@@ -355,7 +355,45 @@ def main(args):
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
             global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
-            
+        elif args.trainer == 'GL_SVDMSE_HE':
+            # global prompt + local prompt
+
+            idxs_users = list(range(0, cfg.DATASET.USERS))
+            print("idxs_users", idxs_users)
+
+            print("------------local train start epoch:", epoch, "-------------")
+            for idx in idxs_users:
+                if epoch == 0:
+                    local_trainer.model.load_state_dict(global_weights, strict=False)
+                else:
+                    local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
+                local_weight = local_trainer.model.state_dict()
+                local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
+                local_weights_1[idx] = {}
+                for i, param_name in enumerate([f'prompt_learner.ctx_local_list.{i}' for i in range(len(local_trainer.model.prompt_learner.ctx_local_list))]):
+                    local_weights_1[idx][i] = copy.deepcopy(local_weight[param_name])
+
+            print("------------local train finish epoch:", epoch, "-------------")
+
+            global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
+
+            print("------------local test start-------------")
+            results = []
+            all_users = list(range(0, cfg.DATASET.USERS))
+
+            for idx in all_users:
+                local_weights_per[idx]['prompt_learner.ctx_global'] = global_weights
+                for i, param_name in enumerate([f'prompt_learner.ctx_local_list.{i}' for i in range(len(local_trainer.model.prompt_learner.ctx_local_list))]):
+                    local_weights_per[idx][param_name] = local_weights_1[idx][i]
+
+            for idx in all_users:
+                local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                results.append(local_trainer.test(idx=idx))
+            # global_test_acc = show_results(cfg, results, epoch)
+            global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
+            global_time_list.append(time.time() - start)
+            print("------------local test finish-------------")    
         elif args.trainer == 'GL_SVDMSE_HER':
             # global prompt + local prompt experts + router
 
