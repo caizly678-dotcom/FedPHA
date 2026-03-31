@@ -92,6 +92,22 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE_HE.lambda_orthogonal = 1
     cfg.TRAINER.GL_SVDMSE_HE.alpha = args.alpha
     cfg.TRAINER.GL_SVDMSE_HE.ratio = args.ratio
+
+    cfg.TRAINER.GL_SVDMSE_HER = CN()
+    cfg.TRAINER.GL_SVDMSE_HER.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
+    cfg.TRAINER.GL_SVDMSE_HER.CSC = False  # class-specific context
+    cfg.TRAINER.GL_SVDMSE_HER.CTX_INIT = False  # initialization words
+    cfg.TRAINER.GL_SVDMSE_HER.PREC = "fp16"  # fp16, fp32, amp
+    cfg.TRAINER.GL_SVDMSE_HER.CLASS_TOKEN_POSITION = "end"  # 'middle' or 'end' or 'front'
+    cfg.TRAINER.GL_SVDMSE_HER.N = 1  # number of prompts
+    cfg.TRAINER.GL_SVDMSE_HER.lambda_orthogonal = 1
+    cfg.TRAINER.GL_SVDMSE_HER.alpha = args.alpha
+    cfg.TRAINER.GL_SVDMSE_HER.ratio = args.ratio
+
+    cfg.TRAINER.GL_SVDMSE_HER.NUM_EXPERTS = args.num_experts
+    cfg.TRAINER.GL_SVDMSE_HER.LAMBDA_BAL = args.lambda_bal
+    cfg.TRAINER.GL_SVDMSE_HER.ROUTER_TYPE = args.router_type
+    cfg.TRAINER.GL_SVDMSE_HER.TOPK = args.topk
     
     cfg.TRAINER.GLP_OT = CN()
     cfg.TRAINER.GLP_OT.N_CTX = args.n_ctx  # number of context vectors
@@ -155,6 +171,14 @@ def setup_cfg(args):
     
     # 3. From input arguments
     reset_cfg(cfg, args)
+        # Force CLI dataset-related overrides after dataset yaml is merged
+    cfg.DATASET.USERS = args.num_users
+    cfg.DATASET.NAME = args.dataset
+    cfg.DATASET.IID = args.iid
+    cfg.DATASET.PARTITION = args.partition
+    cfg.DATASET.USEALL = args.useall
+    cfg.DATASET.NUM_SHOTS = args.num_shots
+    cfg.DATASET.BETA = args.beta
     
     random.seed(cfg.SEED)
     if cfg.DATASET.NAME.lower() in ["cifar10", "cifar100"]:
@@ -237,6 +261,9 @@ def main(args):
     global_test_acc_dict = {}
     global_time_list = []
     start = time.time()
+
+    idxs_users = list(range(cfg.DATASET.USERS))
+
     for epoch in range(start_epoch, end_epoch):
 
         if args.trainer == 'CLIP':
@@ -329,8 +356,8 @@ def main(args):
             global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
             
-        elif args.trainer == 'GL_SVDMSE_HE':
-            # global prompt + local prompt
+        elif args.trainer == 'GL_SVDMSE_HER':
+            # global prompt + local prompt experts + router
 
             idxs_users = list(range(0, cfg.DATASET.USERS))
             print("idxs_users", idxs_users)
@@ -341,12 +368,18 @@ def main(args):
                     local_trainer.model.load_state_dict(global_weights, strict=False)
                 else:
                     local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+
                 local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
                 local_weight = local_trainer.model.state_dict()
+
+                # 1) 聚合 global prompt
                 local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
-                local_weights_1[idx] = {}
-                for i, param_name in enumerate([f'prompt_learner.ctx_local_list.{i}' for i in range(len(local_trainer.model.prompt_learner.ctx_local_list))]):
-                    local_weights_1[idx][i] = copy.deepcopy(local_weight[param_name])
+
+                # 2) 保存当前客户端自己的 local experts
+                local_weights_1[idx] = copy.deepcopy(local_weight[f'prompt_learner.ctx_local_experts.{idx}'])
+
+                # 3) 保存当前客户端自己的 router logits
+                local_weights_2[idx] = copy.deepcopy(local_weight[f'prompt_learner.router_logits_list.{idx}'])
 
             print("------------local train finish epoch:", epoch, "-------------")
 
@@ -358,17 +391,17 @@ def main(args):
 
             for idx in all_users:
                 local_weights_per[idx]['prompt_learner.ctx_global'] = global_weights
-                for i, param_name in enumerate([f'prompt_learner.ctx_local_list.{i}' for i in range(len(local_trainer.model.prompt_learner.ctx_local_list))]):
-                    local_weights_per[idx][param_name] = local_weights_1[idx][i]
+                local_weights_per[idx][f'prompt_learner.ctx_local_experts.{idx}'] = local_weights_1[idx]
+                local_weights_per[idx][f'prompt_learner.router_logits_list.{idx}'] = local_weights_2[idx]
 
             for idx in all_users:
                 local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
                 results.append(local_trainer.test(idx=idx))
-            # global_test_acc = show_results(cfg, results, epoch)
+
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
             global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
-                  
+        
         elif args.trainer == 'GLP_OT':
             # global prompt + local prompt
 
@@ -456,7 +489,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--trainer", type=str, default="PROMPTFL_PROX", help="name of trainer, choose from: "
-                                                                      "Baseline, CLIP, FEDPGP, GLP_OT, FEDPEFT")
+                                                                      "Baseline, CLIP, FEDPGP, GLP_OT, GL_SVDMSE, GL_SVDMSE_HE, GL_SVDMSE_HER, FEDPEFT")
     parser.add_argument("--dataset", type=str, default="dtd", help="name of dataset, choose from: "
                                                                     " cifar100 domainnet pacs OfficeHome  Office31 ")
     parser.add_argument("--backbone", type=str, default="ViT-B/16", help="name of CNN backbone")
@@ -491,10 +524,13 @@ if __name__ == "__main__":
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")
-    
+    parser.add_argument('--num_experts', type=int, default=4, help="number of local prompt experts")
+    parser.add_argument('--lambda_bal', type=float, default=1e-3, help="balance loss weight for router")
+    parser.add_argument('--router_type', type=str, default='softmax', help="router type: softmax / topk")
+    parser.add_argument('--topk', type=int, default=0, help="top-k experts for router, 0 means disabled")
     # parameters of path
     parser.add_argument('--logdir', type=str, required=False, default="./logs/", help='Log directory path')
-    parser.add_argument("--root", type=str, default="/data/fcy_data", help="path to dataset")
+    parser.add_argument("--root", type=str, default="/workspace/FedPHA/data", help="path to dataset")
     parser.add_argument("--output_dir", type=str, default="output/..", help="output directory")
     parser.add_argument("--resume", type=str, default=None, help="checkpoint directory (from which the training resumes)")
     parser.add_argument("--transforms", type=str, nargs="+", help="data augmentation methods")
