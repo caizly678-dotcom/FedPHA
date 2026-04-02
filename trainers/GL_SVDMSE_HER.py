@@ -148,9 +148,6 @@ class PromptLearner(nn.Module):
         with torch.no_grad():
             embedding = clip_model.token_embedding(tokenized_prompts).type(dtype) 
 
-        # These token vectors will be saved when in save_model(),
-        # but they should be ignored in load_model() as we want to use
-        # those computed using the current class names
         self.register_buffer("token_prefix", embedding[:, :1, :])  # SOS
         self.register_buffer("token_suffix", embedding[:, 1 + max_prompt_length:, :])  # CLS, EOS
 
@@ -158,25 +155,23 @@ class PromptLearner(nn.Module):
         self.tokenized_prompts = tokenized_prompts  # torch.Tensor
         self.name_lens = name_lens
         self.class_token_position = cfg.TRAINER.GL_SVDMSE_HER.CLASS_TOKEN_POSITION
-        self.init_experts_from_global()
-    
-    def compute_null_space(self, global_ctx, ratio=0.8):
-        global_ctx = global_ctx.view(-1, global_ctx.shape[-1]) 
-        global_ctx = global_ctx.to(torch.float32)
+
+        # ====== 初始化软奇异值掩码 (Soft SVD Mask) ======
+        rank = min(self.n_ctx_global, ctx_dim)
+        cutoff = int(rank * (1 - self.ratio))
         
-        try:
-            U, S, V = torch.svd(global_ctx)   
-            # U = [len, len]
-            # S = [len]
-            # V = [dim, len]
-        except RuntimeError as e:
-            print(f"SVD failed on GPU: {e}")
-            global_ctx_cpu = global_ctx.cpu()
-            U, S, V = torch.svd(global_ctx_cpu)
-            V = V.to(global_ctx.device)
-        cutoff = int(S.shape[0] * (1 - ratio))
-        V2 = V[:, cutoff:]
-        return V2.to(global_ctx.dtype)
+        init_mask = torch.ones(rank, dtype=dtype)
+        init_mask[:cutoff] = -4.0 
+        init_mask[cutoff:] = 4.0  
+
+        self.svd_mask_logits = nn.ParameterList([
+            nn.Parameter(init_mask.clone())
+            for _ in range(num_users)
+        ])
+        # ===============================================
+
+        self.init_experts_from_global()
+        
 
     def forward(self, idx):
         if idx < 0 or idx >= len(self.user_prompt_lengths):
@@ -189,30 +184,44 @@ class PromptLearner(nn.Module):
             param.requires_grad_(False)
         for i, param in enumerate(self.router_logits_list):
             param.requires_grad_(False)
+        for i, param in enumerate(self.svd_mask_logits):
+            param.requires_grad_(False)
 
         self.ctx_local_experts[idx].requires_grad_(True)
         self.router_logits_list[idx].requires_grad_(True)
+        self.svd_mask_logits[idx].requires_grad_(True)
 
-        ctx_local_bank = self.ctx_local_experts[idx]      # [M, L_i, D]
-        router_logits = self.router_logits_list[idx]      # [M]
-        pi = F.softmax(router_logits, dim=0)              # [M]
+        ctx_local_bank = self.ctx_local_experts[idx]      
+        router_logits = self.router_logits_list[idx]      
+        pi = F.softmax(router_logits, dim=0)              
 
-        ctx_local = (pi[:, None, None] * ctx_local_bank).sum(dim=0)   # [L_i, D]   # [n_ctx_local, dim]
-        ctx_global = self.ctx_global            # [n_ctx_global, dim]
-        null_space = self.compute_null_space(ctx_global, self.ratio)  # [dim, len(1-ratio)]
+        ctx_local = (pi[:, None, None] * ctx_local_bank).sum(dim=0)  
+        ctx_global = self.ctx_global            
 
-        ctx_flat = ctx_local.view(-1, ctx_local.shape[-1])  # [n_ctx_local, dim]
-        null_space = null_space.to(ctx_flat.dtype)
-
-        projected_ctx = torch.mm(ctx_flat, torch.mm(null_space, null_space.T))  # [n_ctx_local, dim]
-        projected_ctx_local = projected_ctx.view(ctx_local.shape)  # [n_ctx_local, dim]
+        # ====== 动态软 SVD 投影 (带 GPU 防御机制) ======
+        ctx_global_float = ctx_global.view(-1, ctx_global.shape[-1]).to(torch.float32)
+        try:
+            U, S, V = torch.svd(ctx_global_float)
+        except RuntimeError as e:
+            print(f"--> [监控] SVD 在 GPU 失败，自动切换至 CPU... (报错信息: {e})")
+            ctx_global_cpu = ctx_global_float.cpu()
+            U, S, V = torch.svd(ctx_global_cpu)
+            V = V.to(ctx_global_float.device)
         
-        ctx_local = ctx_local.unsqueeze(0).expand(self.n_cls, -1, -1)                                       # [n_cls, n_ctx_local, dim]
-        ctx_local = ctx_local.contiguous().view(self.n_cls * self.N, n_ctx_local, -1)                       # [N*n_cls, n_ctx_local, dim]
-        ctx_global = ctx_global.unsqueeze(0).expand(self.n_cls, -1, -1)                                     # [n_cls, n_ctx_global_local, dim]
-        ctx_global = ctx_global.contiguous().view(self.n_cls * self.N, n_ctx_global, -1)                    # [N*n_cls, n_ctx_global, dim]
-        projected_ctx_local = projected_ctx_local.unsqueeze(0).expand(self.n_cls, -1, -1)                   # [n_cls, n_ctx_local, dim]
-        projected_ctx_local = projected_ctx_local.contiguous().view(self.n_cls * self.N, n_ctx_local, -1)   # [N*n_cls, n_ctx_local, dim]
+        soft_mask = torch.sigmoid(self.svd_mask_logits[idx]).to(V.device, dtype=V.dtype)
+        proj_matrix = torch.mm(V, torch.mm(torch.diag(soft_mask), V.T)).to(ctx_local.dtype)
+
+        ctx_flat = ctx_local.view(-1, ctx_local.shape[-1])  
+        projected_ctx = torch.mm(ctx_flat, proj_matrix)
+        projected_ctx_local = projected_ctx.view(ctx_local.shape)  
+        # ===============================================
+        
+        ctx_local = ctx_local.unsqueeze(0).expand(self.n_cls, -1, -1)                                       
+        ctx_local = ctx_local.contiguous().view(self.n_cls * self.N, n_ctx_local, -1)                       
+        ctx_global = ctx_global.unsqueeze(0).expand(self.n_cls, -1, -1)                                     
+        ctx_global = ctx_global.contiguous().view(self.n_cls * self.N, n_ctx_global, -1)                    
+        projected_ctx_local = projected_ctx_local.unsqueeze(0).expand(self.n_cls, -1, -1)                   
+        projected_ctx_local = projected_ctx_local.contiguous().view(self.n_cls * self.N, n_ctx_local, -1)   
         
         prefix = self.token_prefix
         suffix = self.token_suffix
@@ -225,7 +234,7 @@ class PromptLearner(nn.Module):
         prompts_global = self.pad_to_77(prompts_global)
         prompts_projected_local = self.pad_to_77(prompts_projected_local)
         
-        return prompts, prompts_global, prompts_projected_local, pi
+        return prompts, prompts_global, prompts_projected_local, pi, soft_mask
     
     def compose_prompts(self, ctx, prefix, suffix, n_ctx):
         if self.class_token_position == "end":
@@ -271,7 +280,6 @@ class PromptLearner(nn.Module):
         return torch.cat(prompts, dim=0)
 
     def pad_to_77(self, prompts):
-
         cur_len = prompts.shape[1]
         if cur_len < 77:
             pad_len = 77 - cur_len
@@ -314,6 +322,8 @@ class PromptLearner(nn.Module):
 
                     init_prompt = coeff @ basis.T   # [L_i, D]
                     expert_tensor[m].copy_(init_prompt.to(expert_tensor.dtype))
+
+
 class CustomCLIP(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
         super().__init__()
@@ -328,14 +338,13 @@ class CustomCLIP(nn.Module):
 
     def forward(self, image, idx):
         tokenized_prompts = self.tokenized_prompts
-        prompts, prompts_global, prompts_projected_local, router_probs = self.prompt_learner(idx)
-        # Compute the prompted image and text features
+        prompts, prompts_global, prompts_projected_local, router_probs, soft_mask = self.prompt_learner(idx)
+        
         text_features = self.text_encoder(prompts, tokenized_prompts)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         image_features = self.image_encoder(image.type(self.dtype))
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
-        # Compute the prompted logits
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()  
         
@@ -345,17 +354,12 @@ class CustomCLIP(nn.Module):
             text_features_projected_local = self.text_encoder(prompts_projected_local, tokenized_prompts)
             text_features_projected_local = text_features_projected_local / text_features_projected_local.norm(dim=-1, keepdim=True)
             logits_global = logit_scale * image_features @ text_features_global.t()  
-            return logits, text_features_global, text_features, text_features_projected_local, logits_global, router_probs
+            return logits, text_features_global, text_features, text_features_projected_local, logits_global, router_probs, soft_mask
         
         return logits
 
-
 # @TRAINER_REGISTRY.register()
 class GL_SVDMSE_HER(TrainerX):
-    """
-    It is based on CoOp.
-    """
-
     def check_cfg(self, cfg):
         assert cfg.TRAINER.GL_SVDMSE_HER.PREC in ["fp16", "fp32", "amp"]
 
@@ -372,7 +376,6 @@ class GL_SVDMSE_HER(TrainerX):
         clip_model = load_clip_to_cpu(cfg)
         
         if cfg.TRAINER.GL_SVDMSE_HER.PREC == "fp32" or cfg.TRAINER.GL_SVDMSE_HER.PREC == "amp":
-            # CLIP's default precision is fp16
             clip_model.float()   
 
         print("Building custom CLIP")
@@ -388,7 +391,6 @@ class GL_SVDMSE_HER(TrainerX):
 
         if cfg.DATASET.NAME== "ImageNet":
             self.device =  torch.device("cuda:0")
-            # device0 = torch.device("cuda:0")
             device1 = torch.device("cuda")
             self.model.to(self.device)
             self.model.text_encoder.to(device1)
@@ -396,50 +398,19 @@ class GL_SVDMSE_HER(TrainerX):
         else:
             self.model.to(self.device)
         
-        # NOTE: only give prompt_learner to the optimizer
         self.optim = build_optimizer(self.model.prompt_learner, cfg.OPTIM)
         self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
         self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
 
         self.scaler = GradScaler() if cfg.TRAINER.GL_SVDMSE_HER.PREC == "amp" else None
 
-
     def forward_backward(self, batch_idx, batch, idx=-1, **kwargs):
         image, label = self.parse_batch_train(batch)
         prec = self.cfg.TRAINER.GL_SVDMSE_HER.PREC
 
-        if prec == "amp":
-            with autocast():
-                output, global_features, local_features, projected_local_features, output_global, router_probs = self.model(image, idx)
-
-                pull_loss = F.mse_loss(local_features, projected_local_features)
-
-                alpha = self.alpha
-                push_loss = F.relu(alpha - torch.norm(local_features - global_features, dim=-1)).mean()
-
-                cls_loss = F.cross_entropy(output, label)
-                global_cls_loss = F.cross_entropy(output_global, label)
-
-                num_experts = router_probs.shape[0]
-                uniform = torch.full_like(router_probs, 1.0 / num_experts)
-                balance_loss = torch.sum(
-                    router_probs * torch.log((router_probs + 1e-8) / (uniform + 1e-8))
-                )
-
-                loss = cls_loss + global_cls_loss + pull_loss + push_loss + self.lambda_bal * balance_loss
-
-            self.optim.zero_grad()
-            self.scaler.scale(loss).backward()
-            self.scaler.step(self.optim)
-            self.scaler.update()
-        else:
-            output, global_features, local_features, projected_local_features, output_global, router_probs = self.model(image, idx)
-
+        def compute_all_losses(output, global_features, local_features, projected_local_features, output_global, router_probs, soft_mask):
             pull_loss = F.mse_loss(local_features, projected_local_features)
-
-            alpha = self.alpha
-            push_loss = F.relu(alpha - torch.norm(local_features - global_features, dim=-1)).mean()
-
+            push_loss = F.relu(self.alpha - torch.norm(local_features - global_features, dim=-1)).mean()
             cls_loss = F.cross_entropy(output, label)
             global_cls_loss = F.cross_entropy(output_global, label)
 
@@ -448,16 +419,40 @@ class GL_SVDMSE_HER(TrainerX):
             balance_loss = torch.sum(
                 router_probs * torch.log((router_probs + 1e-8) / (uniform + 1e-8))
             )
+            
+            rank = soft_mask.shape[0]
+            cutoff = int(rank * (1 - self.cfg.TRAINER.GL_SVDMSE_HER.ratio))
+            target_mask = torch.ones_like(soft_mask)
+            target_mask[:cutoff] = 0.0 
+            mask_reg_loss = F.mse_loss(soft_mask, target_mask)
 
-            loss = cls_loss + global_cls_loss + pull_loss + push_loss + self.lambda_bal * balance_loss
+            total_loss = cls_loss + global_cls_loss + pull_loss + push_loss + self.lambda_bal * balance_loss + 0.01* mask_reg_loss
+            return total_loss, pull_loss, push_loss, balance_loss, mask_reg_loss
 
+        if prec == "amp":
+            with autocast():
+                output, global_features, local_features, projected_local_features, output_global, router_probs, soft_mask = self.model(image, idx)
+                loss, pull_loss, push_loss, balance_loss, mask_reg_loss = compute_all_losses(
+                    output, global_features, local_features, projected_local_features, output_global, router_probs, soft_mask
+                )
+
+            self.optim.zero_grad()
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optim)
+            self.scaler.update()
+        else:
+            output, global_features, local_features, projected_local_features, output_global, router_probs, soft_mask = self.model(image, idx)
+            loss, pull_loss, push_loss, balance_loss, mask_reg_loss = compute_all_losses(
+                output, global_features, local_features, projected_local_features, output_global, router_probs, soft_mask
+            )
             self.model_backward_and_update(loss)
+            
         loss_summary = {
             "loss": loss.item(),
             "acc": compute_accuracy(output, label)[0].item(),
             "pull_loss": pull_loss.item(),
             "push_loss": push_loss.item(),
-            "balance_loss": balance_loss.item(),
+            "mask_reg": mask_reg_loss.item(),
         }
 
         if (self.batch_idx + 1) == self.num_batches:
@@ -478,10 +473,7 @@ class GL_SVDMSE_HER(TrainerX):
             return
 
         names = self.get_model_names()
-
-        # By default, the best model is loaded
         model_file = "model-best.pth.tar"
-
         if epoch is not None:
             model_file = "model.pth.tar-" + str(epoch)
 
@@ -495,10 +487,8 @@ class GL_SVDMSE_HER(TrainerX):
             state_dict = checkpoint["state_dict"]
             epoch = checkpoint["epoch"]
 
-            # Ignore fixed token vectors
             if "token_prefix" in state_dict:
                 del state_dict["token_prefix"]
-
             if "token_suffix" in state_dict:
                 del state_dict["token_suffix"]
 
