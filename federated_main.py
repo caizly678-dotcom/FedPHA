@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from utils.fed_utils import average_weights, count_parameters, show_results, save_acc_csv
+from utils.fed_utils import average_weights, count_parameters, show_results, save_acc_csv, similarity_average_weights
 from Dassl.dassl.utils import setup_logger, set_random_seed
 from Dassl.dassl.config import get_cfg_default
 from Dassl.dassl.engine import build_trainer
@@ -393,10 +393,10 @@ def main(args):
             # global_test_acc = show_results(cfg, results, epoch)
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
             global_time_list.append(time.time() - start)
-            print("------------local test finish-------------")    
-        elif args.trainer == 'GL_SVDMSE_HER':
-            # global prompt + local prompt experts + router
+            print("------------local test finish-------------")   
 
+        elif args.trainer == 'GL_SVDMSE_HER':
+            # 动态 SVD (MoE路由) 专属联邦聚合逻辑
             idxs_users = list(range(0, cfg.DATASET.USERS))
             print("idxs_users", idxs_users)
 
@@ -406,40 +406,59 @@ def main(args):
                     local_trainer.model.load_state_dict(global_weights, strict=False)
                 else:
                     local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
-
+                
                 local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
                 local_weight = local_trainer.model.state_dict()
-
-                # 1) 聚合 global prompt
+                
+                # 1. 收集全局 Prompt 用于 Server 聚合
                 local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
-
-                # 2) 保存当前客户端自己的 local experts
-                local_weights_1[idx] = copy.deepcopy(local_weight[f'prompt_learner.ctx_local_experts.{idx}'])
-
-                # 3) 保存当前客户端自己的 router logits
-                local_weights_2[idx] = copy.deepcopy(local_weight[f'prompt_learner.router_logits_list.{idx}'])
+                
+                # 2. 收集本地特有的 Experts 和 Router (这些绝对不能平均，必须本地保留)
+                local_weights_1[idx] = {}
+                local_weights_2[idx] = {}
+                num_clients_params = len(local_trainer.model.prompt_learner.ctx_local_experts)
+                for i in range(num_clients_params):
+                    local_weights_1[idx][i] = copy.deepcopy(local_weight[f'prompt_learner.ctx_local_experts.{i}'])
+                    local_weights_2[idx][i] = copy.deepcopy(local_weight[f'prompt_learner.router_logits_list.{i}'])
 
             print("------------local train finish epoch:", epoch, "-------------")
 
-            global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
+            # 对全局 Prompt 进行相似度聚合
+            # 处理 Epoch 0 时 global_weights 还是字典的情况
+            if isinstance(global_weights, dict):
+                ref_global_w = global_weights['prompt_learner.ctx_global']
+            else:
+                ref_global_w = global_weights
 
+            global_weights = similarity_average_weights(
+                w=local_weights_0, 
+                global_w=ref_global_w, 
+                idxs_users=idxs_users, 
+                tau=1.0,  # 温度系数，控制权重的锐度
+                islist=True
+            )
+            
             print("------------local test start-------------")
             results = []
             all_users = list(range(0, cfg.DATASET.USERS))
 
             for idx in all_users:
+                # 下发新的全局 Prompt
                 local_weights_per[idx]['prompt_learner.ctx_global'] = global_weights
-                local_weights_per[idx][f'prompt_learner.ctx_local_experts.{idx}'] = local_weights_1[idx]
-                local_weights_per[idx][f'prompt_learner.router_logits_list.{idx}'] = local_weights_2[idx]
+                # 恢复各自的本地 Experts 和 Router
+                num_clients_params = len(local_trainer.model.prompt_learner.ctx_local_experts)
+                for i in range(num_clients_params):
+                    local_weights_per[idx][f'prompt_learner.ctx_local_experts.{i}'] = local_weights_1[idx][i]
+                    local_weights_per[idx][f'prompt_learner.router_logits_list.{i}'] = local_weights_2[idx][i]
 
             for idx in all_users:
                 local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
                 results.append(local_trainer.test(idx=idx))
-
+            
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
             global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
-        
+
         elif args.trainer == 'GLP_OT':
             # global prompt + local prompt
 
@@ -568,7 +587,7 @@ if __name__ == "__main__":
     parser.add_argument('--topk', type=int, default=0, help="top-k experts for router, 0 means disabled")
     # parameters of path
     parser.add_argument('--logdir', type=str, required=False, default="./logs/", help='Log directory path')
-    parser.add_argument("--root", type=str, default="/workspace/FedPHA/data", help="path to dataset")
+    parser.add_argument("--root", type=str, default="./data", help="path to dataset")
     parser.add_argument("--output_dir", type=str, default="output/..", help="output directory")
     parser.add_argument("--resume", type=str, default=None, help="checkpoint directory (from which the training resumes)")
     parser.add_argument("--transforms", type=str, nargs="+", help="data augmentation methods")
