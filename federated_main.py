@@ -494,7 +494,7 @@ if __name__ == "__main__":
     
     # parameters of path
     parser.add_argument('--logdir', type=str, required=False, default="./logs/", help='Log directory path')
-    parser.add_argument("--root", type=str, default="/data/fcy_data", help="path to dataset")
+    parser.add_argument("--root", type=str, default="./data", help="path to dataset")
     parser.add_argument("--output_dir", type=str, default="output/..", help="output directory")
     parser.add_argument("--resume", type=str, default=None, help="checkpoint directory (from which the training resumes)")
     parser.add_argument("--transforms", type=str, nargs="+", help="data augmentation methods")
