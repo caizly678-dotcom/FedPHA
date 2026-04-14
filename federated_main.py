@@ -81,6 +81,8 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.lambda_orthogonal = 1
     cfg.TRAINER.GL_SVDMSE.alpha = args.alpha
     cfg.TRAINER.GL_SVDMSE.ratio = args.ratio
+    cfg.TRAINER.GL_SVDMSE.POOL_SIZE = args.pool_size  #新增Prompt pool
+    cfg.TRAINER.GL_SVDMSE.ANCHOR_LAMBDA = args.anchor_lambda
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -138,6 +140,8 @@ def extend_cfg(cfg, args):
     cfg.OPTIM.GAMMA = args.gamma  # gamma of single-step
 
     cfg.MODEL.BACKBONE.PRETRAINED = True
+
+
 
 
 def setup_cfg(args):
@@ -231,6 +235,34 @@ def main(args):
             datanumber_client.append(len(local_trainer.fed_train_loader_x_dict[net_i].dataset))
         global_weights = copy.deepcopy(local_trainer.model.state_dict())
 
+    
+    # ===== Server-side prompt pool initialization for GL_SVDMSE =====
+    global_prompt_pool = None
+    global_anchor_prompt = None
+    client2expert = None
+
+    if args.trainer == 'GL_SVDMSE':
+        pool_size = cfg.TRAINER.GL_SVDMSE.POOL_SIZE
+        
+        # public global anchor
+        global_anchor_prompt = copy.deepcopy(global_weights['prompt_learner.ctx_global'])
+
+        # use the original single global prompt as the template
+        base_global_prompt = copy.deepcopy(global_weights['prompt_learner.ctx_global'])
+
+        # initialize K shared prompts on server
+        global_prompt_pool = [copy.deepcopy(base_global_prompt) for _ in range(pool_size)]
+
+        # add tiny noise so different experts do not start from exactly the same point
+        for k in range(1, pool_size):
+            global_prompt_pool[k] = global_prompt_pool[k] + 0.001 * torch.randn_like(global_prompt_pool[k])
+
+        # fixed routing for the first-stage experiment
+        client2expert = {idx: idx % pool_size for idx in range(cfg.DATASET.USERS)}
+
+        print("Initialized global anchor prompt")
+        print("Initialized prompt pool with size =", pool_size)
+        print("Client to expert mapping:", client2expert)
     # Training
     start_epoch = 0
     end_epoch = cfg.OPTIM.ROUND
@@ -293,41 +325,120 @@ def main(args):
             print("------------local test finish-------------")
             
         elif args.trainer == 'GL_SVDMSE':
-            # global prompt + local prompt
+    # global prompt + local prompt
+            pool_size = cfg.TRAINER.GL_SVDMSE.POOL_SIZE
+            if pool_size == 1:
+        # ===== 原始 baseline GL_SVDMSE，保持一字不改 =====
+                idxs_users = list(range(0, cfg.DATASET.USERS))
+                print("idxs_users", idxs_users)
 
-            idxs_users = list(range(0, cfg.DATASET.USERS))
-            print("idxs_users", idxs_users)
+                print("------------local train start epoch:", epoch, "-------------")
+                for idx in idxs_users:
+                    if epoch == 0:
+                        local_trainer.model.load_state_dict(global_weights, strict=False)
+                    else:
+                        local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
 
-            print("------------local train start epoch:", epoch, "-------------")
-            for idx in idxs_users:
-                if epoch == 0:
-                    local_trainer.model.load_state_dict(global_weights, strict=False)
-                else:
+                    local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
+                    local_weight = local_trainer.model.state_dict()
+                    local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
+                    local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
+
+                print("------------local train finish epoch:", epoch, "-------------")
+
+                global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
+
+                print("------------local test start-------------")
+                results = []
+                all_users = list(range(0, cfg.DATASET.USERS))
+
+                for idx in all_users:
+                    local_weights_per[idx]['prompt_learner.ctx_global'] = global_weights
+                    local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
+
+                for idx in all_users:
                     local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
-                local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
-                local_weight = local_trainer.model.state_dict()
-                local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
-                local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
+                    results.append(local_trainer.test(idx=idx))
 
-            print("------------local train finish epoch:", epoch, "-------------")
+                global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
+                global_time_list.append(time.time() - start)
+                print("------------local test finish-------------")
 
-            global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
+            else:
+                # ===== prompt pool + global anchor version =====
+                anchor_lambda = cfg.TRAINER.GL_SVDMSE.ANCHOR_LAMBDA
 
-            print("------------local test start-------------")
-            results = []
-            all_users = list(range(0, cfg.DATASET.USERS))
+                idxs_users = list(range(0, cfg.DATASET.USERS))
+                print("idxs_users", idxs_users)
 
-            for idx in all_users:
-                local_weights_per[idx]['prompt_learner.ctx_global'] = global_weights
-                local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
+                expert_to_users = defaultdict(list)
+                for idx in idxs_users:
+                    expert_id = client2expert[idx]
+                    expert_to_users[expert_id].append(idx)
 
-            for idx in all_users:
-                local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
-                results.append(local_trainer.test(idx=idx))
-            # global_test_acc = show_results(cfg, results, epoch)
-            global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
-            global_time_list.append(time.time() - start)
-            print("------------local test finish-------------")
+                print("expert_to_users:", {k: len(v) for k, v in expert_to_users.items()})
+
+                print("------------local train start epoch:", epoch, "-------------")
+                for idx in idxs_users:
+                    expert_id = client2expert[idx]
+
+                    if epoch == 0:
+                        client_state = copy.deepcopy(global_weights)
+                    else:
+                        client_state = copy.deepcopy(local_weights_per[idx])
+
+                    # mix shared prompt = global anchor + expert prompt
+                    shared_prompt = (
+                        anchor_lambda * global_anchor_prompt
+                        + (1.0 - anchor_lambda) * global_prompt_pool[expert_id]
+                    )
+
+                    client_state['prompt_learner.ctx_global'] = copy.deepcopy(shared_prompt)
+
+                    local_trainer.model.load_state_dict(client_state, strict=False)
+                    local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
+
+                    local_weight = local_trainer.model.state_dict()
+                    local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
+                    local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
+
+                print("------------local train finish epoch:", epoch, "-------------")
+
+                # 1) update public anchor with all clients
+                global_anchor_prompt = average_weights(
+                    local_weights_0, idxs_users, datanumber_client, islist=True
+                )
+
+                # 2) update expert prompts with grouped aggregation
+                for expert_id, users in expert_to_users.items():
+                    global_prompt_pool[expert_id] = average_weights(
+                        local_weights_0, users, datanumber_client, islist=True
+                    )
+
+                print("------------local test start-------------")
+                results = []
+                all_users = list(range(0, cfg.DATASET.USERS))
+
+                for idx in all_users:
+                    expert_id = client2expert[idx]
+
+                    shared_prompt = (
+                        anchor_lambda * global_anchor_prompt
+                        + (1.0 - anchor_lambda) * global_prompt_pool[expert_id]
+                    )
+
+                    local_weights_per[idx]['prompt_learner.ctx_global'] = copy.deepcopy(shared_prompt)
+                    local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
+
+                for idx in all_users:
+                    local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                    results.append(local_trainer.test(idx=idx))
+
+                global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
+                global_time_list.append(time.time() - start)
+                print("------------local test finish-------------")
+                if pool_size == 2:
+                    print("expert_distance =", torch.norm(global_prompt_pool[0] - global_prompt_pool[1]).item())
             
         elif args.trainer == 'GL_SVDMSE_HE':
             # global prompt + local prompt
@@ -504,7 +615,12 @@ if __name__ == "__main__":
     parser.add_argument("--load-epoch", type=int, help="load model weights at this epoch for evaluation")
     parser.add_argument("--no-train", action="store_true", help="do not call trainer.train()")
     parser.add_argument("opts", default=None, nargs=argparse.REMAINDER, help="modify config options using the command-line")
-    
+    # 修改：在参数区新增一个 pool 大小参数
+    parser.add_argument('--pool_size', type=int, default=1, help='number of server shared prompts')
+    parser.add_argument('--anchor_lambda', type=float, default=0.7,help='mixing weight for global anchor prompt')
+
+
+
     args = parser.parse_args()
     
     setproctitle.setproctitle('{}_{}_{}'.format(args.trainer, args.backbone, args.dataset))
