@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from utils.fed_utils import average_weights, count_parameters, show_results, save_acc_csv
+from utils.fed_utils import average_weights, weighted_average_weights, count_parameters, show_results, save_acc_csv, KMEANS
 from Dassl.dassl.utils import setup_logger, set_random_seed
 from Dassl.dassl.config import get_cfg_default
 from Dassl.dassl.engine import build_trainer
@@ -27,6 +27,71 @@ def print_args(args, cfg):
     print("************")
     print(cfg)
 
+#新增一个“统计客户端 label histogram”的辅助函数
+def build_client_label_histograms(fed_train_loader_x_dict, num_users, num_classes):
+    """
+    Build one normalized label histogram for each client.
+    Return:
+        hists: torch.FloatTensor of shape [num_users, num_classes]
+    """
+    all_hists = []
+
+    for idx in range(num_users):
+        counts = torch.zeros(num_classes, dtype=torch.float32)
+
+        loader = fed_train_loader_x_dict[idx]
+        for batch in loader:
+            labels = batch["label"]
+
+            if not torch.is_tensor(labels):
+                labels = torch.tensor(labels)
+
+            labels = labels.view(-1).cpu().long()
+            counts += torch.bincount(labels, minlength=num_classes).float()
+
+        if counts.sum() > 0:
+            counts = counts / counts.sum()
+
+        all_hists.append(counts)
+
+    hists = torch.stack(all_hists, dim=0)
+    return hists
+
+# 新增一个“计算 cluster-aware 权重”的辅助函数
+def build_cluster_aware_weights(client_hists, client2expert, cluster_centers, datanumber_client, tau=5.0):
+    """
+    Build cluster-aware aggregation weights:
+        weight_i ∝ data_size_i * exp(tau * cosine(hist_i, center_cluster_i))
+
+    Args:
+        client_hists: torch.FloatTensor [num_users, num_classes]
+        client2expert: dict {client_idx: expert_id}
+        cluster_centers: torch.FloatTensor [pool_size, num_classes]
+        datanumber_client: list of sample counts for each client
+        tau: temperature for sharpening cosine similarity
+
+    Returns:
+        client_weights: dict {client_idx: unnormalized_weight}
+        client_sims: dict {client_idx: cosine_similarity}
+    """
+    client_weights = {}
+    client_sims = {}
+
+    for idx in range(client_hists.shape[0]):
+        expert_id = client2expert[idx]
+
+        hist_i = client_hists[idx].unsqueeze(0)          # [1, C]
+        center_k = cluster_centers[expert_id].unsqueeze(0)  # [1, C]
+
+        sim = F.cosine_similarity(hist_i, center_k, dim=1).item()
+        sim = max(sim, 0.0)  # avoid negative contribution
+
+        weight = float(datanumber_client[idx]) * float(np.exp(tau * sim))
+
+        client_sims[idx] = sim
+        client_weights[idx] = weight
+
+    return client_weights, client_sims
 
 def reset_cfg(cfg, args):
     if args.root:
@@ -83,7 +148,10 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.ratio = args.ratio
     cfg.TRAINER.GL_SVDMSE.POOL_SIZE = args.pool_size  #新增Prompt pool
     cfg.TRAINER.GL_SVDMSE.ANCHOR_LAMBDA = args.anchor_lambda
-    
+    cfg.TRAINER.GL_SVDMSE.GROUP_METHOD = args.group_method
+    cfg.TRAINER.GL_SVDMSE.CLUSTER_TAU = args.cluster_tau
+
+
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
     cfg.TRAINER.GL_SVDMSE_HE.CSC = False  # class-specific context
@@ -240,10 +308,16 @@ def main(args):
     global_prompt_pool = None
     global_anchor_prompt = None
     client2expert = None
+    cluster_centers = None
+    client_cluster_weights = None
+    client_cluster_sims = None
+
+
 
     if args.trainer == 'GL_SVDMSE':
         pool_size = cfg.TRAINER.GL_SVDMSE.POOL_SIZE
-        
+        group_method = cfg.TRAINER.GL_SVDMSE.GROUP_METHOD
+
         # public global anchor
         global_anchor_prompt = copy.deepcopy(global_weights['prompt_learner.ctx_global'])
 
@@ -257,12 +331,65 @@ def main(args):
         for k in range(1, pool_size):
             global_prompt_pool[k] = global_prompt_pool[k] + 0.001 * torch.randn_like(global_prompt_pool[k])
 
-        # fixed routing for the first-stage experiment
-        client2expert = {idx: idx % pool_size for idx in range(cfg.DATASET.USERS)}
+        # build client-to-expert mapping
+        if pool_size == 1:
+            client2expert = {idx: 0 for idx in range(cfg.DATASET.USERS)}
+        else:
+            if group_method == 'fixed':
+                client2expert = {idx: idx % pool_size for idx in range(cfg.DATASET.USERS)}
+
+            elif group_method == 'hist_kmeans':
+                client_label_hists = build_client_label_histograms(
+                    local_trainer.fed_train_loader_x_dict,
+                    cfg.DATASET.USERS,
+                    local_trainer.num_classes
+                )
+
+                print("Client label histograms shape:", client_label_hists.shape)
+
+                kmeans = KMEANS(
+                    n_clusters=pool_size,
+                    max_iter=100,
+                    verbose=False,
+                    device=torch.device("cpu")
+                )
+
+                cluster_labels = kmeans.fit_predict(client_label_hists.cpu())
+                cluster_labels = cluster_labels.cpu()
+
+                unique_clusters = set(cluster_labels.tolist())
+                if len(unique_clusters) < pool_size:
+                    print("Warning: k-means returned fewer clusters than pool_size, fallback to fixed grouping.")
+                    client2expert = {idx: idx % pool_size for idx in range(cfg.DATASET.USERS)}
+
+                    # fallback centers: use zero centers just to avoid undefined variables
+                    cluster_centers = None
+                    client_cluster_weights = {idx: float(datanumber_client[idx]) for idx in range(cfg.DATASET.USERS)}
+                    client_cluster_sims = {idx: 1.0 for idx in range(cfg.DATASET.USERS)}
+                else:
+                    client2expert = {idx: int(cluster_labels[idx].item()) for idx in range(cfg.DATASET.USERS)}
+
+                    cluster_centers = kmeans.centers.cpu()
+                    client_cluster_weights, client_cluster_sims = build_cluster_aware_weights(
+                        client_label_hists=client_label_hists.cpu(),
+                        client2expert=client2expert,
+                        cluster_centers=cluster_centers,
+                        datanumber_client=datanumber_client,
+                        tau=cfg.TRAINER.GL_SVDMSE.CLUSTER_TAU
+                    )
+
+                print("Cluster labels:", cluster_labels.tolist())
+                print("Cluster centers shape:", None if cluster_centers is None else cluster_centers.shape)
+                print("Client semantic similarities:", client_cluster_sims)
+
+            else:
+                raise ValueError(f"Unknown group_method: {group_method}")
 
         print("Initialized global anchor prompt")
         print("Initialized prompt pool with size =", pool_size)
+        print("Grouping method =", group_method)
         print("Client to expert mapping:", client2expert)
+
     # Training
     start_epoch = 0
     end_epoch = cfg.OPTIM.ROUND
@@ -411,9 +538,14 @@ def main(args):
 
                 # 2) update expert prompts with grouped aggregation
                 for expert_id, users in expert_to_users.items():
-                    global_prompt_pool[expert_id] = average_weights(
-                        local_weights_0, users, datanumber_client, islist=True
-                    )
+                    if cfg.TRAINER.GL_SVDMSE.GROUP_METHOD == 'hist_kmeans' and client_cluster_weights is not None:
+                        global_prompt_pool[expert_id] = weighted_average_weights(
+                            local_weights_0, users, client_cluster_weights, islist=True
+                        )
+                    else:
+                        global_prompt_pool[expert_id] = average_weights(
+                            local_weights_0, users, datanumber_client, islist=True
+                        )
 
                 print("------------local test start-------------")
                 results = []
@@ -618,7 +750,8 @@ if __name__ == "__main__":
     # 修改：在参数区新增一个 pool 大小参数
     parser.add_argument('--pool_size', type=int, default=1, help='number of server shared prompts')
     parser.add_argument('--anchor_lambda', type=float, default=0.7,help='mixing weight for global anchor prompt')
-
+    parser.add_argument('--group_method', type=str, default='fixed',choices=['fixed', 'hist_kmeans'],help='client grouping method for prompt pool')
+    parser.add_argument('--cluster_tau', type=float, default=5.0,help='temperature for cluster-aware aggregation weights')
 
 
     args = parser.parse_args()

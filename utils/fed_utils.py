@@ -51,6 +51,46 @@ def average_weights(w, idxs_users, datanumber_client, islist=False):
 
     return w_avg
 
+def weighted_average_weights(w, idxs_users, custom_weights, islist=False):
+    """
+    Weighted average with user-defined normalized or unnormalized weights.
+
+    Args:
+        w: list or dict-like weights from clients
+        idxs_users: selected client indices
+        custom_weights: dict {client_idx: weight} or list indexed by client_idx
+        islist: whether each client weight is a tensor/list-style object
+
+    Returns:
+        weighted average of client weights
+    """
+    total_weight = 0.0
+    for idx in idxs_users:
+        total_weight += float(custom_weights[idx])
+
+    if total_weight <= 0:
+        raise ValueError("Total custom weight must be positive.")
+
+    w_avg = copy.deepcopy(w[idxs_users[0]])
+
+    for pos, idx in enumerate(idxs_users):
+        fed_w = float(custom_weights[idx]) / total_weight
+
+        if islist:
+            if pos == 0:
+                w_avg = w_avg * fed_w
+            else:
+                w_avg += w[idx] * fed_w
+        else:
+            if pos == 0:
+                for key in w_avg:
+                    w_avg[key] = w_avg[key] * fed_w
+            else:
+                for key in w_avg:
+                    w_avg[key] += w[idx][key] * fed_w
+
+    return w_avg
+
 def moment_aggre_weights(w_prompt,w_key, global_key, global_group_prompt,cluster_size ,idxs_users, datanumber_client, moment = 0.5):
     
     total_data_points = sum([datanumber_client[r] for r in idxs_users])
