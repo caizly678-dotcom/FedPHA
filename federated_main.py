@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from torch.nn import functional as F
 from utils.fed_utils import average_weights, weighted_average_weights, count_parameters, show_results, save_acc_csv, KMEANS
 from Dassl.dassl.utils import setup_logger, set_random_seed
 from Dassl.dassl.config import get_cfg_default
@@ -93,6 +93,87 @@ def build_cluster_aware_weights(client_hists, client2expert, cluster_centers, da
 
     return client_weights, client_sims
 
+# 构建客户端图像摘要
+def build_client_image_summaries(fed_train_loader_x_dict, model, num_users, summary_batches=5):
+    """
+    Build one image-feature summary for each client by averaging a few mini-batches.
+    Return:
+        summaries: torch.FloatTensor [num_users, feature_dim]
+    """
+    was_training = model.training
+    model.eval()
+
+    summaries = []
+    device = next(model.parameters()).device
+
+    with torch.no_grad():
+        for idx in range(num_users):
+            loader = fed_train_loader_x_dict[idx]
+            feats = []
+            batch_count = 0
+
+            for batch in loader:
+                images = batch["img"].to(device)
+                image_features = model.encode_image_in_joint_space(images)
+                feats.append(image_features.mean(dim=0))
+
+                batch_count += 1
+                if batch_count >= summary_batches:
+                    break
+
+            client_feat = torch.stack(feats, dim=0).mean(dim=0)
+            client_feat = client_feat / client_feat.norm(dim=-1, keepdim=True)
+            summaries.append(client_feat.float().cpu())
+
+    if was_training:
+        model.train()
+
+    summaries = torch.stack(summaries, dim=0)
+    return summaries
+
+# 根据语义中心做最近邻匹配
+def build_client_to_expert_by_semantic_match(client_summaries, semantic_centers):
+    client2expert = {}
+    client_semantic_sims = {}
+
+    # force the same dtype for safe similarity computation
+    client_summaries = client_summaries.float()
+    semantic_centers = semantic_centers.float()
+
+    client_summaries = client_summaries / client_summaries.norm(dim=-1, keepdim=True)
+    semantic_centers = semantic_centers / semantic_centers.norm(dim=-1, keepdim=True)
+
+    sim_matrix = client_summaries @ semantic_centers.t()  # [num_users, pool_size]
+
+    best_sims, best_ids = sim_matrix.max(dim=1)
+
+    for idx in range(client_summaries.shape[0]):
+        client2expert[idx] = int(best_ids[idx].item())
+        client_semantic_sims[idx] = float(best_sims[idx].item())
+
+    return client2expert, client_semantic_sims
+
+#读取词表
+def load_external_vocab(vocab_path):
+    with open(vocab_path, "r", encoding="utf-8") as f:
+        words = [line.strip() for line in f if line.strip()]
+    return words
+
+#把语义中心变成prompt原型
+def semantic_centers_to_prompt_pool(centers, n_ctx, dtype, device):
+    """
+    centers: [K, ctx_dim]
+    return: list of K prompts, each shaped [1, n_ctx, ctx_dim]
+    """
+    prompt_pool = []
+    for k in range(centers.shape[0]):
+        center = centers[k].to(device=device, dtype=dtype)
+        prompt = center.unsqueeze(0).repeat(n_ctx, 1).unsqueeze(0)  # [1, n_ctx, ctx_dim]
+        prompt_pool.append(prompt.contiguous())
+    return prompt_pool
+
+
+
 def reset_cfg(cfg, args):
     if args.root:
         cfg.DATASET.ROOT = args.root
@@ -150,6 +231,8 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.ANCHOR_LAMBDA = args.anchor_lambda
     cfg.TRAINER.GL_SVDMSE.GROUP_METHOD = args.group_method
     cfg.TRAINER.GL_SVDMSE.CLUSTER_TAU = args.cluster_tau
+    cfg.TRAINER.GL_SVDMSE.SUMMARY_BATCHES = args.summary_batches
+
 
 
     cfg.TRAINER.GL_SVDMSE_HE = CN()
@@ -311,6 +394,8 @@ def main(args):
     cluster_centers = None
     client_cluster_weights = None
     client_cluster_sims = None
+    semantic_centers = None
+    client_semantic_sims = None
 
 
 
@@ -325,11 +410,43 @@ def main(args):
         base_global_prompt = copy.deepcopy(global_weights['prompt_learner.ctx_global'])
 
         # initialize K shared prompts on server
-        global_prompt_pool = [copy.deepcopy(base_global_prompt) for _ in range(pool_size)]
+        if args.semantic_init and pool_size > 1:
+            vocab_words = load_external_vocab(args.semantic_vocab_path)
+            print("Loaded external vocab size =", len(vocab_words))
 
-        # add tiny noise so different experts do not start from exactly the same point
-        for k in range(1, pool_size):
-            global_prompt_pool[k] = global_prompt_pool[k] + 0.001 * torch.randn_like(global_prompt_pool[k])
+            vocab_feats = local_trainer.model.encode_vocab_in_ctx_space(vocab_words).detach().cpu()
+            print("External vocab feature shape =", vocab_feats.shape)
+
+            vocab_kmeans = KMEANS(
+                n_clusters=pool_size,
+                max_iter=100,
+                verbose=False,
+                device=torch.device("cpu")
+            )
+            _ = vocab_kmeans.fit_predict(vocab_feats)
+            vocab_cluster_centers = vocab_kmeans.centers.cpu()
+
+            semantic_prompt_pool = semantic_centers_to_prompt_pool(
+                centers=vocab_cluster_centers,
+                n_ctx=cfg.TRAINER.GL_SVDMSE.N_CTX,
+                dtype=base_global_prompt.dtype,
+                device=base_global_prompt.device
+            )
+            # blend semantic prototypes with original prompt initialization
+            global_prompt_pool = []
+            for k in range(pool_size):
+                mixed_prompt = (
+                    args.semantic_init_lambda * copy.deepcopy(base_global_prompt)
+                    + (1.0 - args.semantic_init_lambda) * semantic_prompt_pool[k]
+                )
+                global_prompt_pool.append(mixed_prompt)
+
+            print("Initialized prompt pool from external semantic vocabulary")
+        else:
+            global_prompt_pool = [copy.deepcopy(base_global_prompt) for _ in range(pool_size)]
+
+            for k in range(1, pool_size):
+                global_prompt_pool[k] = global_prompt_pool[k] + 0.001 * torch.randn_like(global_prompt_pool[k])
 
         # build client-to-expert mapping
         if pool_size == 1:
@@ -371,7 +488,7 @@ def main(args):
 
                     cluster_centers = kmeans.centers.cpu()
                     client_cluster_weights, client_cluster_sims = build_cluster_aware_weights(
-                        client_label_hists=client_label_hists.cpu(),
+                        client_hists=client_label_hists.cpu(),
                         client2expert=client2expert,
                         cluster_centers=cluster_centers,
                         datanumber_client=datanumber_client,
@@ -381,7 +498,42 @@ def main(args):
                 print("Cluster labels:", cluster_labels.tolist())
                 print("Cluster centers shape:", None if cluster_centers is None else cluster_centers.shape)
                 print("Client semantic similarities:", client_cluster_sims)
+            
+            elif group_method == 'semantic_match':
+                vocab_words = load_external_vocab(args.semantic_vocab_path)
+                print("Loaded external vocab size for semantic matching =", len(vocab_words))
 
+                # 1) encode vocabulary into CLIP joint semantic space
+                semantic_vocab_feats = local_trainer.model.encode_vocab_in_joint_space(vocab_words).detach().cpu()
+                print("Semantic vocab feature shape =", semantic_vocab_feats.shape)
+
+                # 2) cluster vocabulary features into pool_size semantic centers
+                semantic_kmeans = KMEANS(
+                    n_clusters=pool_size,
+                    max_iter=100,
+                    verbose=False,
+                    device=torch.device("cpu")
+                )
+                _ = semantic_kmeans.fit_predict(semantic_vocab_feats)
+                semantic_centers = semantic_kmeans.centers.float().cpu()
+                print("Semantic centers shape =", semantic_centers.shape)
+
+                # 3) build client image summaries
+                client_image_summaries = build_client_image_summaries(
+                    local_trainer.fed_train_loader_x_dict,
+                    local_trainer.model,
+                    cfg.DATASET.USERS,
+                    summary_batches=cfg.TRAINER.GL_SVDMSE.SUMMARY_BATCHES
+                )
+                print("Client image summaries shape =", client_image_summaries.shape)
+
+                # 4) assign clients to nearest semantic center
+                client2expert, client_semantic_sims = build_client_to_expert_by_semantic_match(
+                    client_summaries=client_image_summaries,
+                    semantic_centers=semantic_centers
+                )
+
+                print("Client semantic similarities:", client_semantic_sims)
             else:
                 raise ValueError(f"Unknown group_method: {group_method}")
 
@@ -750,8 +902,13 @@ if __name__ == "__main__":
     # 修改：在参数区新增一个 pool 大小参数
     parser.add_argument('--pool_size', type=int, default=1, help='number of server shared prompts')
     parser.add_argument('--anchor_lambda', type=float, default=0.7,help='mixing weight for global anchor prompt')
-    parser.add_argument('--group_method', type=str, default='fixed',choices=['fixed', 'hist_kmeans'],help='client grouping method for prompt pool')
+    parser.add_argument('--group_method', type=str, default='fixed',choices=['fixed', 'hist_kmeans','semantic_match'],help='client grouping method for prompt pool')
     parser.add_argument('--cluster_tau', type=float, default=5.0,help='temperature for cluster-aware aggregation weights')
+    parser.add_argument('--semantic_vocab_path', type=str, default='./resources/vocab/general_words.txt',help='path to external vocabulary file')
+    parser.add_argument('--semantic_init', action='store_true',help='initialize prompt pool from external semantic vocabulary')
+    parser.add_argument('--semantic_init_lambda', type=float, default=0.5,help='blend ratio between original random prompt and semantic prototype')
+    parser.add_argument('--summary_batches', type=int, default=5,help='number of mini-batches per client to build image feature summary')
+    
 
 
     args = parser.parse_args()

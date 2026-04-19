@@ -252,6 +252,7 @@ class CustomCLIP(nn.Module):
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
         self.image_encoder = clip_model.visual
         self.text_encoder = TextEncoder(clip_model)
+        self.token_embedding = clip_model.token_embedding
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
         self.N = cfg.TRAINER.GL_SVDMSE.N
@@ -279,6 +280,55 @@ class CustomCLIP(nn.Module):
             return logits, text_features_global, text_features, text_features_projected_local, logits_global
         
         return logits
+    
+    # 编码外部词表到联合语义空间
+    def encode_vocab_in_joint_space(self, texts):
+        """
+        Encode external vocabulary into CLIP joint text feature space.
+        Return: [num_words, feature_dim]
+        """
+        device = self.logit_scale.device
+        tokenized = torch.cat([clip.tokenize(t) for t in texts]).to(device)
+
+        with torch.no_grad():
+            token_embeddings = self.token_embedding(tokenized).type(self.dtype)
+            text_features = self.text_encoder(token_embeddings, tokenized)
+            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
+        return text_features
+
+    # 编码图像到联合语义空间
+    def encode_image_in_joint_space(self, image):
+        """
+        Encode images into CLIP joint image feature space.
+        Return: [batch_size, feature_dim]
+        """
+        image_features = self.image_encoder(image.type(self.dtype))
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        return image_features
+    
+    def encode_vocab_in_ctx_space(self, texts):
+        """
+        Encode external vocabulary into CLIP token-embedding space.
+        Return: [num_words, ctx_dim]
+        """
+        device = self.logit_scale.device
+        tokenized = torch.cat([clip.tokenize(t) for t in texts]).to(device)
+
+        with torch.no_grad():
+            embeddings = self.token_embedding(tokenized).type(self.dtype)  # [B, 77, ctx_dim]
+
+        feats = []
+        for i in range(tokenized.shape[0]):
+            eos_pos = tokenized[i].argmax().item()
+            start = 1
+            end = max(start + 1, eos_pos)
+            feat = embeddings[i, start:end, :].mean(dim=0)
+            feat = feat / feat.norm(dim=-1, keepdim=True)
+            feats.append(feat)
+
+        feats = torch.stack(feats, dim=0)
+        return feats
 
 
 # @TRAINER_REGISTRY.register()

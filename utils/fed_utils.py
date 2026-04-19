@@ -211,7 +211,12 @@ class KMEANS:
         labels = torch.empty((x.shape[0],)).long().to(self.device)
         dists = torch.empty((0, self.n_clusters)).to(self.device)
         for i, sample in enumerate(x):
-            dist = F.cosine_similarity(sample.unsqueeze(0), self.centers,dim=1)
+            # 将数据转换为 float32 后再进行余弦相似度计算
+            dist = F.cosine_similarity(
+                sample.unsqueeze(0).float(), 
+                self.centers.float(), 
+                dim=1
+            )
             labels[i] = torch.argmax(dist)
             dists = torch.cat([dists, dist.unsqueeze(0)], (0))
         self.labels = labels
