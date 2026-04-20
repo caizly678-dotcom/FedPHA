@@ -1,5 +1,6 @@
 from collections import defaultdict
 from torch.nn import functional as F
+import torch.nn as nn
 from utils.fed_utils import average_weights, weighted_average_weights, count_parameters, show_results, save_acc_csv, KMEANS
 from Dassl.dassl.utils import setup_logger, set_random_seed
 from Dassl.dassl.config import get_cfg_default
@@ -211,6 +212,83 @@ def build_client_soft_weights_by_semantic_match(client_summaries, semantic_cente
 
     return client_soft_weights, client2expert, client_semantic_sims
 
+
+#新增门控
+class GateNetwork(nn.Module):
+    def __init__(self, in_dim, num_experts, hidden_dim=512):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.2),
+            nn.Linear(hidden_dim, num_experts)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+# gate路由函数
+def build_client_soft_weights_by_gate(gate_net, client_summaries, routing_tau=10.0, routing_topk=0):
+    client_soft_weights = {}
+    client2expert = {}
+    client_gate_scores = {}
+
+    gate_net.eval()
+    device = next(gate_net.parameters()).device
+
+    with torch.no_grad():
+        feats = client_summaries.float().to(device)
+        logits = gate_net(feats)
+        weights = torch.softmax(routing_tau * logits, dim=1)
+
+        if routing_topk is not None and routing_topk > 0 and routing_topk < weights.shape[1]:
+            top_vals, top_idx = weights.topk(routing_topk, dim=1)
+            sparse_weights = torch.zeros_like(weights)
+            sparse_weights.scatter_(1, top_idx, top_vals)
+            weights = sparse_weights / sparse_weights.sum(dim=1, keepdim=True).clamp_min(1e-12)
+
+        best_vals, best_ids = weights.max(dim=1)
+
+    for idx in range(weights.shape[0]):
+        client_soft_weights[idx] = weights[idx].detach().cpu()
+        client2expert[idx] = int(best_ids[idx].item())
+        client_gate_scores[idx] = float(best_vals[idx].item())
+
+    return client_soft_weights, client2expert, client_gate_scores
+
+# gate更新函数
+def update_gate_network(gate_net, gate_optimizer, gate_buffer, pool_size, device, train_steps=1):
+    if len(gate_buffer) == 0:
+        return None
+
+    feats = torch.stack([item["feat"] for item in gate_buffer]).float().to(device)
+    targets = torch.stack([item["target"] for item in gate_buffer]).float().to(device)
+    losses = torch.tensor([item["loss"] for item in gate_buffer], dtype=torch.float32, device=device)
+
+    eps = 1e-6
+    sample_weights = 1.0 / (losses + eps)
+    sample_weights = sample_weights / sample_weights.mean().clamp_min(1e-12)
+
+    gate_net.train()
+    last_loss = None
+
+    for _ in range(train_steps):
+        logits = gate_net(feats)
+        per_sample_bce = F.binary_cross_entropy_with_logits(
+            logits, targets, reduction="none"
+        ).mean(dim=1)
+        loss = (per_sample_bce * sample_weights).mean()
+
+        gate_optimizer.zero_grad()
+        loss.backward()
+        gate_optimizer.step()
+
+        last_loss = float(loss.item())
+
+    gate_net.eval()
+    gate_buffer.clear()
+    return last_loss
+
 #读取词表
 def load_external_vocab(vocab_path):
     with open(vocab_path, "r", encoding="utf-8") as f:
@@ -294,6 +372,11 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.ROUTING_MODE = args.routing_mode
     cfg.TRAINER.GL_SVDMSE.ROUTING_TAU = args.routing_tau
     cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK = args.routing_topk
+    cfg.TRAINER.GL_SVDMSE.USE_LEARNED_GATE = args.use_learned_gate
+    cfg.TRAINER.GL_SVDMSE.GATE_HIDDEN_DIM = args.gate_hidden_dim
+    cfg.TRAINER.GL_SVDMSE.GATE_LR = args.gate_lr
+    cfg.TRAINER.GL_SVDMSE.GATE_WARMUP_ROUNDS = args.gate_warmup_rounds
+    cfg.TRAINER.GL_SVDMSE.GATE_TRAIN_STEPS = args.gate_train_steps
 
 
 
@@ -460,6 +543,11 @@ def main(args):
     client_semantic_sims = None
     client_soft_weights = None
 
+    gate_net = None
+    gate_optimizer = None
+    gate_buffer = []
+    gate_ready = False
+
 
 
     if args.trainer == 'GL_SVDMSE':
@@ -563,63 +651,39 @@ def main(args):
                 print("Client semantic similarities:", client_cluster_sims)
             
             elif group_method == 'semantic_match':
-                vocab_words = load_external_vocab(args.semantic_vocab_path)
-                print("Loaded external vocab size for semantic matching =", len(vocab_words))
+                    vocab_words = load_external_vocab(args.semantic_vocab_path)
+                    print("Loaded external vocab size for semantic matching =", len(vocab_words))
 
-                # 1) encode vocabulary into CLIP joint semantic space
-                semantic_vocab_feats = local_trainer.model.encode_vocab_in_joint_space(vocab_words).detach().cpu()
-                print("Semantic vocab feature shape =", semantic_vocab_feats.shape)
+                    semantic_vocab_feats = local_trainer.model.encode_vocab_in_joint_space(vocab_words).detach().cpu()
+                    print("Semantic vocab feature shape =", semantic_vocab_feats.shape)
 
-                # 2) cluster vocabulary features into pool_size semantic centers
-                semantic_kmeans = KMEANS(
-                    n_clusters=pool_size,
-                    max_iter=100,
-                    verbose=False,
-                    device=torch.device("cpu")
-                )
-                _ = semantic_kmeans.fit_predict(semantic_vocab_feats)
-                semantic_centers = semantic_kmeans.centers.float().cpu()
-                print("Semantic centers shape =", semantic_centers.shape)
-
-                # 3) build client image summaries
-                client_image_summaries = build_client_image_summaries(
-                    local_trainer.fed_train_loader_x_dict,
-                    local_trainer.model,
-                    cfg.DATASET.USERS,
-                    summary_batches=cfg.TRAINER.GL_SVDMSE.SUMMARY_BATCHES,
-                    std_weight=cfg.TRAINER.GL_SVDMSE.SUMMARY_STD_WEIGHT
-                )
-                print("Client image summaries shape =", client_image_summaries.shape)
-
-                # 4) assign clients to nearest semantic center
-                if cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'hard':
-                    client2expert, client_semantic_sims = build_client_to_expert_by_semantic_match(
-                        client_summaries=client_image_summaries,
-                        semantic_centers=semantic_centers
+                    semantic_kmeans = KMEANS(
+                        n_clusters=pool_size,
+                        max_iter=100,
+                        verbose=False,
+                        device=torch.device("cpu")
                     )
-                    client_soft_weights = None
+                    _ = semantic_kmeans.fit_predict(semantic_vocab_feats)
+                    semantic_centers = semantic_kmeans.centers.float().cpu()
+                    print("Semantic centers shape =", semantic_centers.shape)
 
-                elif cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'soft':
-                    client_soft_weights, client2expert, client_semantic_sims = build_client_soft_weights_by_semantic_match(
-                        client_summaries=client_image_summaries,
-                        semantic_centers=semantic_centers,
-                        routing_tau=cfg.TRAINER.GL_SVDMSE.ROUTING_TAU,
-                        routing_topk=cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK
-                    )
+                    if cfg.TRAINER.GL_SVDMSE.USE_LEARNED_GATE:
+                        gate_net = GateNetwork(
+                            in_dim=semantic_centers.shape[1],
+                            num_experts=pool_size,
+                            hidden_dim=cfg.TRAINER.GL_SVDMSE.GATE_HIDDEN_DIM
+                        ).to(global_anchor_prompt.device)
 
-                    print("Client soft routing weights:")
-                    for idx in range(cfg.DATASET.USERS):
-                        print(f"client {idx}: {client_soft_weights[idx].tolist()}")
+                        gate_optimizer = torch.optim.Adam(
+                            gate_net.parameters(),
+                            lr=cfg.TRAINER.GL_SVDMSE.GATE_LR
+                        )
 
-                else:
-                    raise ValueError(f"Unknown routing mode: {cfg.TRAINER.GL_SVDMSE.ROUTING_MODE}")
+                        gate_ready = False
+                        gate_buffer = []
+                        print("Initialized learned GateNetwork")
 
-                print("Client semantic similarities:", client_semantic_sims)
-                expert_usage = defaultdict(int)
-                for _, expert_id in client2expert.items():
-                    expert_usage[expert_id] += 1
-                print("Expert usage:", dict(expert_usage))
-
+                    client2expert = {idx: idx % pool_size for idx in range(cfg.DATASET.USERS)}
             else:
                 raise ValueError(f"Unknown group_method: {group_method}")
 
@@ -735,7 +799,47 @@ def main(args):
 
                 idxs_users = list(range(0, cfg.DATASET.USERS))
                 print("idxs_users", idxs_users)
+                if group_method == 'semantic_match':
+                    client_image_summaries = build_client_image_summaries(
+                        local_trainer.fed_train_loader_x_dict,
+                        local_trainer.model,
+                        cfg.DATASET.USERS,
+                        summary_batches=cfg.TRAINER.GL_SVDMSE.SUMMARY_BATCHES,
+                        std_weight=cfg.TRAINER.GL_SVDMSE.SUMMARY_STD_WEIGHT
+                    )
+                    print("Client image summaries shape =", client_image_summaries.shape)
 
+                    # warmup: first few rounds still use static semantic matching
+                    if (not cfg.TRAINER.GL_SVDMSE.USE_LEARNED_GATE) or (epoch < cfg.TRAINER.GL_SVDMSE.GATE_WARMUP_ROUNDS) or (not gate_ready):
+                        if cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'soft':
+                            client_soft_weights, client2expert, client_semantic_sims = build_client_soft_weights_by_semantic_match(
+                                client_summaries=client_image_summaries,
+                                semantic_centers=semantic_centers,
+                                routing_tau=cfg.TRAINER.GL_SVDMSE.ROUTING_TAU,
+                                routing_topk=cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK
+                            )
+                        else:
+                            client2expert, client_semantic_sims = build_client_to_expert_by_semantic_match(
+                                client_summaries=client_image_summaries,
+                                semantic_centers=semantic_centers
+                            )
+                            client_soft_weights = None
+                        print(f"[Round {epoch}] use static semantic routing")
+                    else:
+                        client_soft_weights, client2expert, client_semantic_sims = build_client_soft_weights_by_gate(
+                            gate_net=gate_net,
+                            client_summaries=client_image_summaries,
+                            routing_tau=cfg.TRAINER.GL_SVDMSE.ROUTING_TAU,
+                            routing_topk=cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK
+                        )
+                        print(f"[Round {epoch}] use learned gate routing")
+
+                    if client_soft_weights is not None:
+                        print("Client soft routing weights:")
+                        for idx in range(cfg.DATASET.USERS):
+                            print(f"client {idx}: {client_soft_weights[idx].tolist()}")
+
+                    print("Client routing scores:", client_semantic_sims)
                 expert_to_users = defaultdict(list)
                 for idx in idxs_users:
                     expert_id = client2expert[idx]
@@ -772,12 +876,21 @@ def main(args):
                     client_state['prompt_learner.ctx_global'] = copy.deepcopy(shared_prompt)
 
                     local_trainer.model.load_state_dict(client_state, strict=False)
+
+                    local_trainer.feedback_loss_sum = 0.0
+                    local_trainer.feedback_loss_count = 0
+
                     local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
 
+                    client_avg_loss = local_trainer.feedback_loss_sum / max(local_trainer.feedback_loss_count, 1)
+
                     local_weight = local_trainer.model.state_dict()
+
+
                     local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
                     local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
 
+                    
                 print("------------local train finish epoch:", epoch, "-------------")
 
                 # 1) update public anchor with all clients
@@ -798,6 +911,8 @@ def main(args):
                             expert_soft_weights[idx] = weight_ik
                             total_expert_weight += weight_ik
 
+                        expert_mass_dict[expert_id] = total_expert_weight  
+
                         if total_expert_weight <= 1e-12:
                             print(f"[Warning] expert {expert_id} gets zero routing mass at epoch {epoch}, keep previous prompt.")
                             continue
@@ -805,6 +920,8 @@ def main(args):
                         global_prompt_pool[expert_id] = weighted_average_weights(
                             local_weights_0, idxs_users, expert_soft_weights, islist=True
                         )
+                      
+
                     print("Expert routing mass:", expert_mass_dict)    
                 else:
                     for expert_id, users in expert_to_users.items():
@@ -816,7 +933,44 @@ def main(args):
                             global_prompt_pool[expert_id] = average_weights(
                                 local_weights_0, users, datanumber_client, islist=True
                             )
+                    # ===== 第九步：每轮结束后更新 gate，加在这里 =====
+                if group_method == 'semantic_match' and cfg.TRAINER.GL_SVDMSE.USE_LEARNED_GATE:
+                    gate_loss = update_gate_network(
+                        gate_net=gate_net,
+                        gate_optimizer=gate_optimizer,
+                        gate_buffer=gate_buffer,
+                        pool_size=pool_size,
+                        device=global_anchor_prompt.device,
+                        train_steps=cfg.TRAINER.GL_SVDMSE.GATE_TRAIN_STEPS
+                    )
 
+                    if gate_loss is not None:
+                        gate_ready = True
+                        print(f"Gate update loss = {gate_loss:.6f}")
+
+                if group_method == 'semantic_match' and cfg.TRAINER.GL_SVDMSE.USE_LEARNED_GATE:
+                        target_mask = torch.zeros(pool_size, dtype=torch.float32)
+
+                        if client_soft_weights is not None:
+                            if cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK > 0:
+                                top_ids = torch.topk(
+                                    client_soft_weights[idx],
+                                    k=min(cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK, pool_size)
+                                ).indices
+                            else:
+                                top_ids = torch.tensor([int(torch.argmax(client_soft_weights[idx]).item())])
+
+                            target_mask[top_ids] = 1.0
+                        else:
+                            target_mask[client2expert[idx]] = 1.0
+
+                        gate_buffer.append({
+                            "feat": client_image_summaries[idx].cpu(),
+                            "target": target_mask.cpu(),
+                            "loss": float(client_avg_loss)
+                        })
+
+                                
                 print("------------local test start-------------")
                 results = []
                 all_users = list(range(0, cfg.DATASET.USERS))
@@ -1041,7 +1195,14 @@ if __name__ == "__main__":
     parser.add_argument('--routing_tau', type=float, default=10.0,help='temperature for semantic soft routing')
     parser.add_argument('--routing_topk', type=int, default=0,help='top-k experts kept in soft routing, 0 means keep all')
     parser.add_argument('--summary_std_weight', type=float, default=0.5,help='weight of std term in client image summary')
+    parser.add_argument('--use_learned_gate', action='store_true',help='use Fed-Duet style learned gate instead of static semantic matching')
+    parser.add_argument('--gate_hidden_dim', type=int, default=512,help='hidden dim of server gate network')
+    parser.add_argument('--gate_lr', type=float, default=1e-3,help='learning rate of server gate network')
+    parser.add_argument('--gate_warmup_rounds', type=int, default=3,help='use static semantic routing for first few rounds to warm up gate')
+    parser.add_argument('--gate_train_steps', type=int, default=1,help='number of optimization steps for gate per round')
 
+
+    
     args = parser.parse_args()
     
     setproctitle.setproctitle('{}_{}_{}'.format(args.trainer, args.backbone, args.dataset))

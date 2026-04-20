@@ -417,7 +417,12 @@ class GL_SVDMSE(TrainerX):
 
         if (self.batch_idx + 1) == self.num_batches:
             self.update_lr()
+        if not hasattr(self, "feedback_loss_sum"):
+            self.feedback_loss_sum = 0.0
+            self.feedback_loss_count = 0
 
+        self.feedback_loss_sum += float(loss.item())
+        self.feedback_loss_count += 1
         return loss_summary
 
     def parse_batch_train(self, batch):
