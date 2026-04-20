@@ -94,9 +94,10 @@ def build_cluster_aware_weights(client_hists, client2expert, cluster_centers, da
     return client_weights, client_sims
 
 # 构建客户端图像摘要
-def build_client_image_summaries(fed_train_loader_x_dict, model, num_users, summary_batches=5):
+def build_client_image_summaries(fed_train_loader_x_dict, model, num_users, summary_batches=5, std_weight=0.5):
     """
-    Build one image-feature summary for each client by averaging a few mini-batches.
+    Build one image-feature summary for each client using mean + std fusion.
+
     Return:
         summaries: torch.FloatTensor [num_users, feature_dim]
     """
@@ -109,21 +110,33 @@ def build_client_image_summaries(fed_train_loader_x_dict, model, num_users, summ
     with torch.no_grad():
         for idx in range(num_users):
             loader = fed_train_loader_x_dict[idx]
-            feats = []
+            feat_list = []
             batch_count = 0
 
             for batch in loader:
                 images = batch["img"].to(device)
-                image_features = model.encode_image_in_joint_space(images)
-                feats.append(image_features.mean(dim=0))
+                image_features = model.encode_image_in_joint_space(images).float()  # [B, D]
+                feat_list.append(image_features)
 
                 batch_count += 1
                 if batch_count >= summary_batches:
                     break
 
-            client_feat = torch.stack(feats, dim=0).mean(dim=0)
-            client_feat = client_feat / client_feat.norm(dim=-1, keepdim=True)
-            summaries.append(client_feat.float().cpu())
+            client_feats = torch.cat(feat_list, dim=0)   # [N, D]
+
+            mu = client_feats.mean(dim=0)
+            sigma = client_feats.std(dim=0, unbiased=False)
+
+            mu = mu / mu.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+            sigma = sigma / sigma.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+
+            interaction = mu * sigma
+            interaction = interaction / interaction.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+
+            client_feat = mu + std_weight * sigma + 0.3 * interaction
+            client_feat = client_feat / client_feat.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+
+            summaries.append(client_feat.cpu())
 
     if was_training:
         model.train()
@@ -152,6 +165,51 @@ def build_client_to_expert_by_semantic_match(client_summaries, semantic_centers)
         client_semantic_sims[idx] = float(best_sims[idx].item())
 
     return client2expert, client_semantic_sims
+
+# 新增 soft routing helper
+def build_client_soft_weights_by_semantic_match(client_summaries, semantic_centers, routing_tau=10.0, routing_topk=0):
+    """
+    Build soft routing weights from client summaries to semantic centers.
+
+    Args:
+        client_summaries: [num_users, feature_dim]
+        semantic_centers: [pool_size, feature_dim]
+        routing_tau: temperature for softmax
+        routing_topk: keep only top-k experts; 0 means keep all
+
+    Returns:
+        client_soft_weights: dict {client_idx: tensor [pool_size]}
+        client2expert: dict {client_idx: argmax expert id}  # only for logging
+        client_semantic_sims: dict {client_idx: best similarity}
+    """
+    client_soft_weights = {}
+    client2expert = {}
+    client_semantic_sims = {}
+
+    client_summaries = client_summaries.float()
+    semantic_centers = semantic_centers.float()
+
+    client_summaries = client_summaries / client_summaries.norm(dim=-1, keepdim=True)
+    semantic_centers = semantic_centers / semantic_centers.norm(dim=-1, keepdim=True)
+
+    sim_matrix = client_summaries @ semantic_centers.t()  # [num_users, pool_size]
+    routing_logits = routing_tau * sim_matrix
+    routing_weights = torch.softmax(routing_logits, dim=1)  # [num_users, pool_size]
+
+    if routing_topk is not None and routing_topk > 0 and routing_topk < routing_weights.shape[1]:
+        top_vals, top_idx = routing_weights.topk(routing_topk, dim=1)
+        sparse_weights = torch.zeros_like(routing_weights)
+        sparse_weights.scatter_(1, top_idx, top_vals)
+        routing_weights = sparse_weights / sparse_weights.sum(dim=1, keepdim=True).clamp_min(1e-12)
+
+    best_sims, best_ids = sim_matrix.max(dim=1)
+
+    for idx in range(client_summaries.shape[0]):
+        client_soft_weights[idx] = routing_weights[idx].cpu()
+        client2expert[idx] = int(best_ids[idx].item())   # 仅用于日志
+        client_semantic_sims[idx] = float(best_sims[idx].item())
+
+    return client_soft_weights, client2expert, client_semantic_sims
 
 #读取词表
 def load_external_vocab(vocab_path):
@@ -232,6 +290,10 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.GROUP_METHOD = args.group_method
     cfg.TRAINER.GL_SVDMSE.CLUSTER_TAU = args.cluster_tau
     cfg.TRAINER.GL_SVDMSE.SUMMARY_BATCHES = args.summary_batches
+    cfg.TRAINER.GL_SVDMSE.SUMMARY_STD_WEIGHT = args.summary_std_weight
+    cfg.TRAINER.GL_SVDMSE.ROUTING_MODE = args.routing_mode
+    cfg.TRAINER.GL_SVDMSE.ROUTING_TAU = args.routing_tau
+    cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK = args.routing_topk
 
 
 
@@ -396,6 +458,7 @@ def main(args):
     client_cluster_sims = None
     semantic_centers = None
     client_semantic_sims = None
+    client_soft_weights = None
 
 
 
@@ -523,17 +586,40 @@ def main(args):
                     local_trainer.fed_train_loader_x_dict,
                     local_trainer.model,
                     cfg.DATASET.USERS,
-                    summary_batches=cfg.TRAINER.GL_SVDMSE.SUMMARY_BATCHES
+                    summary_batches=cfg.TRAINER.GL_SVDMSE.SUMMARY_BATCHES,
+                    std_weight=cfg.TRAINER.GL_SVDMSE.SUMMARY_STD_WEIGHT
                 )
                 print("Client image summaries shape =", client_image_summaries.shape)
 
                 # 4) assign clients to nearest semantic center
-                client2expert, client_semantic_sims = build_client_to_expert_by_semantic_match(
-                    client_summaries=client_image_summaries,
-                    semantic_centers=semantic_centers
-                )
+                if cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'hard':
+                    client2expert, client_semantic_sims = build_client_to_expert_by_semantic_match(
+                        client_summaries=client_image_summaries,
+                        semantic_centers=semantic_centers
+                    )
+                    client_soft_weights = None
+
+                elif cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'soft':
+                    client_soft_weights, client2expert, client_semantic_sims = build_client_soft_weights_by_semantic_match(
+                        client_summaries=client_image_summaries,
+                        semantic_centers=semantic_centers,
+                        routing_tau=cfg.TRAINER.GL_SVDMSE.ROUTING_TAU,
+                        routing_topk=cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK
+                    )
+
+                    print("Client soft routing weights:")
+                    for idx in range(cfg.DATASET.USERS):
+                        print(f"client {idx}: {client_soft_weights[idx].tolist()}")
+
+                else:
+                    raise ValueError(f"Unknown routing mode: {cfg.TRAINER.GL_SVDMSE.ROUTING_MODE}")
 
                 print("Client semantic similarities:", client_semantic_sims)
+                expert_usage = defaultdict(int)
+                for _, expert_id in client2expert.items():
+                    expert_usage[expert_id] += 1
+                print("Expert usage:", dict(expert_usage))
+
             else:
                 raise ValueError(f"Unknown group_method: {group_method}")
 
@@ -659,17 +745,28 @@ def main(args):
 
                 print("------------local train start epoch:", epoch, "-------------")
                 for idx in idxs_users:
-                    expert_id = client2expert[idx]
-
                     if epoch == 0:
                         client_state = copy.deepcopy(global_weights)
                     else:
                         client_state = copy.deepcopy(local_weights_per[idx])
 
-                    # mix shared prompt = global anchor + expert prompt
+                    if group_method == 'semantic_match' and cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'soft':
+                        alpha = client_soft_weights[idx].to(
+                            device=global_anchor_prompt.device,
+                            dtype=global_anchor_prompt.dtype
+                        )  # [pool_size]
+
+                        mixed_expert_prompt = torch.zeros_like(global_prompt_pool[0])
+                        for k in range(pool_size):
+                            mixed_expert_prompt = mixed_expert_prompt + alpha[k] * global_prompt_pool[k]
+                    else:
+                        expert_id = client2expert[idx]
+                        mixed_expert_prompt = global_prompt_pool[expert_id]
+
+                    # mix shared prompt = global anchor + mixed expert prompt
                     shared_prompt = (
                         anchor_lambda * global_anchor_prompt
-                        + (1.0 - anchor_lambda) * global_prompt_pool[expert_id]
+                        + (1.0 - anchor_lambda) * mixed_expert_prompt
                     )
 
                     client_state['prompt_learner.ctx_global'] = copy.deepcopy(shared_prompt)
@@ -689,26 +786,58 @@ def main(args):
                 )
 
                 # 2) update expert prompts with grouped aggregation
-                for expert_id, users in expert_to_users.items():
-                    if cfg.TRAINER.GL_SVDMSE.GROUP_METHOD == 'hist_kmeans' and client_cluster_weights is not None:
+                if group_method == 'semantic_match' and cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'soft':
+                    expert_mass_dict = {}
+                    for expert_id in range(pool_size):
+                        expert_soft_weights = {}
+                        total_expert_weight = 0.0
+
+                        for idx in idxs_users:
+                            alpha_ik = float(client_soft_weights[idx][expert_id].item())
+                            weight_ik = float(datanumber_client[idx]) * alpha_ik
+                            expert_soft_weights[idx] = weight_ik
+                            total_expert_weight += weight_ik
+
+                        if total_expert_weight <= 1e-12:
+                            print(f"[Warning] expert {expert_id} gets zero routing mass at epoch {epoch}, keep previous prompt.")
+                            continue
+
                         global_prompt_pool[expert_id] = weighted_average_weights(
-                            local_weights_0, users, client_cluster_weights, islist=True
+                            local_weights_0, idxs_users, expert_soft_weights, islist=True
                         )
-                    else:
-                        global_prompt_pool[expert_id] = average_weights(
-                            local_weights_0, users, datanumber_client, islist=True
-                        )
+                    print("Expert routing mass:", expert_mass_dict)    
+                else:
+                    for expert_id, users in expert_to_users.items():
+                        if cfg.TRAINER.GL_SVDMSE.GROUP_METHOD == 'hist_kmeans' and client_cluster_weights is not None:
+                            global_prompt_pool[expert_id] = weighted_average_weights(
+                                local_weights_0, users, client_cluster_weights, islist=True
+                            )
+                        else:
+                            global_prompt_pool[expert_id] = average_weights(
+                                local_weights_0, users, datanumber_client, islist=True
+                            )
 
                 print("------------local test start-------------")
                 results = []
                 all_users = list(range(0, cfg.DATASET.USERS))
 
                 for idx in all_users:
-                    expert_id = client2expert[idx]
+                    if group_method == 'semantic_match' and cfg.TRAINER.GL_SVDMSE.ROUTING_MODE == 'soft':
+                        alpha = client_soft_weights[idx].to(
+                            device=global_anchor_prompt.device,
+                            dtype=global_anchor_prompt.dtype
+                        )
+
+                        mixed_expert_prompt = torch.zeros_like(global_prompt_pool[0])
+                        for k in range(pool_size):
+                            mixed_expert_prompt = mixed_expert_prompt + alpha[k] * global_prompt_pool[k]
+                    else:
+                        expert_id = client2expert[idx]
+                        mixed_expert_prompt = global_prompt_pool[expert_id]
 
                     shared_prompt = (
                         anchor_lambda * global_anchor_prompt
-                        + (1.0 - anchor_lambda) * global_prompt_pool[expert_id]
+                        + (1.0 - anchor_lambda) * mixed_expert_prompt
                     )
 
                     local_weights_per[idx]['prompt_learner.ctx_global'] = copy.deepcopy(shared_prompt)
@@ -908,8 +1037,10 @@ if __name__ == "__main__":
     parser.add_argument('--semantic_init', action='store_true',help='initialize prompt pool from external semantic vocabulary')
     parser.add_argument('--semantic_init_lambda', type=float, default=0.5,help='blend ratio between original random prompt and semantic prototype')
     parser.add_argument('--summary_batches', type=int, default=5,help='number of mini-batches per client to build image feature summary')
-    
-
+    parser.add_argument('--routing_mode', type=str, default='hard',choices=['hard', 'soft'],help='routing mode for semantic_match')
+    parser.add_argument('--routing_tau', type=float, default=10.0,help='temperature for semantic soft routing')
+    parser.add_argument('--routing_topk', type=int, default=0,help='top-k experts kept in soft routing, 0 means keep all')
+    parser.add_argument('--summary_std_weight', type=float, default=0.5,help='weight of std term in client image summary')
 
     args = parser.parse_args()
     
