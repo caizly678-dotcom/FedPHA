@@ -257,15 +257,17 @@ def build_client_soft_weights_by_gate(gate_net, client_summaries, routing_tau=10
     return client_soft_weights, client2expert, client_gate_scores
 
 # gate更新函数
-def update_gate_network(gate_net, gate_optimizer, gate_buffer, pool_size, device, train_steps=1):
+def update_gate_network(gate_net, gate_optimizer, gate_buffer, pool_size, device, train_steps=1, balance_lambda=0.1):
     if len(gate_buffer) == 0:
         return None
 
-    feats = torch.stack([item["feat"] for item in gate_buffer]).float().to(device)
-    targets = torch.stack([item["target"] for item in gate_buffer]).float().to(device)
+    feats = torch.stack([item["feat"] for item in gate_buffer]).float().to(device)      # [N, D]
+    targets = torch.stack([item["target"] for item in gate_buffer]).float().to(device)  # [N, K]
     losses = torch.tensor([item["loss"] for item in gate_buffer], dtype=torch.float32, device=device)
 
     eps = 1e-6
+
+    # lower client loss => larger sample weight
     sample_weights = 1.0 / (losses + eps)
     sample_weights = sample_weights / sample_weights.mean().clamp_min(1e-12)
 
@@ -273,11 +275,25 @@ def update_gate_network(gate_net, gate_optimizer, gate_buffer, pool_size, device
     last_loss = None
 
     for _ in range(train_steps):
-        logits = gate_net(feats)
-        per_sample_bce = F.binary_cross_entropy_with_logits(
-            logits, targets, reduction="none"
-        ).mean(dim=1)
-        loss = (per_sample_bce * sample_weights).mean()
+        logits = gate_net(feats)                     # [N, K]
+        log_probs = F.log_softmax(logits, dim=1)    # [N, K]
+        probs = torch.softmax(logits, dim=1)        # [N, K]
+
+        # soft-target KL
+        per_sample_kl = F.kl_div(
+            log_probs,
+            targets,
+            reduction="none"
+        ).sum(dim=1)  # [N]
+
+        main_loss = (per_sample_kl * sample_weights).mean()
+
+        # expert usage balance regularization
+        mean_usage = probs.mean(dim=0)  # [K]
+        uniform = torch.full_like(mean_usage, 1.0 / mean_usage.numel())
+        balance_loss = F.mse_loss(mean_usage, uniform)
+
+        loss = main_loss + balance_lambda * balance_loss
 
         gate_optimizer.zero_grad()
         loss.backward()
@@ -941,7 +957,8 @@ def main(args):
                         gate_buffer=gate_buffer,
                         pool_size=pool_size,
                         device=global_anchor_prompt.device,
-                        train_steps=cfg.TRAINER.GL_SVDMSE.GATE_TRAIN_STEPS
+                        train_steps=cfg.TRAINER.GL_SVDMSE.GATE_TRAIN_STEPS,
+                        balance_lambda=0.1
                     )
 
                     if gate_loss is not None:
@@ -949,24 +966,15 @@ def main(args):
                         print(f"Gate update loss = {gate_loss:.6f}")
 
                 if group_method == 'semantic_match' and cfg.TRAINER.GL_SVDMSE.USE_LEARNED_GATE:
-                        target_mask = torch.zeros(pool_size, dtype=torch.float32)
-
                         if client_soft_weights is not None:
-                            if cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK > 0:
-                                top_ids = torch.topk(
-                                    client_soft_weights[idx],
-                                    k=min(cfg.TRAINER.GL_SVDMSE.ROUTING_TOPK, pool_size)
-                                ).indices
-                            else:
-                                top_ids = torch.tensor([int(torch.argmax(client_soft_weights[idx]).item())])
-
-                            target_mask[top_ids] = 1.0
+                            target_prob = client_soft_weights[idx].float().cpu()
                         else:
-                            target_mask[client2expert[idx]] = 1.0
+                            target_prob = torch.zeros(pool_size, dtype=torch.float32)
+                            target_prob[client2expert[idx]] = 1.0
 
                         gate_buffer.append({
                             "feat": client_image_summaries[idx].cpu(),
-                            "target": target_mask.cpu(),
+                            "target": target_prob,
                             "loss": float(client_avg_loss)
                         })
 
