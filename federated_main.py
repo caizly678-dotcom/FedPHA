@@ -81,6 +81,13 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.lambda_orthogonal = 1
     cfg.TRAINER.GL_SVDMSE.alpha = args.alpha
     cfg.TRAINER.GL_SVDMSE.ratio = args.ratio
+    cfg.TRAINER.GL_SVDMSE.USE_SPF = args.use_spf
+    cfg.TRAINER.GL_SVDMSE.SPF_ENERGY = args.spf_energy
+    cfg.TRAINER.GL_SVDMSE.SPF_MIN_RANK = args.spf_min_rank
+    cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK = args.spf_max_rank
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
+    cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_PRIVATE_LAMBDA = args.spf_private_lambda
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -179,7 +186,14 @@ def setup_cfg(args):
     # 4. From optional input arguments
     cfg.merge_from_list(args.opts)
     
-    cfg.OUTPUT_DIR = f"output/{args.dataset}/{args.trainer}/shot_{args.num_shots}/beta_{args.beta}/ep{cfg.OPTIM.MAX_EPOCH}_r{cfg.OPTIM.ROUND}/alpha{args.alpha}_ratio{args.ratio}/seed_{args.seed}"
+    base_output_dir = (
+        f"output/{args.dataset}/{args.trainer}/"
+        f"shot_{args.num_shots}/beta_{args.beta}/"
+        f"ep{cfg.OPTIM.MAX_EPOCH}_r{cfg.OPTIM.ROUND}/"
+        f"alpha{args.alpha}_ratio{args.ratio}/"
+        f"seed_{args.seed}"
+    )
+    cfg.OUTPUT_DIR = base_output_dir
     
     if args.specify and cfg.DATASET.NAME.lower() == "office31":
         prompts_lens_str = "_".join(map(str, args.prompts_lens))
@@ -190,6 +204,11 @@ def setup_cfg(args):
             f"alpha{args.alpha}_ratio{args.ratio}/"
             f"/prompts_{prompts_lens_str}/"
             f"seed_{args.seed}"
+        )
+
+    if args.use_spf:
+        cfg.OUTPUT_DIR = (
+            f"{base_output_dir}/spf_g{args.spf_gamma_init}_e{args.spf_energy}_r{args.spf_max_rank}"
         )
     
     cfg.freeze()
@@ -488,6 +507,13 @@ if __name__ == "__main__":
     # FedPHA
     parser.add_argument('--alpha', type=float, default=1.0, help="The parameter for push_loss")
     parser.add_argument('--ratio', type=float, default=0.8, help="The parameter for svd")
+    parser.add_argument('--use_spf', action='store_true', default=False, help='enable SPF-FedPHA fused prompt training')
+    parser.add_argument('--spf_energy', type=float, default=0.90, help='SVD energy threshold for SPF shared subspace')
+    parser.add_argument('--spf_min_rank', type=int, default=1, help='minimum SPF shared rank')
+    parser.add_argument('--spf_max_rank', type=int, default=8, help='maximum SPF shared rank')
+    parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
+    parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
+    parser.add_argument('--spf_private_lambda', type=float, default=0.01, help='weight of SPF private orthogonal regularization')
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")

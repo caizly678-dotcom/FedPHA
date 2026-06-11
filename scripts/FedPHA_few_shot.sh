@@ -12,7 +12,7 @@ SEED=1                  # random seed
 python federated_main.py \
   --trainer ${TRAINER} \
   --dataset ${DATASET} \
-  --shots ${SHOTS} \
+  --num_shots ${SHOTS} \
   --backbone ${BACKBONE} \
   --num_users ${USERS} \
-  --seed ${SEED} \
+  --seed ${SEED}

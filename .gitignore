@@ -30,3 +30,5 @@ anaconda3/
 .vscode/
 .DS_Store
 FedPHA-pipeline.jpg
+DATA/
+output/
