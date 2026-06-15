@@ -145,18 +145,15 @@ class PromptLearner(nn.Module):
             max_rank=self.spf_max_rank,
         )
         local_shared = project_to_basis(ctx_local, basis)
-        local_private = ctx_local - local_shared
         global_shared = project_to_basis(ctx_global, basis)
 
         gamma = self.fusion_gamma.to(device=ctx_local.device, dtype=ctx_local.dtype).view(1, 1, 1)
-        fused_ctx = local_private + (1.0 - gamma) * local_shared + gamma * global_shared
+        fused_ctx = ctx_local + gamma * (global_shared - local_shared)
 
         shared_pull_loss = F.mse_loss(local_shared.float(), global_shared.detach().float())
-        private_orth_loss = torch.mean(project_to_basis(local_private, basis).float().pow(2))
 
         aux = {
             "shared_pull_loss": shared_pull_loss,
-            "private_orth_loss": private_orth_loss,
             "gamma": gamma.detach().float().mean(),
             "svd_rank": torch.tensor(float(basis.shape[1]), device=ctx_local.device),
         }
@@ -400,6 +397,7 @@ class GL_SVDMSE(TrainerX):
         prec = self.cfg.TRAINER.GL_SVDMSE.PREC
 
         if self.model.prompt_learner.use_spf:
+            # SPF_PRIVATE_LAMBDA is deprecated because the private orthogonal loss is empirically and mathematically redundant.
             if prec == "amp":
                 with autocast():
                     output, aux = self.model(image)
@@ -407,7 +405,6 @@ class GL_SVDMSE(TrainerX):
                     loss = (
                         loss
                         + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
-                        + self.cfg.TRAINER.GL_SVDMSE.SPF_PRIVATE_LAMBDA * aux["private_orth_loss"]
                     )
                 self.optim.zero_grad()
                 self.scaler.scale(loss).backward()
@@ -419,7 +416,6 @@ class GL_SVDMSE(TrainerX):
                 loss = (
                     loss
                     + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
-                    + self.cfg.TRAINER.GL_SVDMSE.SPF_PRIVATE_LAMBDA * aux["private_orth_loss"]
                 )
                 self.model_backward_and_update(loss)
 
@@ -428,6 +424,7 @@ class GL_SVDMSE(TrainerX):
                 "acc": compute_accuracy(output, label)[0].item(),
                 "spf_gamma": float(aux["gamma"].item()),
                 "spf_rank": float(aux["svd_rank"].item()),
+                "spf_shared_loss": float(aux["shared_pull_loss"].item()),
             }
         else:
             if prec == "amp":
