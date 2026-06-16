@@ -9,6 +9,8 @@ log/
 logs/
 wandb/
 runs/
+manual_logs/
+*.log
 
 data/
 dataset/

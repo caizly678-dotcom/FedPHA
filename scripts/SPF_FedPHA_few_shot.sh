@@ -18,5 +18,4 @@ python federated_main.py \
   --spf_gamma_init 0.05 \
   --spf_energy 0.90 \
   --spf_max_rank 8 \
-  --spf_shared_lambda 0.1 \
-  --spf_private_lambda 0.01
+  --spf_shared_lambda 0.1

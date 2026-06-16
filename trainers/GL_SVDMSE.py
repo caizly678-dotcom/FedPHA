@@ -397,7 +397,6 @@ class GL_SVDMSE(TrainerX):
         prec = self.cfg.TRAINER.GL_SVDMSE.PREC
 
         if self.model.prompt_learner.use_spf:
-            # SPF_PRIVATE_LAMBDA is deprecated because the private orthogonal loss is empirically and mathematically redundant.
             if prec == "amp":
                 with autocast():
                     output, aux = self.model(image)

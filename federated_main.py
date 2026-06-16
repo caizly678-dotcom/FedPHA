@@ -87,7 +87,6 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK = args.spf_max_rank
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
-    cfg.TRAINER.GL_SVDMSE.SPF_PRIVATE_LAMBDA = args.spf_private_lambda
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -513,7 +512,6 @@ if __name__ == "__main__":
     parser.add_argument('--spf_max_rank', type=int, default=8, help='maximum SPF shared rank')
     parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
-    parser.add_argument('--spf_private_lambda', type=float, default=0.01, help='weight of SPF private orthogonal regularization')
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")
