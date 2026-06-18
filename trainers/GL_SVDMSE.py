@@ -391,6 +391,109 @@ class GL_SVDMSE(TrainerX):
 
         self.scaler = GradScaler() if cfg.TRAINER.GL_SVDMSE.PREC == "amp" else None
 
+    @staticmethod
+    def _flatten_grads(grads):
+        flat_grads = []
+        for grad in grads:
+            if grad is None:
+                continue
+            flat_grads.append(grad.detach().float().reshape(-1))
+
+        if len(flat_grads) == 0:
+            return None
+
+        return torch.cat(flat_grads)
+
+    @staticmethod
+    def _grad_norm(grads):
+        flat_grads = GL_SVDMSE._flatten_grads(grads)
+        if flat_grads is None:
+            return 0.0
+        return flat_grads.norm().item()
+
+    @staticmethod
+    def _grad_cos(grads_a, grads_b):
+        flat_a = GL_SVDMSE._flatten_grads(grads_a)
+        flat_b = GL_SVDMSE._flatten_grads(grads_b)
+        if flat_a is None or flat_b is None:
+            return float("nan")
+
+        norm_a = flat_a.norm()
+        norm_b = flat_b.norm()
+        if norm_a.item() < 1e-12 or norm_b.item() < 1e-12:
+            return float("nan")
+
+        return F.cosine_similarity(flat_a, flat_b, dim=0).item()
+
+    def _should_log_spf_grad_diag(self):
+        batch_idx = getattr(self, "batch_idx", 0)
+        num_batches = getattr(self, "num_batches", 0)
+
+        return (
+            batch_idx == 0
+            or (num_batches > 0 and (batch_idx + 1) == num_batches)
+            or batch_idx % 10 == 0
+        )
+
+    def _log_spf_grad_diag(self, loss_ce, loss_mse, loss_total):
+        if not self._should_log_spf_grad_diag():
+            return
+
+        prompt_learner = self.model.prompt_learner
+        ctx_params = [prompt_learner.ctx_local, prompt_learner.ctx_global]
+
+        g_ce_local, g_ce_global = torch.autograd.grad(
+            loss_ce,
+            ctx_params,
+            retain_graph=True,
+            allow_unused=True,
+        )
+        g_mse_local, g_mse_global = torch.autograd.grad(
+            loss_mse,
+            ctx_params,
+            retain_graph=True,
+            allow_unused=True,
+        )
+        g_total_local, g_total_global = torch.autograd.grad(
+            loss_total,
+            ctx_params,
+            retain_graph=True,
+            allow_unused=True,
+        )
+
+        local_ce_norm = self._grad_norm([g_ce_local])
+        global_ce_norm = self._grad_norm([g_ce_global])
+        local_mse_norm = self._grad_norm([g_mse_local])
+        global_mse_norm = self._grad_norm([g_mse_global])
+        local_total_norm = self._grad_norm([g_total_local])
+        global_total_norm = self._grad_norm([g_total_global])
+        ce_mse_cos = self._grad_cos(
+            [g_ce_local, g_ce_global],
+            [g_mse_local, g_mse_global],
+        )
+        grad_ratio_g_l = (
+            float("nan")
+            if local_total_norm < 1e-12
+            else global_total_norm / local_total_norm
+        )
+        spf_lambda = self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA
+
+        print(
+            "[GRAD][SPF] "
+            f"epoch={self.epoch} "
+            f"batch={self.batch_idx}/{self.num_batches} "
+            f"ce={loss_ce.item():.6f} "
+            f"mse={loss_mse.item():.6f} "
+            f"lambda={spf_lambda:.4f} "
+            f"local_ce_norm={local_ce_norm:.4e} "
+            f"global_ce_norm={global_ce_norm:.4e} "
+            f"local_mse_norm={local_mse_norm:.4e} "
+            f"global_mse_norm={global_mse_norm:.4e} "
+            f"ce_mse_cos={ce_mse_cos:.4f} "
+            f"local_total_norm={local_total_norm:.4e} "
+            f"global_total_norm={global_total_norm:.4e} "
+            f"grad_ratio_g_l={grad_ratio_g_l:.4e}"
+        )
 
     def forward_backward(self, batch_idx, batch, **kwargs):
         image, label = self.parse_batch_train(batch)
@@ -400,22 +503,20 @@ class GL_SVDMSE(TrainerX):
             if prec == "amp":
                 with autocast():
                     output, aux = self.model(image)
-                    loss = F.cross_entropy(output, label)
-                    loss = (
-                        loss
-                        + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
-                    )
+                    loss_ce = F.cross_entropy(output, label)
+                    loss_mse = aux["shared_pull_loss"]
+                    loss = loss_ce + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * loss_mse
+                self._log_spf_grad_diag(loss_ce, loss_mse, loss)
                 self.optim.zero_grad()
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optim)
                 self.scaler.update()
             else:
                 output, aux = self.model(image)
-                loss = F.cross_entropy(output, label)
-                loss = (
-                    loss
-                    + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
-                )
+                loss_ce = F.cross_entropy(output, label)
+                loss_mse = aux["shared_pull_loss"]
+                loss = loss_ce + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * loss_mse
+                self._log_spf_grad_diag(loss_ce, loss_mse, loss)
                 self.model_backward_and_update(loss)
 
             loss_summary = {
@@ -424,6 +525,8 @@ class GL_SVDMSE(TrainerX):
                 "spf_gamma": float(aux["gamma"].item()),
                 "spf_rank": float(aux["svd_rank"].item()),
                 "spf_shared_loss": float(aux["shared_pull_loss"].item()),
+                "spf_loss_ce": float(loss_ce.item()),
+                "spf_loss_mse": float(loss_mse.item()),
             }
         else:
             if prec == "amp":
