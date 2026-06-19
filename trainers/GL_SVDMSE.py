@@ -1,4 +1,5 @@
 import os.path as osp
+import math
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -158,6 +159,13 @@ class PromptLearner(nn.Module):
             "svd_rank": torch.tensor(float(basis.shape[1]), device=ctx_local.device),
         }
         return fused_ctx, aux
+
+    def get_fusion_gamma_value(self):
+        return float(self.fusion_gamma.detach().float().item())
+
+    def set_fusion_gamma_value(self, value):
+        value = float(value)
+        self.fusion_gamma.fill_(value)
 
     def compute_null_space(self, global_ctx, ratio=0.8):
         global_ctx = global_ctx.view(-1, global_ctx.shape[-1])  # Flatten: (N * n_ctx, ctx_dim)
@@ -426,6 +434,9 @@ class GL_SVDMSE(TrainerX):
         return F.cosine_similarity(flat_a, flat_b, dim=0).item()
 
     def _should_log_spf_grad_diag(self):
+        if not self.cfg.TRAINER.GL_SVDMSE.SPF_GRAD_DIAG:
+            return False
+
         batch_idx = getattr(self, "batch_idx", 0)
         num_batches = getattr(self, "num_batches", 0)
 
@@ -435,9 +446,34 @@ class GL_SVDMSE(TrainerX):
             or batch_idx % 10 == 0
         )
 
+    def _should_update_dynamic_gamma(self):
+        cfg = self.cfg.TRAINER.GL_SVDMSE
+        if not self.model.prompt_learner.use_spf:
+            return False
+        if not cfg.SPF_DYNAMIC_GAMMA:
+            return False
+
+        update_every = max(1, int(cfg.SPF_GAMMA_UPDATE_EVERY))
+        return self.batch_idx % update_every == 0
+
+    def _should_log_gamma_verbose(self):
+        if not self.cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_VERBOSE:
+            return False
+
+        batch_idx = getattr(self, "batch_idx", 0)
+        return batch_idx == 0 or batch_idx % 10 == 0
+
     def _log_spf_grad_diag(self, loss_ce, loss_mse, loss_total):
-        if not self._should_log_spf_grad_diag():
-            return
+        should_log = self._should_log_spf_grad_diag()
+        diag = {
+            "local_total_norm": -1.0,
+            "global_total_norm": -1.0,
+            "grad_ratio_g_l": -1.0,
+            "ce_mse_cos": float("nan"),
+        }
+
+        if not should_log:
+            return diag
 
         prompt_learner = self.model.prompt_learner
         ctx_params = [prompt_learner.ctx_local, prompt_learner.ctx_global]
@@ -454,6 +490,7 @@ class GL_SVDMSE(TrainerX):
             retain_graph=True,
             allow_unused=True,
         )
+
         g_total_local, g_total_global = torch.autograd.grad(
             loss_total,
             ctx_params,
@@ -476,8 +513,14 @@ class GL_SVDMSE(TrainerX):
             if local_total_norm < 1e-12
             else global_total_norm / local_total_norm
         )
-        spf_lambda = self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA
+        diag = {
+            "local_total_norm": local_total_norm,
+            "global_total_norm": global_total_norm,
+            "grad_ratio_g_l": grad_ratio_g_l,
+            "ce_mse_cos": ce_mse_cos,
+        }
 
+        spf_lambda = self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA
         print(
             "[GRAD][SPF] "
             f"epoch={self.epoch} "
@@ -495,20 +538,102 @@ class GL_SVDMSE(TrainerX):
             f"grad_ratio_g_l={grad_ratio_g_l:.4e}"
         )
 
+        return diag
+
+    @staticmethod
+    def _existing_grad_norm(grad):
+        if grad is None:
+            return None
+
+        norm = grad.detach().float().norm()
+        if not torch.isfinite(norm).item():
+            return None
+
+        return norm.item()
+
+    def _maybe_update_dynamic_gamma_from_existing_grads(self, global_epoch=-1):
+        cfg = self.cfg.TRAINER.GL_SVDMSE
+        if not self.model.prompt_learner.use_spf:
+            return -1.0
+        if not cfg.SPF_DYNAMIC_GAMMA:
+            return -1.0
+        if not self._should_update_dynamic_gamma():
+            return -1.0
+
+        prompt_learner = self.model.prompt_learner
+        local_total_norm = self._existing_grad_norm(prompt_learner.ctx_local.grad)
+        global_total_norm = self._existing_grad_norm(prompt_learner.ctx_global.grad)
+        if local_total_norm is None or global_total_norm is None:
+            return -1.0
+        if local_total_norm <= 0:
+            return -1.0
+
+        ratio = global_total_norm / (local_total_norm + 1e-12)
+        if not math.isfinite(ratio):
+            return -1.0
+
+        target = float(cfg.SPF_GAMMA_TARGET_RATIO)
+        adapt_rate = float(cfg.SPF_GAMMA_ADAPT_RATE)
+        momentum = float(cfg.SPF_GAMMA_MOMENTUM)
+        gamma_min = float(cfg.SPF_GAMMA_MIN)
+        gamma_max = float(cfg.SPF_GAMMA_MAX)
+
+        old_gamma = self.model.prompt_learner.get_fusion_gamma_value()
+        raw_scale = (target / (ratio + 1e-12)) ** adapt_rate
+        scale = min(max(raw_scale, 0.5), 2.0)
+
+        candidate_gamma = old_gamma * scale
+        candidate_gamma = min(max(candidate_gamma, gamma_min), gamma_max)
+
+        new_gamma = momentum * old_gamma + (1 - momentum) * candidate_gamma
+        new_gamma = min(max(new_gamma, gamma_min), gamma_max)
+
+        with torch.no_grad():
+            self.model.prompt_learner.set_fusion_gamma_value(new_gamma)
+
+        if self._should_log_gamma_verbose():
+            print(
+                "[GAMMA][SPF] "
+                f"round={global_epoch} "
+                f"local_epoch={self.epoch} "
+                f"batch={self.batch_idx}/{self.num_batches} "
+                f"old_gamma={old_gamma:.6f} "
+                f"new_gamma={new_gamma:.6f} "
+                f"ratio={ratio:.6f} "
+                f"target={target:.6f} "
+                f"scale={scale:.6f} "
+                f"local_total_norm={local_total_norm:.4e} "
+                f"global_total_norm={global_total_norm:.4e}"
+            )
+
+        return ratio
+
     def forward_backward(self, batch_idx, batch, **kwargs):
         image, label = self.parse_batch_train(batch)
         prec = self.cfg.TRAINER.GL_SVDMSE.PREC
 
         if self.model.prompt_learner.use_spf:
+            global_epoch = kwargs.get("global_epoch", -1)
+            diag = {
+                "local_total_norm": -1.0,
+                "global_total_norm": -1.0,
+                "grad_ratio_g_l": -1.0,
+                "ce_mse_cos": float("nan"),
+            }
             if prec == "amp":
                 with autocast():
                     output, aux = self.model(image)
                     loss_ce = F.cross_entropy(output, label)
                     loss_mse = aux["shared_pull_loss"]
                     loss = loss_ce + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * loss_mse
-                self._log_spf_grad_diag(loss_ce, loss_mse, loss)
+                diag = self._log_spf_grad_diag(loss_ce, loss_mse, loss)
                 self.optim.zero_grad()
                 self.scaler.scale(loss).backward()
+                gamma_ratio = self._maybe_update_dynamic_gamma_from_existing_grads(
+                    global_epoch=global_epoch
+                )
+                if gamma_ratio >= 0:
+                    diag["grad_ratio_g_l"] = gamma_ratio
                 self.scaler.step(self.optim)
                 self.scaler.update()
             else:
@@ -516,17 +641,25 @@ class GL_SVDMSE(TrainerX):
                 loss_ce = F.cross_entropy(output, label)
                 loss_mse = aux["shared_pull_loss"]
                 loss = loss_ce + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * loss_mse
-                self._log_spf_grad_diag(loss_ce, loss_mse, loss)
-                self.model_backward_and_update(loss)
+                diag = self._log_spf_grad_diag(loss_ce, loss_mse, loss)
+                self.model_zero_grad()
+                self.model_backward(loss)
+                gamma_ratio = self._maybe_update_dynamic_gamma_from_existing_grads(
+                    global_epoch=global_epoch
+                )
+                if gamma_ratio >= 0:
+                    diag["grad_ratio_g_l"] = gamma_ratio
+                self.model_update()
 
             loss_summary = {
                 "loss": loss.item(),
                 "acc": compute_accuracy(output, label)[0].item(),
-                "spf_gamma": float(aux["gamma"].item()),
+                "spf_gamma": self.model.prompt_learner.get_fusion_gamma_value(),
                 "spf_rank": float(aux["svd_rank"].item()),
                 "spf_shared_loss": float(aux["shared_pull_loss"].item()),
                 "spf_loss_ce": float(loss_ce.item()),
                 "spf_loss_mse": float(loss_mse.item()),
+                "spf_grad_ratio_g_l": float(diag["grad_ratio_g_l"]),
             }
         else:
             if prec == "amp":

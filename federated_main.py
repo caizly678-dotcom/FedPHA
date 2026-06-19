@@ -87,6 +87,15 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK = args.spf_max_rank
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_DYNAMIC_GAMMA = args.spf_dynamic_gamma
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MIN = args.spf_gamma_min
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MAX = args.spf_gamma_max
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_TARGET_RATIO = args.spf_gamma_target_ratio
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_ADAPT_RATE = args.spf_gamma_adapt_rate
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MOMENTUM = args.spf_gamma_momentum
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_UPDATE_EVERY = args.spf_gamma_update_every
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_VERBOSE = args.spf_gamma_verbose
+    cfg.TRAINER.GL_SVDMSE.SPF_GRAD_DIAG = args.spf_grad_debug
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -209,6 +218,11 @@ def setup_cfg(args):
         cfg.OUTPUT_DIR = (
             f"{base_output_dir}/spf_g{args.spf_gamma_init}_e{args.spf_energy}_r{args.spf_max_rank}"
         )
+        if args.spf_dynamic_gamma:
+            cfg.OUTPUT_DIR = (
+                f"{cfg.OUTPUT_DIR}_dgamma_t{args.spf_gamma_target_ratio}"
+                f"_min{args.spf_gamma_min}_max{args.spf_gamma_max}"
+            )
     
     cfg.freeze()
 
@@ -318,10 +332,15 @@ def main(args):
 
             print("------------local train start epoch:", epoch, "-------------")
             for idx in idxs_users:
+                keep_gamma = None
+                if args.use_spf and args.spf_dynamic_gamma:
+                    keep_gamma = local_trainer.model.prompt_learner.get_fusion_gamma_value()
                 if epoch == 0:
                     local_trainer.model.load_state_dict(global_weights, strict=False)
                 else:
                     local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                if keep_gamma is not None:
+                    local_trainer.model.prompt_learner.set_fusion_gamma_value(keep_gamma)
                 local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
                 local_weight = local_trainer.model.state_dict()
                 local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
@@ -340,7 +359,12 @@ def main(args):
                 local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
 
             for idx in all_users:
+                keep_gamma = None
+                if args.use_spf and args.spf_dynamic_gamma:
+                    keep_gamma = local_trainer.model.prompt_learner.get_fusion_gamma_value()
                 local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                if keep_gamma is not None:
+                    local_trainer.model.prompt_learner.set_fusion_gamma_value(keep_gamma)
                 results.append(local_trainer.test(idx=idx))
             # global_test_acc = show_results(cfg, results, epoch)
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
@@ -512,6 +536,15 @@ if __name__ == "__main__":
     parser.add_argument('--spf_max_rank', type=int, default=8, help='maximum SPF shared rank')
     parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
+    parser.add_argument('--spf_dynamic_gamma', action='store_true', default=False, help='enable dynamic SPF gamma adaptation')
+    parser.add_argument('--spf_gamma_min', type=float, default=0.01, help='minimum dynamic SPF gamma')
+    parser.add_argument('--spf_gamma_max', type=float, default=0.10, help='maximum dynamic SPF gamma')
+    parser.add_argument('--spf_gamma_target_ratio', type=float, default=0.08, help='target global/local SPF total gradient ratio')
+    parser.add_argument('--spf_gamma_adapt_rate', type=float, default=1.0, help='dynamic SPF gamma adaptation rate')
+    parser.add_argument('--spf_gamma_momentum', type=float, default=0.5, help='dynamic SPF gamma momentum')
+    parser.add_argument('--spf_gamma_update_every', type=int, default=1, help='dynamic SPF gamma update interval in batches')
+    parser.add_argument('--spf_gamma_verbose', action='store_true', default=False, help='print dynamic SPF gamma updates')
+    parser.add_argument('--spf_grad_debug', action='store_true', default=False, help='print SPF gradient diagnostics with extra autograd.grad calls')
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")

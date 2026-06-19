@@ -682,7 +682,13 @@ class TrainerX(SimpleTrainer):
         end = time.time()
         for self.batch_idx, batch in enumerate(loader):
             data_time.update(time.time() - end)
-            loss_summary = self.forward_backward(self.batch_idx, batch, idx=idx, **kwargs)
+            loss_summary = self.forward_backward(
+                self.batch_idx,
+                batch,
+                idx=idx,
+                global_epoch=global_epoch,
+                **kwargs,
+            )
             batch_time.update(time.time() - end)
             losses.update(loss_summary)
 

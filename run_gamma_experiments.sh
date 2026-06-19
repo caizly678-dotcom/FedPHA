@@ -1,12 +1,14 @@
 #!/bin/bash
 
 # 1. 定义 spf_gamma_init 的值数组
-GAMMA_INITS=("0.01" "0.02" "0.03" "0.04" "0.06" "0.07" "0.08" "0.09")
+DATASETS=("Office31" "OfficeHome" "caltech101" "food101" "oxford_flowers" "oxford_pets")
+
 
 echo "🎉 开始针对不同 spf_gamma_init 的批量实验..."
 
 # 2. 遍历 Gamma 值
-for GAMMA in "${GAMMA_INITS[@]}"; do
+for DATASET in "${DATASETS[@]}"; do
+
     
     echo "======================================================================"
     echo "🚀 正在运行 | spf_gamma_init: ${GAMMA}"
@@ -17,19 +19,20 @@ for GAMMA in "${GAMMA_INITS[@]}"; do
     # 采用你提供的原始命令结构，保持参数设置的一致性
     CUDA_VISIBLE_DEVICES=3 python federated_main.py \
         --trainer GL_SVDMSE \
-        --dataset dtd \
+        --dataset "${DATASET}" \
         --num_shots 16 \
         --backbone ViT-B/16 \
         --num_users 10 \
         --seed 42 \
         --root /workspace/FedPHA/DATA \
         --use_spf \
-        --spf_gamma_init "$GAMMA" \
-        --spf_energy 0.8 \
+        --spf_gamma_init 0.01 \
+        --spf_energy 0.80 \
         --spf_max_rank 8 \
-        --spf_shared_lambda 0.1
+        --spf_shared_lambda 0.1 \
+        --spf_dynamic_gamma \
+        --spf_gamma_verbose 
 
-    echo "✅ 当前任务完成 | spf_gamma_init: ${GAMMA}"
     echo -e "\n"
         
 done
