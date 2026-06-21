@@ -78,6 +78,10 @@ class PromptLearner(nn.Module):
             "fusion_gamma",
             torch.tensor([cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT], dtype=torch.float32)
         )
+        self.register_buffer(
+            "spf_shared_lambda",
+            torch.tensor(float(cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA), dtype=torch.float32)
+        )
         assert cfg_imsize == clip_imsize, f"cfg_imsize ({cfg_imsize}) must equal to clip_imsize ({clip_imsize})"
 
         if ctx_init:
@@ -158,6 +162,20 @@ class PromptLearner(nn.Module):
             "svd_rank": torch.tensor(float(basis.shape[1]), device=ctx_local.device),
         }
         return fused_ctx, aux
+
+    def get_fusion_gamma_value(self):
+        return float(self.fusion_gamma.detach().float().item())
+
+    def set_fusion_gamma_value(self, value):
+        with torch.no_grad():
+            self.fusion_gamma.fill_(float(value))
+
+    def get_spf_shared_lambda_value(self):
+        return float(self.spf_shared_lambda.detach().float().item())
+
+    def set_spf_shared_lambda_value(self, value):
+        with torch.no_grad():
+            self.spf_shared_lambda.fill_(float(value))
 
     def compute_null_space(self, global_ctx, ratio=0.8):
         global_ctx = global_ctx.view(-1, global_ctx.shape[-1])  # Flatten: (N * n_ctx, ctx_dim)
@@ -391,19 +409,147 @@ class GL_SVDMSE(TrainerX):
 
         self.scaler = GradScaler() if cfg.TRAINER.GL_SVDMSE.PREC == "amp" else None
 
+    @staticmethod
+    def _flatten_grad(g):
+        if g is None:
+            return None
+        flat = g.detach().float().reshape(-1)
+        if flat.numel() == 0 or not torch.isfinite(flat).all().item():
+            return None
+        return flat
+
+    def _grad_norm(self, g):
+        flat = self._flatten_grad(g)
+        if flat is None:
+            return None
+        norm = flat.norm()
+        if not torch.isfinite(norm).item():
+            return None
+        return norm.item()
+
+    def _cosine_grad(self, g1, g2):
+        flat1 = self._flatten_grad(g1)
+        flat2 = self._flatten_grad(g2)
+        if flat1 is None or flat2 is None:
+            return None
+        norm1 = flat1.norm()
+        norm2 = flat2.norm()
+        if norm1.item() <= 0 or norm2.item() <= 0:
+            return None
+        cos = F.cosine_similarity(flat1, flat2, dim=0)
+        if not torch.isfinite(cos).item():
+            return None
+        return cos.item()
+
+    def _maybe_update_client_gate(self, loss_ce, loss_mse, loss_total, idx=None, global_epoch=-1):
+        cfg = self.cfg.TRAINER.GL_SVDMSE
+        prompt_learner = self.model.prompt_learner
+
+        if not prompt_learner.use_spf or not cfg.SPF_CLIENT_GATE:
+            return -1.0, -1.0
+
+        gate_every = max(1, int(cfg.SPF_GATE_EVERY))
+        batch_idx = getattr(self, "batch_idx", 0)
+        if batch_idx % gate_every != 0:
+            return -1.0, -1.0
+
+        ctx_local = prompt_learner.ctx_local
+        ctx_global = prompt_learner.ctx_global
+
+        try:
+            g_ce_local = torch.autograd.grad(
+                loss_ce, ctx_local, retain_graph=True, allow_unused=True
+            )[0]
+            g_mse_local = torch.autograd.grad(
+                loss_mse, ctx_local, retain_graph=True, allow_unused=True
+            )[0]
+            g_total_local = torch.autograd.grad(
+                loss_total, ctx_local, retain_graph=True, allow_unused=True
+            )[0]
+            g_total_global = torch.autograd.grad(
+                loss_total, ctx_global, retain_graph=True, allow_unused=True
+            )[0]
+        except RuntimeError:
+            return -1.0, -1.0
+
+        cos_ce_mse = self._cosine_grad(g_ce_local, g_mse_local)
+        local_norm = self._grad_norm(g_total_local)
+        global_norm = self._grad_norm(g_total_global)
+        if cos_ce_mse is None or local_norm is None or global_norm is None:
+            return -1.0, -1.0
+        if local_norm <= 0:
+            return -1.0, -1.0
+
+        ratio = global_norm / (local_norm + 1e-12)
+
+        old_gamma = prompt_learner.get_fusion_gamma_value()
+        old_lambda = prompt_learner.get_spf_shared_lambda_value()
+        new_gamma = old_gamma
+        new_lambda = old_lambda
+        action = "keep"
+
+        cos_neg = float(cfg.SPF_GATE_COS_NEG)
+        cos_pos = float(cfg.SPF_GATE_COS_POS)
+        target = float(cfg.SPF_GATE_TARGET_RATIO)
+
+        if cos_ce_mse < cos_neg:
+            action = "decay_conflict"
+            new_gamma = max(float(cfg.SPF_GAMMA_MIN), old_gamma * float(cfg.SPF_GAMMA_DECAY))
+            new_lambda = max(float(cfg.SPF_LAMBDA_MIN), old_lambda * float(cfg.SPF_LAMBDA_DECAY))
+        elif cos_ce_mse > cos_pos and ratio < target:
+            action = "grow_aligned_weak_global"
+            new_gamma = min(float(cfg.SPF_GAMMA_MAX), old_gamma * float(cfg.SPF_GAMMA_GROW))
+            new_lambda = min(float(cfg.SPF_LAMBDA_MAX), old_lambda * float(cfg.SPF_LAMBDA_GROW))
+        else:
+            action = "keep_deadzone"
+
+        prompt_learner.set_fusion_gamma_value(new_gamma)
+        prompt_learner.set_spf_shared_lambda_value(new_lambda)
+
+        if cfg.SPF_GATE_VERBOSE:
+            print(
+                "[GATE][SPF] "
+                f"round={global_epoch} "
+                f"client={idx} "
+                f"local_epoch={self.epoch} "
+                f"batch={batch_idx}/{self.num_batches} "
+                f"action={action} "
+                f"cos={cos_ce_mse:.4f} "
+                f"ratio={ratio:.4f} "
+                f"cos_neg={cos_neg:.4f} "
+                f"cos_pos={cos_pos:.4f} "
+                f"target={target:.4f} "
+                f"gamma={old_gamma:.6f}->{new_gamma:.6f} "
+                f"lambda={old_lambda:.6f}->{new_lambda:.6f} "
+                f"local_norm={local_norm:.4e} "
+                f"global_norm={global_norm:.4e}"
+            )
+
+        return ratio, cos_ce_mse
 
     def forward_backward(self, batch_idx, batch, **kwargs):
         image, label = self.parse_batch_train(batch)
         prec = self.cfg.TRAINER.GL_SVDMSE.PREC
+        cfg = self.cfg.TRAINER.GL_SVDMSE
 
         if self.model.prompt_learner.use_spf:
+            global_epoch = kwargs.get("global_epoch", getattr(self, "spf_global_epoch", -1))
+            idx = kwargs.get("idx", None)
+            gate_ratio = -1.0
+            gate_cos = -1.0
             if prec == "amp":
                 with autocast():
                     output, aux = self.model(image)
-                    loss = F.cross_entropy(output, label)
-                    loss = (
-                        loss
-                        + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
+                    loss_ce = F.cross_entropy(output, label)
+                    loss_mse = aux["shared_pull_loss"]
+                    if cfg.SPF_CLIENT_GATE:
+                        lambda_value = self.model.prompt_learner.get_spf_shared_lambda_value()
+                    else:
+                        lambda_value = cfg.SPF_SHARED_LAMBDA
+                    loss = loss_ce + lambda_value * loss_mse
+                if cfg.SPF_CLIENT_GATE:
+                    gate_ratio, gate_cos = self._maybe_update_client_gate(
+                        loss_ce, loss_mse, loss, idx=idx, global_epoch=global_epoch
                     )
                 self.optim.zero_grad()
                 self.scaler.scale(loss).backward()
@@ -411,11 +557,17 @@ class GL_SVDMSE(TrainerX):
                 self.scaler.update()
             else:
                 output, aux = self.model(image)
-                loss = F.cross_entropy(output, label)
-                loss = (
-                    loss
-                    + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
-                )
+                loss_ce = F.cross_entropy(output, label)
+                loss_mse = aux["shared_pull_loss"]
+                if cfg.SPF_CLIENT_GATE:
+                    lambda_value = self.model.prompt_learner.get_spf_shared_lambda_value()
+                else:
+                    lambda_value = cfg.SPF_SHARED_LAMBDA
+                loss = loss_ce + lambda_value * loss_mse
+                if cfg.SPF_CLIENT_GATE:
+                    gate_ratio, gate_cos = self._maybe_update_client_gate(
+                        loss_ce, loss_mse, loss, idx=idx, global_epoch=global_epoch
+                    )
                 self.model_backward_and_update(loss)
 
             loss_summary = {
@@ -424,6 +576,9 @@ class GL_SVDMSE(TrainerX):
                 "spf_gamma": float(aux["gamma"].item()),
                 "spf_rank": float(aux["svd_rank"].item()),
                 "spf_shared_loss": float(aux["shared_pull_loss"].item()),
+                "spf_lambda": float(lambda_value),
+                "spf_gate_ratio": float(gate_ratio),
+                "spf_gate_cos": float(gate_cos),
             }
         else:
             if prec == "amp":

@@ -87,6 +87,22 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK = args.spf_max_rank
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_CLIENT_GATE = args.spf_client_gate
+    cfg.TRAINER.GL_SVDMSE.SPF_GATE_VERBOSE = args.spf_gate_verbose
+    cfg.TRAINER.GL_SVDMSE.SPF_GATE_TARGET_RATIO = args.spf_gate_target_ratio
+    cfg.TRAINER.GL_SVDMSE.SPF_GATE_COS_NEG = args.spf_gate_cos_neg
+    cfg.TRAINER.GL_SVDMSE.SPF_GATE_COS_POS = args.spf_gate_cos_pos
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MIN = args.spf_gamma_min
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MAX = args.spf_gamma_max
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_DECAY = args.spf_gamma_decay
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_GROW = args.spf_gamma_grow
+    cfg.TRAINER.GL_SVDMSE.SPF_LAMBDA_MIN = args.spf_lambda_min
+    cfg.TRAINER.GL_SVDMSE.SPF_LAMBDA_MAX = (
+        args.spf_lambda_max if args.spf_lambda_max is not None else args.spf_shared_lambda
+    )
+    cfg.TRAINER.GL_SVDMSE.SPF_LAMBDA_DECAY = args.spf_lambda_decay
+    cfg.TRAINER.GL_SVDMSE.SPF_LAMBDA_GROW = args.spf_lambda_grow
+    cfg.TRAINER.GL_SVDMSE.SPF_GATE_EVERY = args.spf_gate_every
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -209,6 +225,12 @@ def setup_cfg(args):
         cfg.OUTPUT_DIR = (
             f"{base_output_dir}/spf_g{args.spf_gamma_init}_e{args.spf_energy}_r{args.spf_max_rank}"
         )
+        if args.spf_client_gate:
+            lambda_max = args.spf_lambda_max if args.spf_lambda_max is not None else args.spf_shared_lambda
+            cfg.OUTPUT_DIR = (
+                f"{cfg.OUTPUT_DIR}_cagate_t{args.spf_gate_target_ratio}"
+                f"_gmax{args.spf_gamma_max}_lmax{lambda_max}"
+            )
     
     cfg.freeze()
 
@@ -248,6 +270,13 @@ def main(args):
             # local_trainer = build_trainer(cfg)
             datanumber_client.append(len(local_trainer.fed_train_loader_x_dict[net_i].dataset))
         global_weights = copy.deepcopy(local_trainer.model.state_dict())
+
+    client_gammas = None
+    client_lambdas = None
+    if args.trainer == 'GL_SVDMSE' and args.use_spf and args.spf_client_gate:
+        lambda_max = args.spf_lambda_max if args.spf_lambda_max is not None else args.spf_shared_lambda
+        client_gammas = [args.spf_gamma_init for _ in range(cfg.DATASET.USERS)]
+        client_lambdas = [min(args.spf_shared_lambda, lambda_max) for _ in range(cfg.DATASET.USERS)]
 
     # Training
     start_epoch = 0
@@ -322,8 +351,15 @@ def main(args):
                     local_trainer.model.load_state_dict(global_weights, strict=False)
                 else:
                     local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                if args.use_spf and args.spf_client_gate:
+                    local_trainer.model.prompt_learner.set_fusion_gamma_value(client_gammas[idx])
+                    local_trainer.model.prompt_learner.set_spf_shared_lambda_value(client_lambdas[idx])
+                    local_trainer.spf_global_epoch = epoch
                 local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
                 local_weight = local_trainer.model.state_dict()
+                if args.use_spf and args.spf_client_gate:
+                    client_gammas[idx] = local_trainer.model.prompt_learner.get_fusion_gamma_value()
+                    client_lambdas[idx] = local_trainer.model.prompt_learner.get_spf_shared_lambda_value()
                 local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
                 local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
 
@@ -341,6 +377,9 @@ def main(args):
 
             for idx in all_users:
                 local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                if args.use_spf and args.spf_client_gate:
+                    local_trainer.model.prompt_learner.set_fusion_gamma_value(client_gammas[idx])
+                    local_trainer.model.prompt_learner.set_spf_shared_lambda_value(client_lambdas[idx])
                 results.append(local_trainer.test(idx=idx))
             # global_test_acc = show_results(cfg, results, epoch)
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
@@ -512,6 +551,20 @@ if __name__ == "__main__":
     parser.add_argument('--spf_max_rank', type=int, default=8, help='maximum SPF shared rank')
     parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
+    parser.add_argument('--spf_client_gate', action='store_true', default=False, help='enable conflict-aware per-client SPF gamma/lambda gate')
+    parser.add_argument('--spf_gate_verbose', action='store_true', default=False, help='print conflict-aware SPF gate updates')
+    parser.add_argument('--spf_gate_target_ratio', type=float, default=0.05, help='target global/local gradient ratio for SPF client gate')
+    parser.add_argument('--spf_gate_cos_neg', type=float, default=-0.02, help='cosine threshold below which SPF client gate decays gamma/lambda')
+    parser.add_argument('--spf_gate_cos_pos', type=float, default=0.01, help='cosine threshold above which SPF client gate may grow gamma/lambda')
+    parser.add_argument('--spf_gamma_min', type=float, default=0.0, help='minimum SPF client gate gamma')
+    parser.add_argument('--spf_gamma_max', type=float, default=0.08, help='maximum SPF client gate gamma')
+    parser.add_argument('--spf_gamma_decay', type=float, default=0.85, help='SPF client gate gamma decay factor')
+    parser.add_argument('--spf_gamma_grow', type=float, default=1.05, help='SPF client gate gamma growth factor')
+    parser.add_argument('--spf_lambda_min', type=float, default=0.0, help='minimum SPF client gate lambda')
+    parser.add_argument('--spf_lambda_max', type=float, default=None, help='maximum SPF client gate lambda; defaults to spf_shared_lambda')
+    parser.add_argument('--spf_lambda_decay', type=float, default=0.90, help='SPF client gate lambda decay factor')
+    parser.add_argument('--spf_lambda_grow', type=float, default=1.02, help='SPF client gate lambda growth factor')
+    parser.add_argument('--spf_gate_every', type=int, default=2, help='SPF client gate update interval in batches')
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")
