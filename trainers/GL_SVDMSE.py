@@ -1,4 +1,5 @@
 import os.path as osp
+import math
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -74,10 +75,14 @@ class PromptLearner(nn.Module):
         self.spf_energy = cfg.TRAINER.GL_SVDMSE.SPF_ENERGY
         self.spf_min_rank = cfg.TRAINER.GL_SVDMSE.SPF_MIN_RANK
         self.spf_max_rank = cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK
-        self.register_buffer(
-            "fusion_gamma",
-            torch.tensor([cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT], dtype=torch.float32)
-        )
+        self.spf_gamma_init = cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT
+        self.spf_gamma_max = cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MAX
+        self.spf_gate_hidden_ratio = cfg.TRAINER.GL_SVDMSE.SPF_GATE_HIDDEN_RATIO
+        self.shared_init = cfg.TRAINER.GL_SVDMSE.SPF_SHARED_INIT
+        self.fixed_round_basis = cfg.TRAINER.GL_SVDMSE.SPF_FIXED_ROUND_BASIS
+        self.register_buffer("round_shared_basis", None, persistent=False)
+        self._spf_basis = None
+        self._spf_global_anchor_coord = None
         assert cfg_imsize == clip_imsize, f"cfg_imsize ({cfg_imsize}) must equal to clip_imsize ({clip_imsize})"
 
         if ctx_init:
@@ -90,22 +95,32 @@ class PromptLearner(nn.Module):
             ctx_vectors = embedding[0, 1 : 1 + n_ctx, :]
             prompt_prefix = ctx_init
             ctx_global = ctx_vectors.unsqueeze(0).repeat(self.N, 1, 1)
-            ctx_local = ctx_vectors.unsqueeze(0).repeat(self.N, 1, 1)
+            if self.shared_init:
+                ctx_local = ctx_global.clone()
+            else:
+                ctx_local = ctx_vectors.unsqueeze(0).repeat(self.N, 1, 1)
 
         else:
             # random initialization
             if cfg.TRAINER.GL_SVDMSE.CSC:
                 print("Initializing class-specific contexts")
-                ctx_vectors = torch.empty(n_cls, n_ctx, ctx_dim, dtype=dtype)
+                ctx_global = torch.empty(n_cls, n_ctx, ctx_dim, dtype=dtype)
+                nn.init.normal_(ctx_global, std=0.02)
+                if self.shared_init:
+                    ctx_local = ctx_global.clone()
+                else:
+                    ctx_local = torch.empty(n_cls, n_ctx, ctx_dim, dtype=dtype)
+                    nn.init.normal_(ctx_local, std=0.02)
             else:
                 print("Initializing a generic context")
-                # ctx_vectors = torch.empty(self.N, n_ctx, ctx_dim, dtype=dtype) 
                 ctx_global = torch.empty(self.N, n_ctx, ctx_dim, dtype=dtype)
-                ctx_local = torch.empty(self.N, n_ctx, ctx_dim, dtype=dtype) 
+                nn.init.normal_(ctx_global, std=0.02)   # define the prompt to be trained
+                if self.shared_init:
+                    ctx_local = ctx_global.clone()
+                else:
+                    ctx_local = torch.empty(self.N, n_ctx, ctx_dim, dtype=dtype)
+                    nn.init.normal_(ctx_local, std=0.02)   # define the prompt to be trained
             
-            # nn.init.normal_(ctx_vectors, std=0.02)   # define the prompt to be trained
-            nn.init.normal_(ctx_global, std=0.02)   # define the prompt to be trained
-            nn.init.normal_(ctx_local, std=0.02)   # define the prompt to be trained
             prompt_prefix = " ".join(["X"] * n_ctx)    
 
         print(f'Initial context: "{prompt_prefix}"')
@@ -114,6 +129,26 @@ class PromptLearner(nn.Module):
         # self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
         self.ctx_global = nn.Parameter(ctx_global)
         self.ctx_local = nn.Parameter(ctx_local)
+        if self.use_spf:
+            if not (0.0 < self.spf_gamma_init < self.spf_gamma_max):
+                raise ValueError("SPF_GAMMA_INIT must be in (0, SPF_GAMMA_MAX)")
+            gate_hidden_dim = max(ctx_dim // int(self.spf_gate_hidden_ratio), 1)
+            self.gamma_net = nn.Sequential(
+                nn.Linear(2 * ctx_dim, gate_hidden_dim),
+                nn.ReLU(),
+                nn.Linear(gate_hidden_dim, 1),
+            )
+            nn.init.zeros_(self.gamma_net[-1].weight)
+            gamma_ratio = self.spf_gamma_init / self.spf_gamma_max
+            nn.init.constant_(self.gamma_net[-1].bias, math.log(gamma_ratio / (1.0 - gamma_ratio)))
+            print("SPF gamma_net parameters:")
+            for name, param in self.gamma_net.named_parameters():
+                print(f"  gamma_net.{name}: numel={param.numel()}, requires_grad={param.requires_grad}")
+        if self.shared_init:
+            assert torch.allclose(self.ctx_global, self.ctx_local)
+            assert self.ctx_global.data_ptr() != self.ctx_local.data_ptr()
+        if "round_shared_basis" in self.state_dict():
+            raise AssertionError("round_shared_basis must stay out of state_dict")
         
         classnames = [name.replace("_", " ") for name in classnames]   
         name_lens = [len(_tokenizer.encode(name)) for name in classnames]
@@ -137,24 +172,69 @@ class PromptLearner(nn.Module):
         self.name_lens = name_lens
         self.class_token_position = cfg.TRAINER.GL_SVDMSE.CLASS_TOKEN_POSITION
 
-    def fuse_ctx_spf(self, ctx_local, ctx_global):
+    @torch.no_grad()
+    def refresh_round_shared_basis(self):
         basis, _ = compute_shared_basis(
-            ctx_global,
+            self.ctx_global,
             energy=self.spf_energy,
             min_rank=self.spf_min_rank,
             max_rank=self.spf_max_rank,
         )
-        local_shared = project_to_basis(ctx_local, basis)
-        global_shared = project_to_basis(ctx_global, basis)
+        self.round_shared_basis = basis.detach().clone()
+        return self.round_shared_basis
 
-        gamma = self.fusion_gamma.to(device=ctx_local.device, dtype=ctx_local.dtype).view(1, 1, 1)
-        fused_ctx = ctx_local + gamma * (global_shared - local_shared)
+    @torch.no_grad()
+    def refresh_spf_anchor(self):
+        basis, _ = compute_shared_basis(
+            self.ctx_global,
+            energy=self.spf_energy,
+            min_rank=self.spf_min_rank,
+            max_rank=self.spf_max_rank,
+        )
+        self._spf_basis = basis.detach()
+        assert self._spf_basis.requires_grad is False
+        self._spf_global_anchor_coord = (self.ctx_global.detach() @ self._spf_basis).detach()
+        return self._spf_basis
 
-        shared_pull_loss = F.mse_loss(local_shared.float(), global_shared.detach().float())
+    def get_spf_basis(self):
+        if self._spf_basis is None:
+            raise RuntimeError("SPF anchor is not initialized; call refresh_spf_anchor() before local training")
+        assert self._spf_basis.requires_grad is False
+        return self._spf_basis
+
+    def fuse_ctx_spf(self, ctx_local, ctx_global):
+        basis = self.get_spf_basis()
+        local_coord = ctx_local @ basis
+        global_coord = ctx_global @ basis
+        local_shared = local_coord @ basis.t()
+        global_shared = global_coord @ basis.t()
+        residual = global_shared - local_shared
+
+        gate_input = torch.cat([ctx_local.detach(), residual.detach()], dim=-1)
+        gate_dtype = next(self.gamma_net.parameters()).dtype
+        raw_gamma = self.gamma_net(gate_input.to(dtype=gate_dtype))
+        gamma = self.spf_gamma_max * torch.sigmoid(raw_gamma)
+        gamma = gamma.to(device=ctx_local.device, dtype=ctx_local.dtype)
+        correction = gamma * residual
+        fused_ctx = ctx_local + correction
+
+        anchor_coord = self._spf_global_anchor_coord.detach().to(
+            device=local_coord.device, dtype=local_coord.dtype
+        )
+        shared_pull_loss = 1.0 - F.cosine_similarity(
+            local_coord.float().flatten().unsqueeze(0),
+            anchor_coord.float().flatten().unsqueeze(0),
+            dim=-1,
+        ).mean()
+        correction_ratio = correction.detach().float().norm() / ctx_local.detach().float().norm().clamp_min(1e-12)
 
         aux = {
             "shared_pull_loss": shared_pull_loss,
-            "gamma": gamma.detach().float().mean(),
+            "gamma_mean": gamma.detach().float().mean(),
+            "gamma_std": gamma.detach().float().std(unbiased=False),
+            "gamma_min": gamma.detach().float().min(),
+            "gamma_max": gamma.detach().float().max(),
+            "correction_ratio": correction_ratio,
             "svd_rank": torch.tensor(float(basis.shape[1]), device=ctx_local.device),
         }
         return fused_ctx, aux
@@ -400,9 +480,9 @@ class GL_SVDMSE(TrainerX):
             if prec == "amp":
                 with autocast():
                     output, aux = self.model(image)
-                    loss = F.cross_entropy(output, label)
+                    loss_ce = F.cross_entropy(output, label)
                     loss = (
-                        loss
+                        loss_ce
                         + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
                     )
                 self.optim.zero_grad()
@@ -411,9 +491,9 @@ class GL_SVDMSE(TrainerX):
                 self.scaler.update()
             else:
                 output, aux = self.model(image)
-                loss = F.cross_entropy(output, label)
+                loss_ce = F.cross_entropy(output, label)
                 loss = (
-                    loss
+                    loss_ce
                     + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
                 )
                 self.model_backward_and_update(loss)
@@ -421,9 +501,13 @@ class GL_SVDMSE(TrainerX):
             loss_summary = {
                 "loss": loss.item(),
                 "acc": compute_accuracy(output, label)[0].item(),
-                "spf_gamma": float(aux["gamma"].item()),
-                "spf_rank": float(aux["svd_rank"].item()),
                 "spf_shared_loss": float(aux["shared_pull_loss"].item()),
+                "spf_gamma_mean": float(aux["gamma_mean"].item()),
+                "spf_gamma_std": float(aux["gamma_std"].item()),
+                "spf_gamma_min": float(aux["gamma_min"].item()),
+                "spf_gamma_max": float(aux["gamma_max"].item()),
+                "spf_correction_ratio": float(aux["correction_ratio"].item()),
+                "spf_rank": float(aux["svd_rank"].item()),
             }
         else:
             if prec == "amp":

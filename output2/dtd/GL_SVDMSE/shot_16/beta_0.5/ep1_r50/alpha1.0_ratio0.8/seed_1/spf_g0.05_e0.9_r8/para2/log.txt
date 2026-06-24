@@ -1,0 +1,2327 @@
+***************
+** Arguments **
+***************
+alpha: 1.0
+avg_prompt: 1
+backbone: ViT-B/16
+beta: 0.5
+dataset: dtd
+device_id: 0
+eval_only: False
+frac: 1
+gamma: 1
+head: 
+iid: False
+load_epoch: None
+logdir: ./logs/
+n_ctx: 16
+no_train: False
+num_prompt: 2
+num_shots: 16
+num_users: 10
+opts: []
+output_dir: output/..
+para_dir: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8/para2
+partition: noniid-labeldir
+prompts_lens: None
+ratio: 0.8
+resume: None
+root: /workspace/FedPHA/DATA
+seed: 1
+specify: False
+spf_energy: 0.9
+spf_gamma_init: 0.05
+spf_max_rank: 8
+spf_min_rank: 1
+spf_shared_lambda: 0.0
+test_batch_size: 128
+train_batch_size: 32
+trainer: GL_SVDMSE
+transforms: None
+use_spf: True
+useall: False
+************
+** Config **
+************
+DATALOADER:
+  K_TRANSFORMS: 1
+  NUM_WORKERS: 8
+  RETURN_IMG0: False
+  TEST:
+    BATCH_SIZE: 128
+    SAMPLER: SequentialSampler
+  TRAIN_U:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAME_AS_X: True
+    SAMPLER: RandomSampler
+  TRAIN_X:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAMPLER: RandomSampler
+DATASET:
+  ALL_AS_UNLABELED: False
+  BETA: 0.5
+  CIFAR_C_LEVEL: 1
+  CIFAR_C_TYPE: 
+  DOMAIN_NUM: 1
+  IID: False
+  NAME: DescribableTextures
+  NUM_LABELED: -1
+  NUM_SHOTS: 16
+  PARTITION: noniid-labeldir
+  REPEATRATE: 0.0
+  ROOT: /workspace/FedPHA/DATA
+  SOURCE_DOMAINS: ()
+  STL10_FOLD: -1
+  SUBSAMPLE_CLASSES: all
+  TARGET_DOMAINS: ()
+  USEALL: False
+  USERS: 10
+  USER_PROMPT_LENGTHS: []
+  VAL_PERCENT: 0.1
+INPUT:
+  COLORJITTER_B: 0.4
+  COLORJITTER_C: 0.4
+  COLORJITTER_H: 0.1
+  COLORJITTER_S: 0.4
+  CROP_PADDING: 4
+  CUTOUT_LEN: 16
+  CUTOUT_N: 1
+  GB_K: 21
+  GB_P: 0.5
+  GN_MEAN: 0.0
+  GN_STD: 0.15
+  INTERPOLATION: bicubic
+  NO_TRANSFORM: False
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  RANDAUGMENT_M: 10
+  RANDAUGMENT_N: 2
+  RGS_P: 0.2
+  RRCROP_SCALE: (0.08, 1.0)
+  SIZE: (224, 224)
+  TRANSFORMS: ('random_resized_crop', 'random_flip', 'normalize')
+MODEL:
+  BACKBONE:
+    NAME: ViT-B/16
+    PRETRAINED: True
+  HEAD:
+    ACTIVATION: relu
+    BN: True
+    DROPOUT: 0.0
+    HIDDEN_LAYERS: ()
+    NAME: 
+  INIT_WEIGHTS: 
+OPTIM:
+  ADAM_BETA1: 0.9
+  ADAM_BETA2: 0.999
+  BASE_LR_MULT: 0.1
+  GAMMA: 1
+  LR: 0.001
+  LR_SCHEDULER: single_step
+  MAX_EPOCH: 1
+  MOMENTUM: 0.9
+  NAME: sgd
+  NEW_LAYERS: ()
+  RMSPROP_ALPHA: 0.99
+  ROUND: 50
+  SGD_DAMPNING: 0
+  SGD_NESTEROV: False
+  STAGED_LR: False
+  STEPSIZE: (-1,)
+  WARMUP_CONS_LR: 1e-05
+  WARMUP_EPOCH: 0
+  WARMUP_MIN_LR: 1e-05
+  WARMUP_RECOUNT: True
+  WARMUP_TYPE: constant
+  WEIGHT_DECAY: 0.0005
+OUTPUT_DIR: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8
+RESUME: 
+SEED: 1
+TEST:
+  COMPUTE_CMAT: False
+  EVALUATOR: Classification
+  FINAL_MODEL: last_step
+  NO_TEST: False
+  PER_CLASS_RESULT: False
+  SPLIT: test
+TRAIN:
+  CHECKPOINT_FREQ: 0
+  COUNT_ITER: train_x
+  PRINT_FREQ: 10
+TRAINER:
+  CDAC:
+    CLASS_LR_MULTI: 10
+    P_THRESH: 0.95
+    RAMPUP_COEF: 30
+    RAMPUP_ITRS: 1000
+    STRONG_TRANSFORMS: ()
+    TOPK_MATCH: 5
+  CROSSGRAD:
+    ALPHA_D: 0.5
+    ALPHA_F: 0.5
+    EPS_D: 1.0
+    EPS_F: 1.0
+  DAEL:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DAELDG:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DDAIG:
+    ALPHA: 0.5
+    CLAMP: False
+    CLAMP_MAX: 1.0
+    CLAMP_MIN: -1.0
+    G_ARCH: 
+    LMDA: 0.3
+    WARMUP: 0
+  DOMAINMIX:
+    ALPHA: 1.0
+    BETA: 1.0
+    TYPE: crossdomain
+  ENTMIN:
+    LMDA: 0.001
+  FEDPGP:
+    BOTTLENECK: 4
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    FEATURE: False
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    mu: 1
+    temp: 0.5
+  FIXMATCH:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 1.0
+  GLP_OT:
+    AVG_N: 1.0
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    EPS: 0.1
+    MAX_ITER: 100
+    N: 2
+    N_CTX: 16
+    OT: COT
+    PREC: fp16
+    THRESH: 0.001
+    TOP_PERCENT: 1
+  GL_SVDMSE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    SPF_ENERGY: 0.9
+    SPF_GAMMA_INIT: 0.05
+    SPF_MAX_RANK: 8
+    SPF_MIN_RANK: 1
+    SPF_SHARED_LAMBDA: 0.0
+    USE_SPF: True
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  GL_SVDMSE_HE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N: 1
+    N_CTX_GLOBAL: 16
+    PREC: fp16
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  M3SDA:
+    LMDA: 0.5
+    N_STEP_F: 4
+  MCD:
+    N_STEP_F: 4
+  MEANTEACHER:
+    EMA_ALPHA: 0.999
+    RAMPUP: 5
+    WEIGHT_U: 1.0
+  MIXMATCH:
+    MIXUP_BETA: 0.75
+    RAMPUP: 20000
+    TEMP: 2.0
+    WEIGHT_U: 100.0
+  MME:
+    LMDA: 0.1
+  NAME: GL_SVDMSE
+  PROMPTFL:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N_CTX: 16
+    PREC: fp16
+  SE:
+    CONF_THRE: 0.95
+    EMA_ALPHA: 0.999
+    RAMPUP: 300
+USE_CUDA: True
+VERBOSE: True
+VERSION: 1
+Loading trainer: GL_SVDMSE
+Loading dataset: DescribableTextures
+Reading split from /workspace/FedPHA/DATA/dtd/split_zhou_DescribableTextures.json
+Loading preprocessed few-shot data from /workspace/FedPHA/DATA/dtd/split_fewshot/shot_16-seed_1.pkl
+Creating a 16-shot federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22]
+idx: 0 , output_dict_len: 80
+user class dict total [9, 18, 12, 26, 17]
+idx: 1 , output_dict_len: 80
+user class dict total [37, 16, 13, 27, 8]
+idx: 2 , output_dict_len: 80
+user class dict total [10, 31, 15, 41, 25]
+idx: 3 , output_dict_len: 80
+user class dict total [1, 4, 35, 2, 32]
+idx: 4 , output_dict_len: 80
+user class dict total [38, 0, 42, 5, 30]
+idx: 5 , output_dict_len: 80
+user class dict total [29, 14, 11, 40, 33]
+idx: 6 , output_dict_len: 80
+user class dict total [34, 19, 7, 6, 21]
+idx: 7 , output_dict_len: 80
+user class dict total [36, 39, 20, 46, 28]
+idx: 8 , output_dict_len: 80
+user class dict total [44, 24]
+idx: 9 , output_dict_len: 32
+Creating a baseline federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22]
+idx: 0 , output_dict_len: 180
+user class dict total [9, 18, 12, 26, 17]
+idx: 1 , output_dict_len: 180
+user class dict total [37, 16, 13, 27, 8]
+idx: 2 , output_dict_len: 180
+user class dict total [10, 31, 15, 41, 25]
+idx: 3 , output_dict_len: 180
+user class dict total [1, 4, 35, 2, 32]
+idx: 4 , output_dict_len: 180
+user class dict total [38, 0, 42, 5, 30]
+idx: 5 , output_dict_len: 180
+user class dict total [29, 14, 11, 40, 33]
+idx: 6 , output_dict_len: 180
+user class dict total [34, 19, 7, 6, 21]
+idx: 7 , output_dict_len: 180
+user class dict total [36, 39, 20, 46, 28]
+idx: 8 , output_dict_len: 180
+user class dict total [44, 24]
+idx: 9 , output_dict_len: 72
+fewshot federated dataset
+Building transform_train
++ random resized crop (size=(224, 224), scale=(0.08, 1.0))
++ random flip
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+Building transform_test
++ resize the smaller edge to 224
++ 224x224 center crop
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+-------------------  -------------------
+Dataset              DescribableTextures
+# classes            47
+# federated_train_x  10
+# federated_test_x   10
+# test               1,692
+-------------------  -------------------
+Loading CLIP (backbone: ViT-B/16)
+Building custom CLIP
+Initializing a generic context
+Initial context: "X X X X X X X X X X X X X X X X"
+Number of context words (tokens): 16
+Turning off gradients in both the image and the text encoder
+Loading evaluator: Classification
++---------------------------+------------+
+|          Modules          | Parameters |
++---------------------------+------------+
+| prompt_learner.ctx_global |    8192    |
+|  prompt_learner.ctx_local |    8192    |
++---------------------------+------------+
+Total Trainable Params: 16384
++-------------------------------------------------------------+------------+
+|                           Modules                           | Parameters |
++-------------------------------------------------------------+------------+
+|                image_encoder.class_embedding                |    768     |
+|              image_encoder.positional_embedding             |   151296   |
+|                      image_encoder.proj                     |   393216   |
+|                  image_encoder.conv1.weight                 |   589824   |
+|                 image_encoder.ln_pre.weight                 |    768     |
+|                  image_encoder.ln_pre.bias                  |    768     |
+|  image_encoder.transformer.resblocks.0.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.0.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.0.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.0.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.0.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.0.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.1.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.1.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.1.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.1.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.1.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.1.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.2.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.2.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.2.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.2.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.2.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.2.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.3.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.3.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.3.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.3.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.3.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.3.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.4.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.4.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.4.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.4.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.4.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.4.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.5.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.5.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.5.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.5.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.5.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.5.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.6.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.6.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.6.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.6.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.6.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.6.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.7.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.7.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.7.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.7.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.7.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.7.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.8.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.8.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.8.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.8.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.8.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.8.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.9.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.9.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.9.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.9.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.9.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.9.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.10.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.10.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.10.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.10.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.10.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.10.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.10.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.10.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.10.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.10.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_2.bias      |    768     |
+|  image_encoder.transformer.resblocks.11.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.11.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.11.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.11.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.11.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.11.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.11.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.11.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.11.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.11.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_2.bias      |    768     |
+|                 image_encoder.ln_post.weight                |    768     |
+|                  image_encoder.ln_post.bias                 |    768     |
++-------------------------------------------------------------+------------+
+Total Trainable Params: 86192640
++------------------------------------------------------------+------------+
+|                          Modules                           | Parameters |
++------------------------------------------------------------+------------+
+|             text_encoder.positional_embedding              |   39424    |
+|                text_encoder.text_projection                |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.0.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.0.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.0.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.0.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.1.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.1.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.1.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.1.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.1.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.1.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.2.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.2.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.2.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.2.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.2.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.2.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.3.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.3.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.3.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.3.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.3.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.3.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.4.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.4.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.4.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.4.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.4.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.4.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.5.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.5.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.5.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.5.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.5.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.5.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.6.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.6.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.6.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.6.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.6.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.6.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.7.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.7.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.7.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.7.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.7.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.7.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.8.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.8.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.8.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.8.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.8.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.8.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.9.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.9.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.9.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.9.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.9.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.9.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.10.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.10.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.10.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.10.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.10.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.10.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.10.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.10.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.10.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.10.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.11.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.11.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.11.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.11.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.11.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.11.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.11.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.11.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.11.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.11.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_2.bias       |    512     |
+|                text_encoder.ln_final.weight                |    512     |
+|                 text_encoder.ln_final.bias                 |    512     |
++------------------------------------------------------------+------------+
+Total Trainable Params: 38131200
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 0 -------------
+epoch [1/1] batch [1/2] time 2.118 (2.118) data 0.495 (0.495) loss 2.6133 (2.6133) acc 50.0000 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:02 user 0
+epoch [1/1] batch [2/2] time 0.117 (1.118) data 0.000 (0.248) loss 2.7637 (2.6885) acc 40.6250 (45.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+epoch [1/1] batch [1/2] time 0.671 (0.671) data 0.515 (0.515) loss 3.3535 (3.3535) acc 18.7500 (18.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.079 (0.375) data 0.000 (0.258) loss 3.1562 (3.2549) acc 21.8750 (20.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.763 (0.763) data 0.486 (0.486) loss 3.2500 (3.2500) acc 15.6250 (15.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.080 (0.422) data 0.000 (0.243) loss 2.9824 (3.1162) acc 21.8750 (18.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.691 (0.691) data 0.518 (0.518) loss 3.5898 (3.5898) acc 0.0000 (0.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.130 (0.411) data 0.000 (0.259) loss 3.7090 (3.6494) acc 0.0000 (0.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.728 (0.728) data 0.556 (0.556) loss 2.9160 (2.9160) acc 34.3750 (34.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.134 (0.431) data 0.000 (0.278) loss 2.9004 (2.9082) acc 34.3750 (34.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.702 (0.702) data 0.478 (0.478) loss 2.3477 (2.3477) acc 50.0000 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.200 (0.451) data 0.000 (0.239) loss 2.5996 (2.4736) acc 31.2500 (40.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.636 (0.636) data 0.456 (0.456) loss 3.0723 (3.0723) acc 9.3750 (9.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.195 (0.415) data 0.000 (0.228) loss 2.8477 (2.9600) acc 31.2500 (20.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.715 (0.715) data 0.517 (0.517) loss 3.5098 (3.5098) acc 15.6250 (15.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.092 (0.404) data 0.000 (0.259) loss 3.4980 (3.5039) acc 25.0000 (20.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.748 (0.748) data 0.505 (0.505) loss 3.5039 (3.5039) acc 28.1250 (28.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.215 (0.482) data 0.000 (0.253) loss 3.0176 (3.2607) acc 34.3750 (31.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.657 (0.657) data 0.524 (0.524) loss 3.0488 (3.0488) acc 12.5000 (12.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 0 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 119
+* accuracy: 66.1%
+* error: 33.9%
+* macro_f1: 69.9%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 87
+* accuracy: 48.3%
+* error: 51.7%
+* macro_f1: 53.6%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 40
+* accuracy: 22.2%
+* error: 77.8%
+* macro_f1: 27.7%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 9
+* accuracy: 5.0%
+* error: 95.0%
+* macro_f1: 8.2%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 65
+* accuracy: 36.1%
+* error: 63.9%
+* macro_f1: 37.2%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 84
+* accuracy: 46.7%
+* error: 53.3%
+* macro_f1: 45.5%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 78
+* accuracy: 43.3%
+* error: 56.7%
+* macro_f1: 50.3%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 68
+* accuracy: 37.8%
+* error: 62.2%
+* macro_f1: 44.8%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 62
+* accuracy: 34.4%
+* error: 65.6%
+* macro_f1: 34.8%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 19
+* accuracy: 26.4%
+* error: 73.6%
+* macro_f1: 37.3%
+0 --Local test acc: 66.11111111111111
+1 --Local test acc: 48.333333333333336
+2 --Local test acc: 22.22222222222222
+3 --Local test acc: 5.0
+4 --Local test acc: 36.111111111111114
+5 --Local test acc: 46.666666666666664
+6 --Local test acc: 43.333333333333336
+7 --Local test acc: 37.77777777777778
+8 --Local test acc: 34.44444444444444
+9 --Local test acc: 26.38888888888889
+--Global test acc: 36.63888888888889
+Epoch:0
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 1 -------------
+epoch [1/1] batch [1/2] time 0.663 (0.663) data 0.515 (0.515) loss 2.2852 (2.2852) acc 62.5000 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.087 (0.375) data 0.000 (0.258) loss 1.9521 (2.1187) acc 62.5000 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.725 (0.725) data 0.564 (0.564) loss 2.7500 (2.7500) acc 40.6250 (40.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.221 (0.473) data 0.000 (0.282) loss 2.5918 (2.6709) acc 34.3750 (37.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.650 (0.650) data 0.495 (0.495) loss 2.7012 (2.7012) acc 28.1250 (28.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.081 (0.366) data 0.000 (0.248) loss 2.7754 (2.7383) acc 31.2500 (29.6875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.759 (0.759) data 0.614 (0.614) loss 3.4961 (3.4961) acc 6.2500 (6.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.141 (0.450) data 0.000 (0.307) loss 3.1328 (3.3145) acc 0.0000 (3.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.665 (0.665) data 0.508 (0.508) loss 2.6875 (2.6875) acc 28.1250 (28.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.249 (0.457) data 0.000 (0.254) loss 2.4434 (2.5654) acc 43.7500 (35.9375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.671 (0.671) data 0.536 (0.536) loss 2.1113 (2.1113) acc 37.5000 (37.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.155 (0.413) data 0.000 (0.268) loss 2.1289 (2.1201) acc 40.6250 (39.0625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.635 (0.635) data 0.489 (0.489) loss 2.5410 (2.5410) acc 37.5000 (37.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.179 (0.407) data 0.000 (0.245) loss 1.9619 (2.2515) acc 56.2500 (46.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.621 (0.621) data 0.527 (0.527) loss 3.2676 (3.2676) acc 25.0000 (25.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.179 (0.400) data 0.026 (0.276) loss 2.9336 (3.1006) acc 40.6250 (32.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.639 (0.639) data 0.488 (0.488) loss 2.4707 (2.4707) acc 34.3750 (34.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.175 (0.407) data 0.000 (0.244) loss 2.9277 (2.6992) acc 37.5000 (35.9375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.630 (0.630) data 0.529 (0.529) loss 3.0059 (3.0059) acc 18.7500 (18.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 1 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 105
+* accuracy: 58.3%
+* error: 41.7%
+* macro_f1: 63.4%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 99
+* accuracy: 55.0%
+* error: 45.0%
+* macro_f1: 60.0%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 76
+* accuracy: 42.2%
+* error: 57.8%
+* macro_f1: 54.5%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 61
+* accuracy: 33.9%
+* error: 66.1%
+* macro_f1: 35.9%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 64
+* accuracy: 35.6%
+* error: 64.4%
+* macro_f1: 34.9%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 106
+* accuracy: 58.9%
+* error: 41.1%
+* macro_f1: 57.4%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 125
+* accuracy: 69.4%
+* error: 30.6%
+* macro_f1: 79.2%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 84
+* accuracy: 46.7%
+* error: 53.3%
+* macro_f1: 54.9%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 80
+* accuracy: 44.4%
+* error: 55.6%
+* macro_f1: 41.5%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 33
+* accuracy: 45.8%
+* error: 54.2%
+* macro_f1: 62.8%
+0 --Local test acc: 58.333333333333336
+1 --Local test acc: 55.0
+2 --Local test acc: 42.22222222222222
+3 --Local test acc: 33.888888888888886
+4 --Local test acc: 35.55555555555556
+5 --Local test acc: 58.888888888888886
+6 --Local test acc: 69.44444444444444
+7 --Local test acc: 46.666666666666664
+8 --Local test acc: 44.44444444444444
+9 --Local test acc: 45.833333333333336
+--Global test acc: 49.027777777777786
+Epoch:1
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 2 -------------
+epoch [1/1] batch [1/2] time 0.872 (0.872) data 0.581 (0.581) loss 1.9053 (1.9053) acc 50.0000 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.292 (0.582) data 0.000 (0.290) loss 1.5977 (1.7515) acc 59.3750 (54.6875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.623 (0.623) data 0.519 (0.519) loss 2.5410 (2.5410) acc 53.1250 (53.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.224 (0.424) data 0.000 (0.260) loss 2.1191 (2.3301) acc 53.1250 (53.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.664 (0.664) data 0.508 (0.508) loss 2.5449 (2.5449) acc 43.7500 (43.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.303 (0.483) data 0.000 (0.254) loss 1.7139 (2.1294) acc 53.1250 (48.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.791 (0.791) data 0.654 (0.654) loss 2.6113 (2.6113) acc 28.1250 (28.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.189 (0.490) data 0.000 (0.327) loss 2.2559 (2.4336) acc 46.8750 (37.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0002) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.710 (0.710) data 0.569 (0.569) loss 2.2891 (2.2891) acc 43.7500 (43.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.178 (0.444) data 0.000 (0.285) loss 2.4023 (2.3457) acc 43.7500 (43.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.721 (0.721) data 0.533 (0.533) loss 1.7568 (1.7568) acc 50.0000 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.206 (0.464) data 0.000 (0.267) loss 0.9419 (1.3494) acc 84.3750 (67.1875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.664 (0.664) data 0.526 (0.526) loss 1.7266 (1.7266) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.128 (0.396) data 0.000 (0.263) loss 1.9014 (1.8140) acc 59.3750 (64.0625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.793 (0.793) data 0.583 (0.583) loss 2.3047 (2.3047) acc 62.5000 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.087 (0.440) data 0.000 (0.291) loss 2.7578 (2.5312) acc 40.6250 (51.5625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.687 (0.687) data 0.541 (0.541) loss 3.0859 (3.0859) acc 28.1250 (28.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.112 (0.399) data 0.000 (0.271) loss 2.4258 (2.7559) acc 53.1250 (40.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.770 (0.770) data 0.510 (0.510) loss 2.6953 (2.6953) acc 34.3750 (34.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 2 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 115
+* accuracy: 63.9%
+* error: 36.1%
+* macro_f1: 66.3%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 103
+* accuracy: 57.2%
+* error: 42.8%
+* macro_f1: 59.6%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 98
+* accuracy: 54.4%
+* error: 45.6%
+* macro_f1: 60.6%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 101
+* accuracy: 56.1%
+* error: 43.9%
+* macro_f1: 55.5%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 73
+* accuracy: 40.6%
+* error: 59.4%
+* macro_f1: 37.8%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 120
+* accuracy: 66.7%
+* error: 33.3%
+* macro_f1: 66.6%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 140
+* accuracy: 77.8%
+* error: 22.2%
+* macro_f1: 81.2%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 107
+* accuracy: 59.4%
+* error: 40.6%
+* macro_f1: 65.7%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 84
+* accuracy: 46.7%
+* error: 53.3%
+* macro_f1: 41.3%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 41
+* accuracy: 56.9%
+* error: 43.1%
+* macro_f1: 71.7%
+0 --Local test acc: 63.888888888888886
+1 --Local test acc: 57.22222222222222
+2 --Local test acc: 54.44444444444444
+3 --Local test acc: 56.111111111111114
+4 --Local test acc: 40.55555555555556
+5 --Local test acc: 66.66666666666667
+6 --Local test acc: 77.77777777777777
+7 --Local test acc: 59.44444444444444
+8 --Local test acc: 46.666666666666664
+9 --Local test acc: 56.94444444444444
+--Global test acc: 57.97222222222223
+Epoch:2
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 3 -------------
+epoch [1/1] batch [1/2] time 0.755 (0.755) data 0.546 (0.546) loss 1.8760 (1.8760) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.153 (0.454) data 0.000 (0.273) loss 1.7021 (1.7891) acc 59.3750 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.693 (0.693) data 0.482 (0.482) loss 2.2715 (2.2715) acc 56.2500 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.189 (0.441) data 0.000 (0.241) loss 2.1230 (2.1973) acc 50.0000 (53.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.639 (0.639) data 0.519 (0.519) loss 1.7275 (1.7275) acc 50.0000 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.107 (0.373) data 0.000 (0.260) loss 1.4131 (1.5703) acc 53.1250 (51.5625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.618 (0.618) data 0.508 (0.508) loss 1.3809 (1.3809) acc 62.5000 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.080 (0.349) data 0.000 (0.254) loss 1.4219 (1.4014) acc 65.6250 (64.0625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.713 (0.713) data 0.625 (0.625) loss 1.9531 (1.9531) acc 56.2500 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.079 (0.396) data 0.000 (0.313) loss 2.3633 (2.1582) acc 40.6250 (48.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.781 (0.781) data 0.534 (0.534) loss 1.0264 (1.0264) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.193 (0.487) data 0.000 (0.267) loss 0.9336 (0.9800) acc 75.0000 (73.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.636 (0.636) data 0.489 (0.489) loss 1.3535 (1.3535) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.138 (0.387) data 0.000 (0.245) loss 1.3984 (1.3760) acc 71.8750 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.812 (0.812) data 0.588 (0.588) loss 2.2871 (2.2871) acc 43.7500 (43.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.203 (0.508) data 0.000 (0.294) loss 2.1973 (2.2422) acc 43.7500 (43.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.783 (0.783) data 0.632 (0.632) loss 2.2109 (2.2109) acc 56.2500 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.147 (0.465) data 0.000 (0.316) loss 2.9297 (2.5703) acc 31.2500 (43.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.605 (0.605) data 0.502 (0.502) loss 2.2051 (2.2051) acc 50.0000 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 3 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 122
+* accuracy: 67.8%
+* error: 32.2%
+* macro_f1: 66.2%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 103
+* accuracy: 57.2%
+* error: 42.8%
+* macro_f1: 60.9%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 113
+* accuracy: 62.8%
+* error: 37.2%
+* macro_f1: 71.4%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 129
+* accuracy: 71.7%
+* error: 28.3%
+* macro_f1: 68.0%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 92
+* accuracy: 51.1%
+* error: 48.9%
+* macro_f1: 46.1%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 144
+* accuracy: 80.0%
+* error: 20.0%
+* macro_f1: 84.4%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 135
+* accuracy: 75.0%
+* error: 25.0%
+* macro_f1: 82.2%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 110
+* accuracy: 61.1%
+* error: 38.9%
+* macro_f1: 67.0%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 92
+* accuracy: 51.1%
+* error: 48.9%
+* macro_f1: 42.4%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 42
+* accuracy: 58.3%
+* error: 41.7%
+* macro_f1: 72.9%
+0 --Local test acc: 67.77777777777777
+1 --Local test acc: 57.22222222222222
+2 --Local test acc: 62.77777777777778
+3 --Local test acc: 71.66666666666667
+4 --Local test acc: 51.111111111111114
+5 --Local test acc: 80.0
+6 --Local test acc: 75.0
+7 --Local test acc: 61.111111111111114
+8 --Local test acc: 51.111111111111114
+9 --Local test acc: 58.333333333333336
+--Global test acc: 63.61111111111111
+Epoch:3
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 4 -------------
+epoch [1/1] batch [1/2] time 0.692 (0.692) data 0.542 (0.542) loss 1.0967 (1.0967) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.302 (0.497) data 0.000 (0.271) loss 1.2803 (1.1885) acc 71.8750 (70.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.632 (0.632) data 0.560 (0.560) loss 1.5449 (1.5449) acc 59.3750 (59.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.061 (0.347) data 0.000 (0.280) loss 2.4141 (1.9795) acc 40.6250 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.629 (0.629) data 0.525 (0.525) loss 1.3682 (1.3682) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.068 (0.348) data 0.000 (0.263) loss 1.6553 (1.5117) acc 46.8750 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.637 (0.637) data 0.572 (0.572) loss 1.6152 (1.6152) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.062 (0.350) data 0.000 (0.286) loss 2.4316 (2.0234) acc 50.0000 (57.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.624 (0.624) data 0.558 (0.558) loss 1.9404 (1.9404) acc 50.0000 (50.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.062 (0.343) data 0.000 (0.279) loss 1.8594 (1.8999) acc 62.5000 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.763 (0.763) data 0.528 (0.528) loss 0.8359 (0.8359) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.214 (0.488) data 0.000 (0.264) loss 0.6733 (0.7546) acc 90.6250 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.789 (0.789) data 0.561 (0.561) loss 1.5244 (1.5244) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.224 (0.506) data 0.000 (0.281) loss 1.4824 (1.5034) acc 59.3750 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.778 (0.778) data 0.553 (0.553) loss 2.0840 (2.0840) acc 56.2500 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.186 (0.482) data 0.000 (0.277) loss 1.7119 (1.8979) acc 62.5000 (59.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.723 (0.723) data 0.488 (0.488) loss 2.6738 (2.6738) acc 43.7500 (43.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.210 (0.466) data 0.000 (0.244) loss 1.9541 (2.3140) acc 59.3750 (51.5625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.734 (0.734) data 0.507 (0.507) loss 2.1523 (2.1523) acc 53.1250 (53.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 4 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 130
+* accuracy: 72.2%
+* error: 27.8%
+* macro_f1: 72.1%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 127
+* accuracy: 70.6%
+* error: 29.4%
+* macro_f1: 73.2%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 117
+* accuracy: 65.0%
+* error: 35.0%
+* macro_f1: 70.3%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 116
+* accuracy: 64.4%
+* error: 35.6%
+* macro_f1: 66.8%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 118
+* accuracy: 65.6%
+* error: 34.4%
+* macro_f1: 62.3%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 141
+* accuracy: 78.3%
+* error: 21.7%
+* macro_f1: 79.9%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 136
+* accuracy: 75.6%
+* error: 24.4%
+* macro_f1: 81.9%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 124
+* accuracy: 68.9%
+* error: 31.1%
+* macro_f1: 69.8%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 98
+* accuracy: 54.4%
+* error: 45.6%
+* macro_f1: 43.3%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 55
+* accuracy: 76.4%
+* error: 23.6%
+* macro_f1: 85.9%
+0 --Local test acc: 72.22222222222223
+1 --Local test acc: 70.55555555555556
+2 --Local test acc: 65.0
+3 --Local test acc: 64.44444444444444
+4 --Local test acc: 65.55555555555556
+5 --Local test acc: 78.33333333333333
+6 --Local test acc: 75.55555555555556
+7 --Local test acc: 68.88888888888889
+8 --Local test acc: 54.44444444444444
+9 --Local test acc: 76.38888888888889
+--Global test acc: 69.13888888888889
+Epoch:4
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 5 -------------
+epoch [1/1] batch [1/2] time 0.696 (0.696) data 0.558 (0.558) loss 1.3613 (1.3613) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.154 (0.425) data 0.000 (0.279) loss 0.8506 (1.1060) acc 81.2500 (73.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.663 (0.663) data 0.527 (0.527) loss 1.4707 (1.4707) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.105 (0.384) data 0.000 (0.263) loss 1.7266 (1.5986) acc 65.6250 (67.1875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.645 (0.645) data 0.577 (0.577) loss 1.3564 (1.3564) acc 53.1250 (53.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.062 (0.354) data 0.000 (0.288) loss 0.9556 (1.1560) acc 68.7500 (60.9375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.620 (0.620) data 0.554 (0.554) loss 1.5400 (1.5400) acc 59.3750 (59.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.064 (0.342) data 0.000 (0.277) loss 1.4385 (1.4893) acc 56.2500 (57.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.674 (0.674) data 0.561 (0.561) loss 1.0781 (1.0781) acc 81.2500 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.100 (0.387) data 0.000 (0.280) loss 1.4355 (1.2568) acc 56.2500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.689 (0.689) data 0.611 (0.611) loss 0.7661 (0.7661) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.107 (0.398) data 0.000 (0.306) loss 0.5039 (0.6350) acc 96.8750 (90.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.794 (0.794) data 0.503 (0.503) loss 1.1445 (1.1445) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.310 (0.552) data 0.000 (0.252) loss 1.2012 (1.1729) acc 68.7500 (76.5625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.802 (0.802) data 0.653 (0.653) loss 1.6465 (1.6465) acc 62.5000 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.145 (0.473) data 0.000 (0.326) loss 2.0332 (1.8398) acc 53.1250 (57.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.822 (0.822) data 0.512 (0.512) loss 2.0293 (2.0293) acc 59.3750 (59.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.297 (0.559) data 0.000 (0.256) loss 2.2773 (2.1533) acc 53.1250 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.649 (0.649) data 0.503 (0.503) loss 1.5293 (1.5293) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 5 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 133
+* accuracy: 73.9%
+* error: 26.1%
+* macro_f1: 77.0%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 132
+* accuracy: 73.3%
+* error: 26.7%
+* macro_f1: 75.8%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 138
+* accuracy: 76.7%
+* error: 23.3%
+* macro_f1: 81.0%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 117
+* accuracy: 65.0%
+* error: 35.0%
+* macro_f1: 67.8%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 116
+* accuracy: 64.4%
+* error: 35.6%
+* macro_f1: 61.5%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 158
+* accuracy: 87.8%
+* error: 12.2%
+* macro_f1: 90.7%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 148
+* accuracy: 82.2%
+* error: 17.8%
+* macro_f1: 84.5%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 125
+* accuracy: 69.4%
+* error: 30.6%
+* macro_f1: 69.5%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 101
+* accuracy: 56.1%
+* error: 43.9%
+* macro_f1: 44.4%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 63
+* accuracy: 87.5%
+* error: 12.5%
+* macro_f1: 92.0%
+0 --Local test acc: 73.88888888888889
+1 --Local test acc: 73.33333333333333
+2 --Local test acc: 76.66666666666667
+3 --Local test acc: 65.0
+4 --Local test acc: 64.44444444444444
+5 --Local test acc: 87.77777777777777
+6 --Local test acc: 82.22222222222223
+7 --Local test acc: 69.44444444444444
+8 --Local test acc: 56.111111111111114
+9 --Local test acc: 87.5
+--Global test acc: 73.63888888888889
+Epoch:5
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 6 -------------
+epoch [1/1] batch [1/2] time 0.571 (0.571) data 0.506 (0.506) loss 0.8950 (0.8950) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.061 (0.316) data 0.000 (0.253) loss 0.7886 (0.8418) acc 81.2500 (79.6875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.629 (0.629) data 0.565 (0.565) loss 1.3066 (1.3066) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.062 (0.346) data 0.000 (0.283) loss 1.0107 (1.1587) acc 84.3750 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.562 (0.562) data 0.498 (0.498) loss 0.8281 (0.8281) acc 81.2500 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.063 (0.312) data 0.000 (0.249) loss 0.8291 (0.8286) acc 78.1250 (79.6875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.598 (0.598) data 0.531 (0.531) loss 1.2900 (1.2900) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.061 (0.329) data 0.000 (0.266) loss 1.1904 (1.2402) acc 62.5000 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.598 (0.598) data 0.534 (0.534) loss 1.0283 (1.0283) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.061 (0.330) data 0.000 (0.267) loss 1.2568 (1.1426) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.720 (0.720) data 0.634 (0.634) loss 0.5483 (0.5483) acc 87.5000 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.068 (0.394) data 0.000 (0.317) loss 0.2269 (0.3876) acc 100.0000 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.561 (0.561) data 0.498 (0.498) loss 0.8628 (0.8628) acc 75.0000 (75.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.061 (0.311) data 0.000 (0.249) loss 0.9688 (0.9158) acc 71.8750 (73.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.645 (0.645) data 0.543 (0.543) loss 1.6445 (1.6445) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.069 (0.357) data 0.000 (0.272) loss 1.4707 (1.5576) acc 68.7500 (67.1875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.576 (0.576) data 0.511 (0.511) loss 2.1270 (2.1270) acc 53.1250 (53.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.082 (0.329) data 0.021 (0.266) loss 1.8428 (1.9849) acc 59.3750 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.590 (0.590) data 0.505 (0.505) loss 1.0781 (1.0781) acc 90.6250 (90.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 6 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 127
+* accuracy: 70.6%
+* error: 29.4%
+* macro_f1: 72.9%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 118
+* accuracy: 65.6%
+* error: 34.4%
+* macro_f1: 69.6%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 135
+* accuracy: 75.0%
+* error: 25.0%
+* macro_f1: 78.3%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 146
+* accuracy: 81.1%
+* error: 18.9%
+* macro_f1: 84.6%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 117
+* accuracy: 65.0%
+* error: 35.0%
+* macro_f1: 63.8%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 164
+* accuracy: 91.1%
+* error: 8.9%
+* macro_f1: 92.8%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 145
+* accuracy: 80.6%
+* error: 19.4%
+* macro_f1: 82.5%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 124
+* accuracy: 68.9%
+* error: 31.1%
+* macro_f1: 69.0%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 103
+* accuracy: 57.2%
+* error: 42.8%
+* macro_f1: 44.3%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 61
+* accuracy: 84.7%
+* error: 15.3%
+* macro_f1: 90.2%
+0 --Local test acc: 70.55555555555556
+1 --Local test acc: 65.55555555555556
+2 --Local test acc: 75.0
+3 --Local test acc: 81.11111111111111
+4 --Local test acc: 65.0
+5 --Local test acc: 91.11111111111111
+6 --Local test acc: 80.55555555555556
+7 --Local test acc: 68.88888888888889
+8 --Local test acc: 57.22222222222222
+9 --Local test acc: 84.72222222222223
+--Global test acc: 73.97222222222221
+Epoch:6
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 7 -------------
+epoch [1/1] batch [1/2] time 0.601 (0.601) data 0.488 (0.488) loss 0.6074 (0.6074) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.063 (0.332) data 0.000 (0.244) loss 1.0352 (0.8213) acc 78.1250 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.660 (0.660) data 0.528 (0.528) loss 1.1973 (1.1973) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.096 (0.378) data 0.000 (0.264) loss 1.8525 (1.5249) acc 53.1250 (60.9375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.829 (0.829) data 0.636 (0.636) loss 0.7979 (0.7979) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.146 (0.488) data 0.000 (0.318) loss 0.7168 (0.7573) acc 75.0000 (79.6875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.711 (0.711) data 0.576 (0.576) loss 0.7192 (0.7192) acc 81.2500 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.132 (0.421) data 0.000 (0.288) loss 0.9736 (0.8464) acc 75.0000 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.593 (0.593) data 0.529 (0.529) loss 1.1680 (1.1680) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.116 (0.354) data 0.000 (0.264) loss 0.9814 (1.0747) acc 59.3750 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.628 (0.628) data 0.546 (0.546) loss 0.2666 (0.2666) acc 96.8750 (96.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.061 (0.344) data 0.000 (0.273) loss 0.3030 (0.2848) acc 93.7500 (95.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.522 (0.522) data 0.457 (0.457) loss 0.6826 (0.6826) acc 81.2500 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.061 (0.292) data 0.000 (0.229) loss 1.0010 (0.8418) acc 65.6250 (73.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.669 (0.669) data 0.606 (0.606) loss 1.3398 (1.3398) acc 62.5000 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.061 (0.365) data 0.000 (0.303) loss 1.7168 (1.5283) acc 65.6250 (64.0625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.593 (0.593) data 0.530 (0.530) loss 1.2227 (1.2227) acc 75.0000 (75.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.061 (0.327) data 0.000 (0.265) loss 2.2617 (1.7422) acc 50.0000 (62.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.769 (0.769) data 0.635 (0.635) loss 1.0498 (1.0498) acc 87.5000 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 7 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 151
+* accuracy: 83.9%
+* error: 16.1%
+* macro_f1: 85.8%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 107
+* accuracy: 59.4%
+* error: 40.6%
+* macro_f1: 64.9%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 146
+* accuracy: 81.1%
+* error: 18.9%
+* macro_f1: 83.4%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 147
+* accuracy: 81.7%
+* error: 18.3%
+* macro_f1: 83.6%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 143
+* accuracy: 79.4%
+* error: 20.6%
+* macro_f1: 80.6%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 165
+* accuracy: 91.7%
+* error: 8.3%
+* macro_f1: 93.2%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 152
+* accuracy: 84.4%
+* error: 15.6%
+* macro_f1: 86.7%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 128
+* accuracy: 71.1%
+* error: 28.9%
+* macro_f1: 69.5%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 98
+* accuracy: 54.4%
+* error: 45.6%
+* macro_f1: 45.9%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 65
+* accuracy: 90.3%
+* error: 9.7%
+* macro_f1: 92.8%
+0 --Local test acc: 83.88888888888889
+1 --Local test acc: 59.44444444444444
+2 --Local test acc: 81.11111111111111
+3 --Local test acc: 81.66666666666667
+4 --Local test acc: 79.44444444444444
+5 --Local test acc: 91.66666666666667
+6 --Local test acc: 84.44444444444444
+7 --Local test acc: 71.11111111111111
+8 --Local test acc: 54.44444444444444
+9 --Local test acc: 90.27777777777777
+--Global test acc: 77.75
+Epoch:7
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 8 -------------
+epoch [1/1] batch [1/2] time 0.628 (0.628) data 0.524 (0.524) loss 0.6729 (0.6729) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.199 (0.413) data 0.000 (0.262) loss 0.5781 (0.6255) acc 87.5000 (85.9375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.652 (0.652) data 0.527 (0.527) loss 1.7959 (1.7959) acc 56.2500 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.137 (0.395) data 0.000 (0.264) loss 1.6914 (1.7437) acc 59.3750 (57.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.625 (0.625) data 0.512 (0.512) loss 0.6772 (0.6772) acc 81.2500 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.223 (0.424) data 0.000 (0.256) loss 0.6084 (0.6428) acc 81.2500 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.569 (0.569) data 0.495 (0.495) loss 0.5195 (0.5195) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.061 (0.315) data 0.000 (0.248) loss 0.3960 (0.4578) acc 90.6250 (92.1875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.598 (0.598) data 0.534 (0.534) loss 0.9189 (0.9189) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.061 (0.329) data 0.000 (0.267) loss 0.5391 (0.7290) acc 81.2500 (76.5625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.631 (0.631) data 0.562 (0.562) loss 0.1137 (0.1137) acc 100.0000 (100.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.061 (0.346) data 0.000 (0.281) loss 0.2705 (0.1921) acc 90.6250 (95.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.569 (0.569) data 0.505 (0.505) loss 1.0117 (1.0117) acc 75.0000 (75.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.061 (0.315) data 0.000 (0.253) loss 0.4766 (0.7441) acc 93.7500 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.580 (0.580) data 0.513 (0.513) loss 1.5977 (1.5977) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.126 (0.353) data 0.000 (0.257) loss 1.2148 (1.4062) acc 71.8750 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.572 (0.572) data 0.507 (0.507) loss 1.5840 (1.5840) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.061 (0.316) data 0.000 (0.253) loss 2.0020 (1.7930) acc 46.8750 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.620 (0.620) data 0.552 (0.552) loss 1.0342 (1.0342) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 8 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 135
+* accuracy: 75.0%
+* error: 25.0%
+* macro_f1: 75.4%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 114
+* accuracy: 63.3%
+* error: 36.7%
+* macro_f1: 68.1%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 139
+* accuracy: 77.2%
+* error: 22.8%
+* macro_f1: 78.9%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 155
+* accuracy: 86.1%
+* error: 13.9%
+* macro_f1: 87.8%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 129
+* accuracy: 71.7%
+* error: 28.3%
+* macro_f1: 69.8%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 165
+* accuracy: 91.7%
+* error: 8.3%
+* macro_f1: 92.9%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 149
+* accuracy: 82.8%
+* error: 17.2%
+* macro_f1: 82.0%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 132
+* accuracy: 73.3%
+* error: 26.7%
+* macro_f1: 72.0%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 103
+* accuracy: 57.2%
+* error: 42.8%
+* macro_f1: 47.1%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 62
+* accuracy: 86.1%
+* error: 13.9%
+* macro_f1: 91.8%
+0 --Local test acc: 75.0
+1 --Local test acc: 63.333333333333336
+2 --Local test acc: 77.22222222222223
+3 --Local test acc: 86.11111111111111
+4 --Local test acc: 71.66666666666667
+5 --Local test acc: 91.66666666666667
+6 --Local test acc: 82.77777777777777
+7 --Local test acc: 73.33333333333333
+8 --Local test acc: 57.22222222222222
+9 --Local test acc: 86.11111111111111
+--Global test acc: 76.44444444444444
+Epoch:8
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 9 -------------
+epoch [1/1] batch [1/2] time 0.689 (0.689) data 0.509 (0.509) loss 0.4170 (0.4170) acc 87.5000 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.100 (0.395) data 0.000 (0.254) loss 0.8262 (0.6216) acc 78.1250 (82.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.633 (0.633) data 0.567 (0.567) loss 1.3037 (1.3037) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.061 (0.347) data 0.000 (0.284) loss 1.3965 (1.3501) acc 75.0000 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.638 (0.638) data 0.486 (0.486) loss 0.7065 (0.7065) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.233 (0.436) data 0.000 (0.243) loss 0.7456 (0.7261) acc 75.0000 (76.5625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.616 (0.616) data 0.534 (0.534) loss 0.5210 (0.5210) acc 96.8750 (96.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.127 (0.371) data 0.000 (0.267) loss 0.9907 (0.7559) acc 81.2500 (89.0625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.616 (0.616) data 0.475 (0.475) loss 0.8057 (0.8057) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.116 (0.366) data 0.000 (0.237) loss 0.7603 (0.7830) acc 71.8750 (70.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.624 (0.624) data 0.560 (0.560) loss 0.2169 (0.2169) acc 96.8750 (96.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.061 (0.343) data 0.000 (0.280) loss 0.0814 (0.1492) acc 100.0000 (98.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.591 (0.591) data 0.511 (0.511) loss 0.6514 (0.6514) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.062 (0.326) data 0.000 (0.256) loss 0.4861 (0.5687) acc 90.6250 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.614 (0.614) data 0.550 (0.550) loss 1.1953 (1.1953) acc 75.0000 (75.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.061 (0.337) data 0.000 (0.275) loss 1.3320 (1.2637) acc 68.7500 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.650 (0.650) data 0.580 (0.580) loss 1.7920 (1.7920) acc 56.2500 (56.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.061 (0.355) data 0.000 (0.290) loss 1.8672 (1.8296) acc 53.1250 (54.6875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.593 (0.593) data 0.528 (0.528) loss 0.8882 (0.8882) acc 90.6250 (90.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 9 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 161
+* accuracy: 89.4%
+* error: 10.6%
+* macro_f1: 90.6%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 142
+* accuracy: 78.9%
+* error: 21.1%
+* macro_f1: 80.9%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 148
+* accuracy: 82.2%
+* error: 17.8%
+* macro_f1: 83.2%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 128
+* accuracy: 71.1%
+* error: 28.9%
+* macro_f1: 76.3%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 151
+* accuracy: 83.9%
+* error: 16.1%
+* macro_f1: 85.2%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 165
+* accuracy: 91.7%
+* error: 8.3%
+* macro_f1: 93.2%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 157
+* accuracy: 87.2%
+* error: 12.8%
+* macro_f1: 88.5%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 126
+* accuracy: 70.0%
+* error: 30.0%
+* macro_f1: 69.5%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 98
+* accuracy: 54.4%
+* error: 45.6%
+* macro_f1: 45.7%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 66
+* accuracy: 91.7%
+* error: 8.3%
+* macro_f1: 94.3%
+0 --Local test acc: 89.44444444444444
+1 --Local test acc: 78.88888888888889
+2 --Local test acc: 82.22222222222223
+3 --Local test acc: 71.11111111111111
+4 --Local test acc: 83.88888888888889
+5 --Local test acc: 91.66666666666667
+6 --Local test acc: 87.22222222222223
+7 --Local test acc: 70.0
+8 --Local test acc: 54.44444444444444
+9 --Local test acc: 91.66666666666667
+--Global test acc: 80.05555555555556
+Epoch:9
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 10 -------------
+epoch [1/1] batch [1/2] time 0.568 (0.568) data 0.504 (0.504) loss 0.3936 (0.3936) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.061 (0.314) data 0.000 (0.252) loss 0.8467 (0.6201) acc 81.2500 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.576 (0.576) data 0.513 (0.513) loss 0.8633 (0.8633) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.137 (0.357) data 0.000 (0.256) loss 1.0488 (0.9561) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.595 (0.595) data 0.525 (0.525) loss 0.5869 (0.5869) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.070 (0.332) data 0.009 (0.267) loss 0.5366 (0.5618) acc 81.2500 (82.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.761 (0.761) data 0.602 (0.602) loss 1.0508 (1.0508) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.134 (0.447) data 0.000 (0.301) loss 0.8560 (0.9534) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.637 (0.637) data 0.572 (0.572) loss 0.6353 (0.6353) acc 87.5000 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.061 (0.349) data 0.000 (0.286) loss 1.1055 (0.8704) acc 53.1250 (70.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.689 (0.689) data 0.591 (0.591) loss 0.3049 (0.3049) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.065 (0.377) data 0.000 (0.296) loss 0.0630 (0.1840) acc 100.0000 (96.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.589 (0.589) data 0.484 (0.484) loss 0.5684 (0.5684) acc 90.6250 (90.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.062 (0.326) data 0.000 (0.242) loss 0.4055 (0.4869) acc 93.7500 (92.1875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.721 (0.721) data 0.543 (0.543) loss 1.4404 (1.4404) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.141 (0.431) data 0.000 (0.272) loss 0.9858 (1.2131) acc 71.8750 (71.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.588 (0.588) data 0.524 (0.524) loss 1.7148 (1.7148) acc 59.3750 (59.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.106 (0.347) data 0.000 (0.262) loss 1.6592 (1.6870) acc 56.2500 (57.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.619 (0.619) data 0.536 (0.536) loss 0.5869 (0.5869) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 10 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 155
+* accuracy: 86.1%
+* error: 13.9%
+* macro_f1: 88.0%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 151
+* accuracy: 83.9%
+* error: 16.1%
+* macro_f1: 85.6%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 140
+* accuracy: 77.8%
+* error: 22.2%
+* macro_f1: 79.0%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 131
+* accuracy: 72.8%
+* error: 27.2%
+* macro_f1: 81.3%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 117
+* accuracy: 65.0%
+* error: 35.0%
+* macro_f1: 64.2%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 158
+* accuracy: 87.8%
+* error: 12.2%
+* macro_f1: 89.0%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 160
+* accuracy: 88.9%
+* error: 11.1%
+* macro_f1: 89.5%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 132
+* accuracy: 73.3%
+* error: 26.7%
+* macro_f1: 71.0%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 121
+* accuracy: 67.2%
+* error: 32.8%
+* macro_f1: 62.2%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 65
+* accuracy: 90.3%
+* error: 9.7%
+* macro_f1: 92.8%
+0 --Local test acc: 86.11111111111111
+1 --Local test acc: 83.88888888888889
+2 --Local test acc: 77.77777777777777
+3 --Local test acc: 72.77777777777777
+4 --Local test acc: 65.0
+5 --Local test acc: 87.77777777777777
+6 --Local test acc: 88.88888888888889
+7 --Local test acc: 73.33333333333333
+8 --Local test acc: 67.22222222222223
+9 --Local test acc: 90.27777777777777
+--Global test acc: 79.30555555555557
+Epoch:10
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 11 -------------
+epoch [1/1] batch [1/2] time 0.581 (0.581) data 0.511 (0.511) loss 0.2520 (0.2520) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.061 (0.321) data 0.000 (0.255) loss 0.3723 (0.3121) acc 90.6250 (92.1875) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.729 (0.729) data 0.540 (0.540) loss 0.6113 (0.6113) acc 90.6250 (90.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.212 (0.470) data 0.000 (0.270) loss 0.8833 (0.7473) acc 81.2500 (85.9375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.578 (0.578) data 0.514 (0.514) loss 0.6040 (0.6040) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.061 (0.319) data 0.000 (0.257) loss 0.4133 (0.5087) acc 84.3750 (81.2500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.745 (0.745) data 0.582 (0.582) loss 0.7002 (0.7002) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.102 (0.423) data 0.000 (0.291) loss 0.3972 (0.5487) acc 96.8750 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.556 (0.556) data 0.492 (0.492) loss 1.3379 (1.3379) acc 68.7500 (68.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.061 (0.308) data 0.000 (0.246) loss 0.9521 (1.1450) acc 71.8750 (70.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.707 (0.707) data 0.521 (0.521) loss 0.2773 (0.2773) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.159 (0.433) data 0.000 (0.261) loss 0.1609 (0.2191) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.674 (0.674) data 0.555 (0.555) loss 0.4153 (0.4153) acc 93.7500 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+epoch [1/1] batch [2/2] time 0.060 (0.367) data 0.000 (0.278) loss 0.5352 (0.4752) acc 84.3750 (89.0625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.699 (0.699) data 0.488 (0.488) loss 1.3193 (1.3193) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+epoch [1/1] batch [2/2] time 0.153 (0.426) data 0.000 (0.244) loss 1.1270 (1.2231) acc 75.0000 (76.5625) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0003) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.628 (0.628) data 0.554 (0.554) loss 1.4746 (1.4746) acc 65.6250 (65.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+epoch [1/1] batch [2/2] time 0.134 (0.381) data 0.000 (0.277) loss 1.0986 (1.2866) acc 75.0000 (70.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/1] time 0.638 (0.638) data 0.574 (0.574) loss 0.4136 (0.4136) acc 90.6250 (90.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+------------local train finish epoch: 11 -------------
+------------local test start-------------
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 157
+* accuracy: 87.2%
+* error: 12.8%
+* macro_f1: 88.1%
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 133
+* accuracy: 73.9%
+* error: 26.1%
+* macro_f1: 79.5%
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 148
+* accuracy: 82.2%
+* error: 17.8%
+* macro_f1: 82.6%
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 161
+* accuracy: 89.4%
+* error: 10.6%
+* macro_f1: 90.4%
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 142
+* accuracy: 78.9%
+* error: 21.1%
+* macro_f1: 80.7%
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 166
+* accuracy: 92.2%
+* error: 7.8%
+* macro_f1: 93.7%
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 161
+* accuracy: 89.4%
+* error: 10.6%
+* macro_f1: 90.1%
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 134
+* accuracy: 74.4%
+* error: 25.6%
+* macro_f1: 73.2%
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 108
+* accuracy: 60.0%
+* error: 40.0%
+* macro_f1: 58.2%
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 68
+* accuracy: 94.4%
+* error: 5.6%
+* macro_f1: 94.4%
+0 --Local test acc: 87.22222222222223
+1 --Local test acc: 73.88888888888889
+2 --Local test acc: 82.22222222222223
+3 --Local test acc: 89.44444444444444
+4 --Local test acc: 78.88888888888889
+5 --Local test acc: 92.22222222222223
+6 --Local test acc: 89.44444444444444
+7 --Local test acc: 74.44444444444444
+8 --Local test acc: 60.0
+9 --Local test acc: 94.44444444444444
+--Global test acc: 82.22222222222221
+Epoch:11
+------------local test finish-------------
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 12 -------------
+epoch [1/1] batch [1/2] time 0.596 (0.596) data 0.531 (0.531) loss 0.4993 (0.4993) acc 90.6250 (90.6250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+epoch [1/1] batch [2/2] time 0.061 (0.328) data 0.000 (0.265) loss 0.2350 (0.3671) acc 96.8750 (93.7500) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.652 (0.652) data 0.520 (0.520) loss 1.1006 (1.1006) acc 78.1250 (78.1250) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+epoch [1/1] batch [2/2] time 0.088 (0.370) data 0.000 (0.260) loss 0.8442 (0.9724) acc 87.5000 (82.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.625 (0.625) data 0.560 (0.560) loss 0.4812 (0.4812) acc 87.5000 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+epoch [1/1] batch [2/2] time 0.062 (0.343) data 0.000 (0.280) loss 0.4287 (0.4550) acc 87.5000 (87.5000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.610 (0.610) data 0.545 (0.545) loss 0.3020 (0.3020) acc 96.8750 (96.8750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+epoch [1/1] batch [2/2] time 0.061 (0.335) data 0.000 (0.273) loss 0.3054 (0.3037) acc 93.7500 (95.3125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.543 (0.543) data 0.479 (0.479) loss 0.6499 (0.6499) acc 84.3750 (84.3750) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+epoch [1/1] batch [2/2] time 0.067 (0.305) data 0.000 (0.240) loss 0.5171 (0.5835) acc 81.2500 (82.8125) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0002 (0.0003) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+epoch [1/1] batch [1/2] time 0.549 (0.549) data 0.485 (0.485) loss 0.0396 (0.0396) acc 100.0000 (100.0000) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+epoch [1/1] batch [2/2] time 0.060 (0.305) data 0.000 (0.243) loss 0.2812 (0.1604) acc 96.8750 (98.4375) spf_gamma 0.0500 (0.0500) spf_rank 8.0000 (8.0000) spf_shared_loss 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01

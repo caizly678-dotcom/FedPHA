@@ -17,7 +17,7 @@ def choose_rank_by_energy(s, energy=0.90, min_rank=1, max_rank=None):
 def compute_shared_basis(ctx, energy=0.90, min_rank=1, max_rank=None):
     device = ctx.device
     dtype = ctx.dtype
-    x = ctx.reshape(-1, ctx.shape[-1]).float()
+    x = ctx.detach().reshape(-1, ctx.shape[-1]).float()
     try:
         _, s, vh = torch.linalg.svd(x, full_matrices=False)
     except RuntimeError as err:
@@ -27,7 +27,7 @@ def compute_shared_basis(ctx, energy=0.90, min_rank=1, max_rank=None):
         vh = vh.to(device)
     r = choose_rank_by_energy(s, energy=energy, min_rank=min_rank, max_rank=max_rank)
     basis = vh[:r, :].transpose(0, 1).contiguous()
-    return basis.to(device=device, dtype=dtype), s.detach()
+    return basis.to(device=device, dtype=dtype).detach(), s.detach()
 
 
 def project_to_basis(ctx, basis):

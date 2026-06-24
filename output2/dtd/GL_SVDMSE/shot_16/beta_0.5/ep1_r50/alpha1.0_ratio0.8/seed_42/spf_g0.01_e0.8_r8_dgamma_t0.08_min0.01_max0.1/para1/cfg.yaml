@@ -1,0 +1,249 @@
+DATALOADER:
+  K_TRANSFORMS: 1
+  NUM_WORKERS: 8
+  RETURN_IMG0: false
+  TEST:
+    BATCH_SIZE: 128
+    SAMPLER: SequentialSampler
+  TRAIN_U:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAME_AS_X: true
+    SAMPLER: RandomSampler
+  TRAIN_X:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAMPLER: RandomSampler
+DATASET:
+  ALL_AS_UNLABELED: false
+  BETA: 0.5
+  CIFAR_C_LEVEL: 1
+  CIFAR_C_TYPE: ''
+  DOMAIN_NUM: 1
+  IID: false
+  NAME: DescribableTextures
+  NUM_LABELED: -1
+  NUM_SHOTS: 16
+  PARTITION: noniid-labeldir
+  REPEATRATE: 0.0
+  ROOT: /workspace/FedPHA/DATA
+  SOURCE_DOMAINS: !!python/tuple []
+  STL10_FOLD: -1
+  SUBSAMPLE_CLASSES: all
+  TARGET_DOMAINS: !!python/tuple []
+  USEALL: false
+  USERS: 10
+  USER_PROMPT_LENGTHS: []
+  VAL_PERCENT: 0.1
+INPUT:
+  COLORJITTER_B: 0.4
+  COLORJITTER_C: 0.4
+  COLORJITTER_H: 0.1
+  COLORJITTER_S: 0.4
+  CROP_PADDING: 4
+  CUTOUT_LEN: 16
+  CUTOUT_N: 1
+  GB_K: 21
+  GB_P: 0.5
+  GN_MEAN: 0.0
+  GN_STD: 0.15
+  INTERPOLATION: bicubic
+  NO_TRANSFORM: false
+  PIXEL_MEAN:
+  - 0.48145466
+  - 0.4578275
+  - 0.40821073
+  PIXEL_STD:
+  - 0.26862954
+  - 0.26130258
+  - 0.27577711
+  RANDAUGMENT_M: 10
+  RANDAUGMENT_N: 2
+  RGS_P: 0.2
+  RRCROP_SCALE: !!python/tuple
+  - 0.08
+  - 1.0
+  SIZE: !!python/tuple
+  - 224
+  - 224
+  TRANSFORMS: !!python/tuple
+  - random_resized_crop
+  - random_flip
+  - normalize
+MODEL:
+  BACKBONE:
+    NAME: ViT-B/16
+    PRETRAINED: true
+  HEAD:
+    ACTIVATION: relu
+    BN: true
+    DROPOUT: 0.0
+    HIDDEN_LAYERS: !!python/tuple []
+    NAME: ''
+  INIT_WEIGHTS: ''
+OPTIM:
+  ADAM_BETA1: 0.9
+  ADAM_BETA2: 0.999
+  BASE_LR_MULT: 0.1
+  GAMMA: 1
+  LR: 0.001
+  LR_SCHEDULER: single_step
+  MAX_EPOCH: 1
+  MOMENTUM: 0.9
+  NAME: sgd
+  NEW_LAYERS: !!python/tuple []
+  RMSPROP_ALPHA: 0.99
+  ROUND: 50
+  SGD_DAMPNING: 0
+  SGD_NESTEROV: false
+  STAGED_LR: false
+  STEPSIZE: !!python/tuple
+  - -1
+  WARMUP_CONS_LR: 1.0e-05
+  WARMUP_EPOCH: 0
+  WARMUP_MIN_LR: 1.0e-05
+  WARMUP_RECOUNT: true
+  WARMUP_TYPE: constant
+  WEIGHT_DECAY: 0.0005
+OUTPUT_DIR: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_42/spf_g0.01_e0.8_r8_dgamma_t0.08_min0.01_max0.1
+RESUME: ''
+SEED: 42
+TEST:
+  COMPUTE_CMAT: false
+  EVALUATOR: Classification
+  FINAL_MODEL: last_step
+  NO_TEST: false
+  PER_CLASS_RESULT: false
+  SPLIT: test
+TRAIN:
+  CHECKPOINT_FREQ: 0
+  COUNT_ITER: train_x
+  PRINT_FREQ: 10
+TRAINER:
+  CDAC:
+    CLASS_LR_MULTI: 10
+    P_THRESH: 0.95
+    RAMPUP_COEF: 30
+    RAMPUP_ITRS: 1000
+    STRONG_TRANSFORMS: !!python/tuple []
+    TOPK_MATCH: 5
+  CROSSGRAD:
+    ALPHA_D: 0.5
+    ALPHA_F: 0.5
+    EPS_D: 1.0
+    EPS_F: 1.0
+  DAEL:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: !!python/tuple []
+    WEIGHT_U: 0.5
+  DAELDG:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: !!python/tuple []
+    WEIGHT_U: 0.5
+  DDAIG:
+    ALPHA: 0.5
+    CLAMP: false
+    CLAMP_MAX: 1.0
+    CLAMP_MIN: -1.0
+    G_ARCH: ''
+    LMDA: 0.3
+    WARMUP: 0
+  DOMAINMIX:
+    ALPHA: 1.0
+    BETA: 1.0
+    TYPE: crossdomain
+  ENTMIN:
+    LMDA: 0.001
+  FEDPGP:
+    BOTTLENECK: 4
+    CLASS_TOKEN_POSITION: end
+    CSC: false
+    CTX_INIT: false
+    FEATURE: false
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    mu: 1
+    temp: 0.5
+  FIXMATCH:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: !!python/tuple []
+    WEIGHT_U: 1.0
+  GLP_OT:
+    AVG_N: 1.0
+    CLASS_TOKEN_POSITION: end
+    CSC: false
+    CTX_INIT: false
+    EPS: 0.1
+    MAX_ITER: 100
+    N: 2
+    N_CTX: 16
+    OT: COT
+    PREC: fp16
+    THRESH: 0.001
+    TOP_PERCENT: 1
+  GL_SVDMSE:
+    CLASS_TOKEN_POSITION: end
+    CSC: false
+    CTX_INIT: false
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    SPF_DYNAMIC_GAMMA: true
+    SPF_ENERGY: 0.8
+    SPF_GAMMA_ADAPT_RATE: 0.5
+    SPF_GAMMA_INIT: 0.01
+    SPF_GAMMA_MAX: 0.1
+    SPF_GAMMA_MIN: 0.01
+    SPF_GAMMA_MOMENTUM: 0.9
+    SPF_GAMMA_TARGET_RATIO: 0.08
+    SPF_GAMMA_UPDATE_EVERY: 1
+    SPF_MAX_RANK: 8
+    SPF_MIN_RANK: 1
+    SPF_SHARED_LAMBDA: 0.1
+    USE_SPF: true
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  GL_SVDMSE_HE:
+    CLASS_TOKEN_POSITION: end
+    CSC: false
+    CTX_INIT: false
+    N: 1
+    N_CTX_GLOBAL: 16
+    PREC: fp16
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  M3SDA:
+    LMDA: 0.5
+    N_STEP_F: 4
+  MCD:
+    N_STEP_F: 4
+  MEANTEACHER:
+    EMA_ALPHA: 0.999
+    RAMPUP: 5
+    WEIGHT_U: 1.0
+  MIXMATCH:
+    MIXUP_BETA: 0.75
+    RAMPUP: 20000
+    TEMP: 2.0
+    WEIGHT_U: 100.0
+  MME:
+    LMDA: 0.1
+  NAME: GL_SVDMSE
+  PROMPTFL:
+    CLASS_TOKEN_POSITION: end
+    CSC: false
+    CTX_INIT: false
+    N_CTX: 16
+    PREC: fp16
+  SE:
+    CONF_THRE: 0.95
+    EMA_ALPHA: 0.999
+    RAMPUP: 300
+USE_CUDA: true
+VERBOSE: true
+VERSION: 1

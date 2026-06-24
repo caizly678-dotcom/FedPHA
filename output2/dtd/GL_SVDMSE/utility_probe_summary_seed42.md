@@ -1,0 +1,3 @@
+| Dataset | Lambda | Last10 Avg | Last10 Std | Best Acc | Best Round | Final Acc | Probe Count | Mean CE Loss | Mean MSE Loss | Mean Weighted MSE Loss | Mean CE Grad Norm | Mean MSE Grad Norm | Mean Effective Pull Ratio | Mean Cos CE-MSE | Mean Utility | Median Utility | Positive Utility Ratio | Negative Utility Ratio | Client Mean Utility Std | Result Path |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dtd | 0.3 | 92.663889 | 0.327366 | 93.250000 | 43 | 92.638889 | 100 | 0.588927 | 0.000236 | 0.000071 | 14.143438 | 0.000339 | 0.000016 | 0.001323 | 0.000000 | 0.000000 | 0.600000 | 0.400000 | 0.000000 | output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_42/spf_g0.01_e0.8_r8_slambda0.3_utilityprobe_p5/para1 |
