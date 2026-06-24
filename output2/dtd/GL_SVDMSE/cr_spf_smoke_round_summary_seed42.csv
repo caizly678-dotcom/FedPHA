@@ -1,2 +1,0 @@
-Dataset,Rounds,Mean Kappa,Median Kappa,Std Kappa,Early Kappa Mean (round 0-20),Late Kappa Mean (round 25-end),Mean N_eff,Median N_eff,Mean Pairwise Positive Similarity,Mean Direction Concentration,Mean Rcon/FedAvg Ratio,Zero Consensus Round Ratio
-dtd,50,0.021802,0.020591,0.009944,0.024891,0.019930,8.187158,8.286475,0.053092,0.403127,9.750057,0.000000
