@@ -89,9 +89,13 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MAX = args.spf_gamma_max
     cfg.TRAINER.GL_SVDMSE.SPF_GATE_HIDDEN_RATIO = args.spf_gate_hidden_ratio
+    cfg.TRAINER.GL_SVDMSE.SPF_USE_DYNAMIC_GATE = args.spf_use_dynamic_gate
+    cfg.TRAINER.GL_SVDMSE.SPF_ALIGNMENT_TYPE = args.spf_alignment_type
+    cfg.TRAINER.GL_SVDMSE.SPF_FREEZE_ANCHOR = args.spf_freeze_anchor
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_INIT = args.spf_shared_init
     cfg.TRAINER.GL_SVDMSE.SPF_FIXED_ROUND_BASIS = args.spf_fixed_round_basis
+    cfg.TRAINER.GL_SVDMSE.DEBUG_TEXT_ENCODER_FORWARD_COUNT = args.smoke_text_encoder_counter
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -252,10 +256,12 @@ def clone_state_dict_cpu(state_dict):
 
 
 def clone_spf_private_state(prompt_learner):
-    return {
+    state = {
         "ctx_local": prompt_learner.ctx_local.detach().cpu().clone(),
-        "gamma_net": clone_state_dict_cpu(prompt_learner.gamma_net.state_dict()),
     }
+    if hasattr(prompt_learner, "gamma_net"):
+        state["gamma_net"] = clone_state_dict_cpu(prompt_learner.gamma_net.state_dict())
+    return state
 
 
 def load_spf_client_state(local_trainer, global_state, private_state):
@@ -274,14 +280,20 @@ def load_spf_client_state(local_trainer, global_state, private_state):
                 dtype=prompt_learner.ctx_local.dtype,
             )
         )
-    gamma_state = {
-        key: value.to(
-            device=next(prompt_learner.gamma_net.parameters()).device,
-            dtype=next(prompt_learner.gamma_net.parameters()).dtype,
-        )
-        for key, value in private_state["gamma_net"].items()
-    }
-    prompt_learner.gamma_net.load_state_dict(gamma_state)
+    if hasattr(prompt_learner, "gamma_net") and "gamma_net" in private_state:
+        gamma_state = {
+            key: value.to(
+                device=next(prompt_learner.gamma_net.parameters()).device,
+                dtype=next(prompt_learner.gamma_net.parameters()).dtype,
+            )
+            for key, value in private_state["gamma_net"].items()
+        }
+        prompt_learner.gamma_net.load_state_dict(gamma_state)
+    print(
+        "SPF client state restored:",
+        "ctx_local",
+        "+ gamma_net" if hasattr(prompt_learner, "gamma_net") and "gamma_net" in private_state else "",
+    )
 
 
 def rebuild_prompt_optimizer(local_trainer):
@@ -295,9 +307,12 @@ def rebuild_prompt_optimizer(local_trainer):
         for group in local_trainer.optim.param_groups
         for param in group["params"]
     }
-    for name, param in prompt_learner.gamma_net.named_parameters():
-        assert param.requires_grad
-        assert id(param) in optim_param_ids, f"gamma_net parameter missing from optimizer: {name}"
+    if hasattr(prompt_learner, "gamma_net"):
+        for name, param in prompt_learner.gamma_net.named_parameters():
+            assert param.requires_grad
+            assert id(param) in optim_param_ids, f"gamma_net parameter missing from optimizer: {name}"
+    assert len(local_trainer.optim.state) == 0
+    print(f"SPF optimizer state entries after rebuild: {len(local_trainer.optim.state)}")
 
 
 def refresh_spf_anchor_for_client(local_trainer):
@@ -311,6 +326,7 @@ def extract_spf_global_state(local_trainer):
     global_state = {"ctx_global": prompt_learner.ctx_global.detach().cpu().clone()}
     assert set(global_state.keys()) == {"ctx_global"}
     assert all("ctx_local" not in key and "gamma_net" not in key for key in global_state)
+    print(f"SPF upload parameter keys: {list(global_state.keys())}")
     return global_state
 
 
@@ -319,22 +335,32 @@ def run_spf_state_isolation_check(local_trainer, private_states):
         return
     prompt_learner = get_prompt_learner(local_trainer)
     global_state = {"ctx_global": prompt_learner.ctx_global.detach().cpu().clone()}
-    client_a = clone_state_dict_cpu(private_states[0]["gamma_net"])
-    client_b = clone_state_dict_cpu(private_states[1]["gamma_net"])
-    modified_a = {
-        key: value.clone()
-        for key, value in client_a.items()
-    }
-    first_key = next(iter(modified_a))
-    modified_a[first_key].add_(1.0)
-    private_states[0]["gamma_net"] = modified_a
-    load_spf_client_state(local_trainer, global_state, private_states[1])
-    restored_b = clone_state_dict_cpu(prompt_learner.gamma_net.state_dict())
-    for key in client_b:
-        assert torch.allclose(restored_b[key], client_b[key])
-        assert not torch.allclose(restored_b[key], modified_a[key])
-        break
-    private_states[0]["gamma_net"] = client_a
+    client_a_ctx = private_states[0]["ctx_local"].clone()
+    client_b_ctx = private_states[1]["ctx_local"].clone()
+    modified_a_ctx = client_a_ctx.clone().add_(1.0)
+    private_states[0]["ctx_local"] = modified_a_ctx
+    if hasattr(prompt_learner, "gamma_net") and "gamma_net" in private_states[0]:
+        client_a = clone_state_dict_cpu(private_states[0]["gamma_net"])
+        client_b = clone_state_dict_cpu(private_states[1]["gamma_net"])
+        modified_a = {key: value.clone() for key, value in client_a.items()}
+        first_key = next(iter(modified_a))
+        modified_a[first_key].add_(1.0)
+        private_states[0]["gamma_net"] = modified_a
+        load_spf_client_state(local_trainer, global_state, private_states[1])
+        restored_b = clone_state_dict_cpu(prompt_learner.gamma_net.state_dict())
+        for key in client_b:
+            assert torch.allclose(restored_b[key], client_b[key])
+            assert not torch.allclose(restored_b[key], modified_a[key])
+            break
+        private_states[0]["gamma_net"] = client_a
+    else:
+        load_spf_client_state(local_trainer, global_state, private_states[1])
+        device = prompt_learner.ctx_local.device
+        dtype = prompt_learner.ctx_local.dtype
+        restored_ctx = prompt_learner.ctx_local.detach()
+        assert torch.allclose(restored_ctx, client_b_ctx.to(device=device, dtype=dtype))
+        assert not torch.allclose(restored_ctx, modified_a_ctx.to(device=device, dtype=dtype))
+    private_states[0]["ctx_local"] = client_a_ctx
     print("SPF private-state isolation check passed")
 
 
@@ -453,7 +479,8 @@ def main(args):
             if args.use_spf:
                 for idx in idxs_users:
                     load_spf_client_state(local_trainer, global_weights, spf_private_states[idx])
-                    refresh_spf_anchor_for_client(local_trainer)
+                    if local_trainer.model.prompt_learner.freeze_anchor:
+                        refresh_spf_anchor_for_client(local_trainer)
                     rebuild_prompt_optimizer(local_trainer)
                     local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
                     spf_private_states[idx] = clone_spf_private_state(get_prompt_learner(local_trainer))
@@ -490,6 +517,7 @@ def main(args):
                 global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=False)
                 assert set(global_weights.keys()) == {"ctx_global"}
                 assert all("ctx_local" not in key and "gamma_net" not in key for key in global_weights)
+                print(f"SPF FedAvg completed for round {epoch}: keys={list(global_weights.keys())}")
             else:
                 global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
 
@@ -499,7 +527,9 @@ def main(args):
             if args.use_spf:
                 for idx in all_users:
                     load_spf_client_state(local_trainer, global_weights, spf_private_states[idx])
-                    refresh_spf_anchor_for_client(local_trainer)
+                    if local_trainer.model.prompt_learner.freeze_anchor:
+                        refresh_spf_anchor_for_client(local_trainer)
+                    print(f"SPF global state dispatched to client {idx}")
                     results.append(local_trainer.test(idx=idx))
             else:
                 round_shared_basis = maybe_refresh_round_shared_basis(local_trainer, args, global_weights)
@@ -692,9 +722,17 @@ if __name__ == "__main__":
     parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
     parser.add_argument('--spf_gamma_max', type=float, default=0.10, help='maximum SPF dynamic residual gate value')
     parser.add_argument('--spf_gate_hidden_ratio', type=int, default=8, help='ctx_dim divisor for SPF gamma gate hidden size')
+    parser.add_argument('--spf_use_dynamic_gate', dest='spf_use_dynamic_gate', action='store_true', help='use dynamic SPF gate instead of fixed gamma')
+    parser.add_argument('--no_spf_use_dynamic_gate', dest='spf_use_dynamic_gate', action='store_false', help='disable dynamic SPF gate and use fixed gamma')
+    parser.set_defaults(spf_use_dynamic_gate=True)
+    parser.add_argument('--spf_alignment_type', type=str, default="cosine", choices=["mse", "cosine"], help='SPF alignment loss type')
+    parser.add_argument('--spf_freeze_anchor', dest='spf_freeze_anchor', action='store_true', help='freeze SPF basis and global anchor per client round')
+    parser.add_argument('--no_spf_freeze_anchor', dest='spf_freeze_anchor', action='store_false', help='recompute SPF basis and anchor every batch')
+    parser.set_defaults(spf_freeze_anchor=True)
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
     parser.add_argument('--spf_shared_init', action='store_true', default=False, help='initialize local prompts from cloned global prompts')
     parser.add_argument('--spf_fixed_round_basis', action='store_true', default=False, help='reuse one SPF basis per communication round')
+    parser.add_argument('--smoke_text_encoder_counter', action='store_true', default=False, help='enable text encoder forward counting for smoke tests')
     parser.add_argument('--spf_variant', type=str, default="", help='output directory tag for SPF-lite stabilization variants')
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")

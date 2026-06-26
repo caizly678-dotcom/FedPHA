@@ -45,8 +45,12 @@ class TextEncoder(nn.Module):
         self.ln_final = clip_model.ln_final
         self.text_projection = clip_model.text_projection
         self.dtype = clip_model.dtype
+        self.debug_forward_count = False
+        self.forward_count = 0
 
     def forward(self, prompts, tokenized_prompts):
+        if self.debug_forward_count:
+            self.forward_count += 1
 
         x = prompts + self.positional_embedding.type(self.dtype)
         
@@ -78,6 +82,9 @@ class PromptLearner(nn.Module):
         self.spf_gamma_init = cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT
         self.spf_gamma_max = cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MAX
         self.spf_gate_hidden_ratio = cfg.TRAINER.GL_SVDMSE.SPF_GATE_HIDDEN_RATIO
+        self.use_dynamic_gate = cfg.TRAINER.GL_SVDMSE.SPF_USE_DYNAMIC_GATE
+        self.alignment_type = cfg.TRAINER.GL_SVDMSE.SPF_ALIGNMENT_TYPE
+        self.freeze_anchor = cfg.TRAINER.GL_SVDMSE.SPF_FREEZE_ANCHOR
         self.shared_init = cfg.TRAINER.GL_SVDMSE.SPF_SHARED_INIT
         self.fixed_round_basis = cfg.TRAINER.GL_SVDMSE.SPF_FIXED_ROUND_BASIS
         self.register_buffer("round_shared_basis", None, persistent=False)
@@ -125,11 +132,12 @@ class PromptLearner(nn.Module):
 
         print(f'Initial context: "{prompt_prefix}"')
         print(f"Number of context words (tokens): {n_ctx}")
+        print(f"SPF method label: {self.get_spf_method_label()}")
 
         # self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
         self.ctx_global = nn.Parameter(ctx_global)
         self.ctx_local = nn.Parameter(ctx_local)
-        if self.use_spf:
+        if self.use_spf and self.use_dynamic_gate:
             if not (0.0 < self.spf_gamma_init < self.spf_gamma_max):
                 raise ValueError("SPF_GAMMA_INIT must be in (0, SPF_GAMMA_MAX)")
             gate_hidden_dim = max(ctx_dim // int(self.spf_gate_hidden_ratio), 1)
@@ -172,6 +180,35 @@ class PromptLearner(nn.Module):
         self.name_lens = name_lens
         self.class_token_position = cfg.TRAINER.GL_SVDMSE.CLASS_TOKEN_POSITION
 
+    def get_spf_method_label(self):
+        if not self.use_spf:
+            return "non-SPF"
+        if not self.use_dynamic_gate and not self.freeze_anchor and self.alignment_type == "mse":
+            return "A0"
+        if not self.use_dynamic_gate and self.freeze_anchor and self.alignment_type == "mse":
+            return "A1"
+        if self.use_dynamic_gate and self.freeze_anchor and self.alignment_type == "mse":
+            return "A2"
+        if not self.use_dynamic_gate and self.freeze_anchor and self.alignment_type == "cosine":
+            return "A3"
+        if self.use_dynamic_gate and self.freeze_anchor and self.alignment_type == "cosine":
+            return "A4"
+        return (
+            f"custom(dynamic_gate={self.use_dynamic_gate}, "
+            f"freeze_anchor={self.freeze_anchor}, alignment={self.alignment_type})"
+        )
+
+    def _compute_basis_and_anchor(self, ctx_global):
+        basis, _ = compute_shared_basis(
+            ctx_global,
+            energy=self.spf_energy,
+            min_rank=self.spf_min_rank,
+            max_rank=self.spf_max_rank,
+        )
+        basis = basis.detach()
+        anchor_coord = (ctx_global.detach() @ basis).detach()
+        return basis, anchor_coord
+
     @torch.no_grad()
     def refresh_round_shared_basis(self):
         basis, _ = compute_shared_basis(
@@ -185,47 +222,53 @@ class PromptLearner(nn.Module):
 
     @torch.no_grad()
     def refresh_spf_anchor(self):
-        basis, _ = compute_shared_basis(
-            self.ctx_global,
-            energy=self.spf_energy,
-            min_rank=self.spf_min_rank,
-            max_rank=self.spf_max_rank,
-        )
-        self._spf_basis = basis.detach()
+        basis, anchor_coord = self._compute_basis_and_anchor(self.ctx_global)
+        self._spf_basis = basis
         assert self._spf_basis.requires_grad is False
-        self._spf_global_anchor_coord = (self.ctx_global.detach() @ self._spf_basis).detach()
+        self._spf_global_anchor_coord = anchor_coord
         return self._spf_basis
 
-    def get_spf_basis(self):
-        if self._spf_basis is None:
+    def get_spf_basis(self, ctx_global=None):
+        if not self.freeze_anchor:
+            if ctx_global is None:
+                ctx_global = self.ctx_global
+            basis, anchor_coord = self._compute_basis_and_anchor(ctx_global)
+            return basis, anchor_coord
+        if self._spf_basis is None or self._spf_global_anchor_coord is None:
             raise RuntimeError("SPF anchor is not initialized; call refresh_spf_anchor() before local training")
         assert self._spf_basis.requires_grad is False
-        return self._spf_basis
+        return self._spf_basis, self._spf_global_anchor_coord
 
     def fuse_ctx_spf(self, ctx_local, ctx_global):
-        basis = self.get_spf_basis()
+        basis, anchor_coord = self.get_spf_basis(ctx_global)
         local_coord = ctx_local @ basis
         global_coord = ctx_global @ basis
         local_shared = local_coord @ basis.t()
         global_shared = global_coord @ basis.t()
         residual = global_shared - local_shared
 
-        gate_input = torch.cat([ctx_local.detach(), residual.detach()], dim=-1)
-        gate_dtype = next(self.gamma_net.parameters()).dtype
-        raw_gamma = self.gamma_net(gate_input.to(dtype=gate_dtype))
-        gamma = self.spf_gamma_max * torch.sigmoid(raw_gamma)
-        gamma = gamma.to(device=ctx_local.device, dtype=ctx_local.dtype)
+        if self.use_dynamic_gate:
+            gate_input = torch.cat([ctx_local.detach(), residual.detach()], dim=-1)
+            gate_dtype = next(self.gamma_net.parameters()).dtype
+            raw_gamma = self.gamma_net(gate_input.to(dtype=gate_dtype))
+            gamma = self.spf_gamma_max * torch.sigmoid(raw_gamma)
+            gamma = gamma.to(device=ctx_local.device, dtype=ctx_local.dtype)
+        else:
+            gamma = torch.full_like(residual[..., :1], self.spf_gamma_init)
         correction = gamma * residual
         fused_ctx = ctx_local + correction
 
-        anchor_coord = self._spf_global_anchor_coord.detach().to(
-            device=local_coord.device, dtype=local_coord.dtype
-        )
-        shared_pull_loss = 1.0 - F.cosine_similarity(
-            local_coord.float().flatten().unsqueeze(0),
-            anchor_coord.float().flatten().unsqueeze(0),
-            dim=-1,
-        ).mean()
+        anchor_coord = anchor_coord.to(device=local_coord.device, dtype=local_coord.dtype)
+        if self.alignment_type == "cosine":
+            shared_pull_loss = 1.0 - F.cosine_similarity(
+                local_coord.float().flatten().unsqueeze(0),
+                anchor_coord.float().flatten().unsqueeze(0),
+                dim=-1,
+            ).mean()
+        elif self.alignment_type == "mse":
+            shared_pull_loss = F.mse_loss(local_coord, anchor_coord.detach())
+        else:
+            raise ValueError(f"Unsupported SPF alignment type: {self.alignment_type}")
         correction_ratio = correction.detach().float().norm() / ctx_local.detach().float().norm().clamp_min(1e-12)
 
         aux = {
@@ -380,6 +423,7 @@ class CustomCLIP(nn.Module):
         self.text_encoder = TextEncoder(clip_model)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
+        self.text_encoder.debug_forward_count = cfg.TRAINER.GL_SVDMSE.DEBUG_TEXT_ENCODER_FORWARD_COUNT
         self.N = cfg.TRAINER.GL_SVDMSE.N
 
     def forward(self, image, idx=None):
@@ -445,6 +489,7 @@ class GL_SVDMSE(TrainerX):
 
         print("Building custom CLIP")
         self.model = CustomCLIP(cfg, classnames, clip_model)
+        print(f"SPF method label: {self.model.prompt_learner.get_spf_method_label()}")
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.model.named_parameters():
@@ -475,22 +520,32 @@ class GL_SVDMSE(TrainerX):
     def forward_backward(self, batch_idx, batch, **kwargs):
         image, label = self.parse_batch_train(batch)
         prec = self.cfg.TRAINER.GL_SVDMSE.PREC
+        self.model.image_encoder.eval()
+        self.model.text_encoder.eval()
+        if self.cfg.TRAINER.GL_SVDMSE.DEBUG_TEXT_ENCODER_FORWARD_COUNT:
+            self.model.text_encoder.forward_count = 0
 
         if self.model.prompt_learner.use_spf:
             if prec == "amp":
                 with autocast():
                     output, aux = self.model(image)
-                    loss_ce = F.cross_entropy(output, label)
-                    loss = (
-                        loss_ce
-                        + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
-                    )
+                if self.cfg.TRAINER.GL_SVDMSE.DEBUG_TEXT_ENCODER_FORWARD_COUNT:
+                    assert self.model.text_encoder.forward_count == 1
+                    print("text_encoder_forwards_per_batch=1")
+                loss_ce = F.cross_entropy(output, label)
+                loss = (
+                    loss_ce
+                    + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
+                )
                 self.optim.zero_grad()
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optim)
                 self.scaler.update()
             else:
                 output, aux = self.model(image)
+                if self.cfg.TRAINER.GL_SVDMSE.DEBUG_TEXT_ENCODER_FORWARD_COUNT:
+                    assert self.model.text_encoder.forward_count == 1
+                    print("text_encoder_forwards_per_batch=1")
                 loss_ce = F.cross_entropy(output, label)
                 loss = (
                     loss_ce

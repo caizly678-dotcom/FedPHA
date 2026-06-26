@@ -1,0 +1,306 @@
+import copy
+import math
+import os
+import sys
+from types import SimpleNamespace
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+
+from federated_main import (  # noqa: E402
+    clone_spf_private_state,
+    extract_spf_global_state,
+    load_spf_client_state,
+    rebuild_prompt_optimizer,
+)
+from trainers.GL_SVDMSE import CustomCLIP, PromptLearner  # noqa: E402
+
+
+def make_cfg(
+    use_spf=True,
+    gamma_init=0.05,
+    gamma_max=0.10,
+    n_ctx=4,
+    n_prompt=1,
+    ctx_init=False,
+    shared_init=False,
+    class_token_position="end",
+):
+    trainer_cfg = SimpleNamespace(
+        N_CTX=n_ctx,
+        CSC=False,
+        CTX_INIT=ctx_init,
+        PREC="fp32",
+        CLASS_TOKEN_POSITION=class_token_position,
+        N=n_prompt,
+        lambda_orthogonal=1.0,
+        alpha=1.0,
+        ratio=0.8,
+        USE_SPF=use_spf,
+        SPF_ENERGY=0.90,
+        SPF_MIN_RANK=1,
+        SPF_MAX_RANK=8,
+        SPF_GAMMA_INIT=gamma_init,
+        SPF_GAMMA_MAX=gamma_max,
+        SPF_GATE_HIDDEN_RATIO=8,
+        SPF_USE_DYNAMIC_GATE=True,
+        SPF_ALIGNMENT_TYPE="cosine",
+        SPF_FREEZE_ANCHOR=True,
+        SPF_SHARED_LAMBDA=0.1,
+        SPF_SHARED_INIT=shared_init,
+        SPF_FIXED_ROUND_BASIS=False,
+        DEBUG_TEXT_ENCODER_FORWARD_COUNT=False,
+    )
+    cfg = SimpleNamespace(
+        INPUT=SimpleNamespace(SIZE=(32, 32)),
+        MODEL=SimpleNamespace(BACKBONE=SimpleNamespace(NAME="fake"), INIT_WEIGHTS=""),
+        TRAINER=SimpleNamespace(GL_SVDMSE=trainer_cfg),
+        OPTIM=SimpleNamespace(
+            NAME="adam",
+            LR=1e-3,
+            WEIGHT_DECAY=0.0,
+            MOMENTUM=0.9,
+            SGD_DAMPNING=0,
+            SGD_NESTEROV=False,
+            RMSPROP_ALPHA=0.99,
+            ADAM_BETA1=0.9,
+            ADAM_BETA2=0.999,
+            STAGED_LR=False,
+            NEW_LAYERS=(),
+            BASE_LR_MULT=0.1,
+            LR_SCHEDULER="single_step",
+            STEPSIZE=(-1,),
+            GAMMA=0.1,
+            MAX_EPOCH=1,
+            WARMUP_EPOCH=0,
+            WARMUP_TYPE="constant",
+            WARMUP_CONS_LR=1e-5,
+            WARMUP_MIN_LR=1e-5,
+            WARMUP_RECOUNT=True,
+        ),
+    )
+    return cfg
+
+
+class FakeTransformer(nn.Module):
+    def forward(self, x):
+        return x + x.mean(dim=0, keepdim=True)
+
+
+class FakeVisual(nn.Module):
+    def __init__(self, embed_dim, input_resolution=32):
+        super().__init__()
+        self.input_resolution = input_resolution
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.proj = nn.Linear(3, embed_dim, bias=False)
+
+    def forward(self, image):
+        x = self.pool(image).flatten(1)
+        return self.proj(x)
+
+
+class FakeClipModel(nn.Module):
+    def __init__(self, embed_dim=16, vocab_size=49408, input_resolution=32):
+        super().__init__()
+        self.dtype = torch.float32
+        self.visual = FakeVisual(embed_dim, input_resolution=input_resolution)
+        self.transformer = FakeTransformer()
+        self.positional_embedding = nn.Parameter(torch.zeros(77, embed_dim))
+        self.ln_final = nn.LayerNorm(embed_dim)
+        self.text_projection = nn.Parameter(torch.eye(embed_dim))
+        self.logit_scale = nn.Parameter(torch.tensor(math.log(1 / 0.07)))
+        self.token_embedding = nn.Embedding(vocab_size, embed_dim)
+
+
+def make_prompt_learner(
+    use_spf=True,
+    gamma_init=0.05,
+    gamma_max=0.10,
+    n_ctx=4,
+    n_prompt=1,
+    shared_init=False,
+):
+    torch.manual_seed(1)
+    cfg = make_cfg(
+        use_spf=use_spf,
+        gamma_init=gamma_init,
+        gamma_max=gamma_max,
+        n_ctx=n_ctx,
+        n_prompt=n_prompt,
+        shared_init=shared_init,
+    )
+    classnames = ["alpha", "beta"]
+    clip_model = FakeClipModel()
+    prompt_learner = PromptLearner(cfg, classnames, clip_model)
+    return cfg, classnames, clip_model, prompt_learner
+
+
+def make_fake_trainer(prompt_learner, cfg):
+    model = SimpleNamespace(prompt_learner=prompt_learner)
+    return SimpleNamespace(model=model, cfg=cfg, optim=None, sched=None, _optims={}, _scheds={})
+
+
+def assert_tensor_close(a, b, atol=1e-6, rtol=1e-6, msg=""):
+    if not torch.allclose(a, b, atol=atol, rtol=rtol):
+        raise AssertionError(msg or f"Tensor mismatch:\n{a}\n!=\n{b}")
+
+
+def test_gamma_initialization_and_range():
+    cfg, _, _, prompt_learner = make_prompt_learner(use_spf=True, gamma_init=0.05, gamma_max=0.10)
+    prompt_learner.refresh_spf_anchor()
+    _, aux = prompt_learner.fuse_ctx_spf(prompt_learner.ctx_local, prompt_learner.ctx_global)
+    gamma_mean = aux["gamma_mean"].item()
+    gamma_std = aux["gamma_std"].item()
+    gamma_min = aux["gamma_min"].item()
+    gamma_max = aux["gamma_max"].item()
+
+    assert abs(gamma_mean - cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT) <= 1e-6
+    assert gamma_std <= 1e-8
+    assert gamma_min >= -1e-8
+    assert gamma_max <= cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MAX + 1e-8
+    print("test_gamma_initialization_and_range passed")
+
+
+def test_basis_and_global_anchor_freeze_and_cache():
+    _, _, _, prompt_learner = make_prompt_learner(use_spf=True)
+    original_compute_shared_basis = sys.modules["trainers.GL_SVDMSE"].compute_shared_basis
+    call_count = {"n": 0}
+
+    def counting_compute_shared_basis(*args, **kwargs):
+        call_count["n"] += 1
+        return original_compute_shared_basis(*args, **kwargs)
+
+    sys.modules["trainers.GL_SVDMSE"].compute_shared_basis = counting_compute_shared_basis
+    try:
+        prompt_learner.refresh_spf_anchor()
+        assert call_count["n"] == 1
+        basis_snapshot = prompt_learner._spf_basis.detach().clone()
+        anchor_snapshot = prompt_learner._spf_global_anchor_coord.detach().clone()
+        assert prompt_learner._spf_basis.requires_grad is False
+        assert prompt_learner._spf_global_anchor_coord.requires_grad is False
+
+        prompt_learner.fuse_ctx_spf(prompt_learner.ctx_local, prompt_learner.ctx_global)
+        prompt_learner.fuse_ctx_spf(prompt_learner.ctx_local, prompt_learner.ctx_global)
+
+        assert call_count["n"] == 1
+        assert_tensor_close(prompt_learner._spf_basis, basis_snapshot)
+        assert_tensor_close(prompt_learner._spf_global_anchor_coord, anchor_snapshot)
+    finally:
+        sys.modules["trainers.GL_SVDMSE"].compute_shared_basis = original_compute_shared_basis
+    print("test_basis_and_global_anchor_freeze_and_cache passed")
+
+
+def test_alignment_loss_and_ce_gradient_paths():
+    cfg, classnames, clip_model, prompt_learner = make_prompt_learner(use_spf=True)
+    prompt_learner.refresh_spf_anchor()
+
+    prompt_learner.ctx_global.grad = None
+    prompt_learner.ctx_local.grad = None
+    _, aux = prompt_learner.fuse_ctx_spf(prompt_learner.ctx_local, prompt_learner.ctx_global)
+    aux["shared_pull_loss"].backward()
+
+    assert prompt_learner.ctx_global.grad is None or torch.allclose(
+        prompt_learner.ctx_global.grad, torch.zeros_like(prompt_learner.ctx_global.grad)
+    )
+
+    prompt_learner.ctx_global.grad = None
+    prompt_learner.ctx_local.grad = None
+    model = CustomCLIP(cfg, classnames, clip_model)
+    model.train()
+    model.prompt_learner.refresh_spf_anchor()
+    image = torch.randn(2, 3, 32, 32)
+    label = torch.tensor([0, 1])
+    logits, _ = model(image)
+    loss_ce = F.cross_entropy(logits, label)
+    loss_ce.backward()
+
+    assert model.prompt_learner.ctx_global.grad is not None
+    assert model.prompt_learner.ctx_global.grad.abs().sum().item() > 0
+    print("test_alignment_loss_and_ce_gradient_paths passed")
+
+
+def test_client_private_state_isolation():
+    cfg, _, _, prompt_learner = make_prompt_learner(use_spf=True)
+    fake_trainer = make_fake_trainer(prompt_learner, cfg)
+    global_state = extract_spf_global_state(fake_trainer)
+    private_a = clone_spf_private_state(prompt_learner)
+    private_b = clone_spf_private_state(prompt_learner)
+
+    mutated_a = {
+        "ctx_local": private_a["ctx_local"].clone().add_(1.0),
+        "gamma_net": {},
+    }
+    for key, value in private_a["gamma_net"].items():
+        mutated_a["gamma_net"][key] = value.clone().add_(1.0)
+
+    load_spf_client_state(fake_trainer, global_state, private_b)
+    assert_tensor_close(prompt_learner.ctx_local.detach(), private_b["ctx_local"])
+    for key, value in private_b["gamma_net"].items():
+        assert_tensor_close(prompt_learner.gamma_net.state_dict()[key], value)
+
+    load_spf_client_state(fake_trainer, global_state, mutated_a)
+    assert_tensor_close(prompt_learner.ctx_local.detach(), mutated_a["ctx_local"])
+    for key, value in mutated_a["gamma_net"].items():
+        assert_tensor_close(prompt_learner.gamma_net.state_dict()[key], value)
+
+    print("test_client_private_state_isolation passed")
+
+
+def test_optimizer_state_isolation():
+    cfg, _, _, prompt_learner = make_prompt_learner(use_spf=True)
+    fake_trainer = make_fake_trainer(prompt_learner, cfg)
+
+    rebuild_prompt_optimizer(fake_trainer)
+    assert len(fake_trainer.optim.state) == 0
+    param_ids = {
+        id(param)
+        for group in fake_trainer.optim.param_groups
+        for param in group["params"]
+    }
+    for name, param in prompt_learner.gamma_net.named_parameters():
+        assert id(param) in param_ids, f"gamma_net parameter missing from optimizer: {name}"
+
+    loss = (
+        prompt_learner.ctx_global.sum()
+        + prompt_learner.ctx_local.sum()
+        + sum(param.sum() for param in prompt_learner.gamma_net.parameters())
+    )
+    loss.backward()
+    fake_trainer.optim.step()
+    assert len(fake_trainer.optim.state) > 0
+
+    rebuild_prompt_optimizer(fake_trainer)
+    assert len(fake_trainer.optim.state) == 0
+    print("test_optimizer_state_isolation passed")
+
+
+def test_fedavg_upload_safety():
+    cfg, _, _, prompt_learner = make_prompt_learner(use_spf=True)
+    fake_trainer = make_fake_trainer(prompt_learner, cfg)
+    global_state = extract_spf_global_state(fake_trainer)
+
+    assert set(global_state.keys()) == {"ctx_global"}
+    assert "ctx_local" not in global_state
+    assert "gamma_net" not in global_state
+    print("test_fedavg_upload_safety passed")
+
+
+def main():
+    test_gamma_initialization_and_range()
+    test_basis_and_global_anchor_freeze_and_cache()
+    test_alignment_loss_and_ce_gradient_paths()
+    test_client_private_state_isolation()
+    test_optimizer_state_isolation()
+    test_fedavg_upload_safety()
+    print("ALL SPF TESTS PASSED")
+
+
+if __name__ == "__main__":
+    main()
