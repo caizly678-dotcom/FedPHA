@@ -1,0 +1,15 @@
+{
+  "best_gm_micro": 67.71602955348538,
+  "best_gm_round": 3,
+  "final_gm_micro": 67.52328943141664,
+  "best_pm_micro": 89.78477353035657,
+  "best_pm_round": 30,
+  "final_pm_micro": 89.46353999357532,
+  "final_mean_client_acc": 89.19428834456235,
+  "final_worst_client_acc": 79.05982905982906,
+  "final_client_acc_std": 6.3284933789958275,
+  "mean_round_total_sec": 154.2109198491997,
+  "peak_memory_mb": 1413.22314453125,
+  "seed": 1,
+  "method_label": "A1"
+}

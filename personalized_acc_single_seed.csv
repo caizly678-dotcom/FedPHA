@@ -1,0 +1,8 @@
+Dataset,Personalized Acc (Last 10 Avg)
+caltech101,98.78
+dtd,91.54
+food101,96.31
+oxford_flowers,99.22
+oxford_pets,98.75
+Office31,94.58
+OfficeHome,89.07

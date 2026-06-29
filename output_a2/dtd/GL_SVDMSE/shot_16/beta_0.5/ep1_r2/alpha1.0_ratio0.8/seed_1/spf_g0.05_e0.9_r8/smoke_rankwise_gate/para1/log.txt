@@ -1,0 +1,1179 @@
+***************
+** Arguments **
+***************
+alpha: 1.0
+avg_prompt: 1
+backbone: ViT-B/16
+beta: 0.5
+dataset: dtd
+device_id: 0
+eval_only: False
+frac: 1
+gamma: 1
+head: 
+iid: False
+load_epoch: None
+logdir: ./logs/
+n_ctx: 16
+no_train: False
+num_prompt: 2
+num_shots: 16
+num_users: 2
+opts: ['OPTIM.ROUND', '2']
+output_dir: output/..
+para_dir: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r2/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8/smoke_rankwise_gate/para1
+partition: noniid-labeldir
+prompts_lens: None
+ratio: 0.8
+resume: None
+root: /workspace/FedPHA/DATA
+seed: 1
+smoke_text_encoder_counter: True
+specify: False
+spf_alignment_type: mse
+spf_debug_gate: True
+spf_energy: 0.9
+spf_fixed_round_basis: False
+spf_freeze_anchor: True
+spf_gamma_base: 0.05
+spf_gamma_delta: 0.03
+spf_gamma_init: 0.05
+spf_gamma_max: 0.1
+spf_gamma_min: 0.005
+spf_gate_lr_mult: 3.0
+spf_gate_type: rankwise
+spf_max_rank: 8
+spf_min_rank: 1
+spf_shared_init: False
+spf_shared_lambda: 0.1
+spf_use_dynamic_gate: True
+spf_variant: smoke_rankwise_gate
+test_batch_size: 128
+train_batch_size: 32
+trainer: GL_SVDMSE
+transforms: None
+use_spf: True
+useall: False
+************
+** Config **
+************
+DATALOADER:
+  K_TRANSFORMS: 1
+  NUM_WORKERS: 8
+  RETURN_IMG0: False
+  TEST:
+    BATCH_SIZE: 128
+    SAMPLER: SequentialSampler
+  TRAIN_U:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAME_AS_X: True
+    SAMPLER: RandomSampler
+  TRAIN_X:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAMPLER: RandomSampler
+DATASET:
+  ALL_AS_UNLABELED: False
+  BETA: 0.5
+  CIFAR_C_LEVEL: 1
+  CIFAR_C_TYPE: 
+  DOMAIN_NUM: 1
+  IID: False
+  NAME: DescribableTextures
+  NUM_LABELED: -1
+  NUM_SHOTS: 16
+  PARTITION: noniid-labeldir
+  REPEATRATE: 0.0
+  ROOT: /workspace/FedPHA/DATA
+  SOURCE_DOMAINS: ()
+  STL10_FOLD: -1
+  SUBSAMPLE_CLASSES: all
+  TARGET_DOMAINS: ()
+  USEALL: False
+  USERS: 2
+  USER_PROMPT_LENGTHS: []
+  VAL_PERCENT: 0.1
+INPUT:
+  COLORJITTER_B: 0.4
+  COLORJITTER_C: 0.4
+  COLORJITTER_H: 0.1
+  COLORJITTER_S: 0.4
+  CROP_PADDING: 4
+  CUTOUT_LEN: 16
+  CUTOUT_N: 1
+  GB_K: 21
+  GB_P: 0.5
+  GN_MEAN: 0.0
+  GN_STD: 0.15
+  INTERPOLATION: bicubic
+  NO_TRANSFORM: False
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  RANDAUGMENT_M: 10
+  RANDAUGMENT_N: 2
+  RGS_P: 0.2
+  RRCROP_SCALE: (0.08, 1.0)
+  SIZE: (224, 224)
+  TRANSFORMS: ('random_resized_crop', 'random_flip', 'normalize')
+MODEL:
+  BACKBONE:
+    NAME: ViT-B/16
+    PRETRAINED: True
+  HEAD:
+    ACTIVATION: relu
+    BN: True
+    DROPOUT: 0.0
+    HIDDEN_LAYERS: ()
+    NAME: 
+  INIT_WEIGHTS: 
+OPTIM:
+  ADAM_BETA1: 0.9
+  ADAM_BETA2: 0.999
+  BASE_LR_MULT: 0.1
+  GAMMA: 1
+  LR: 0.001
+  LR_SCHEDULER: single_step
+  MAX_EPOCH: 1
+  MOMENTUM: 0.9
+  NAME: sgd
+  NEW_LAYERS: ()
+  RMSPROP_ALPHA: 0.99
+  ROUND: 2
+  SGD_DAMPNING: 0
+  SGD_NESTEROV: False
+  STAGED_LR: False
+  STEPSIZE: (-1,)
+  WARMUP_CONS_LR: 1e-05
+  WARMUP_EPOCH: 0
+  WARMUP_MIN_LR: 1e-05
+  WARMUP_RECOUNT: True
+  WARMUP_TYPE: constant
+  WEIGHT_DECAY: 0.0005
+OUTPUT_DIR: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r2/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8/smoke_rankwise_gate
+RESUME: 
+SEED: 1
+TEST:
+  COMPUTE_CMAT: False
+  EVALUATOR: Classification
+  FINAL_MODEL: last_step
+  NO_TEST: False
+  PER_CLASS_RESULT: False
+  SPLIT: test
+TRAIN:
+  CHECKPOINT_FREQ: 0
+  COUNT_ITER: train_x
+  PRINT_FREQ: 10
+TRAINER:
+  CDAC:
+    CLASS_LR_MULTI: 10
+    P_THRESH: 0.95
+    RAMPUP_COEF: 30
+    RAMPUP_ITRS: 1000
+    STRONG_TRANSFORMS: ()
+    TOPK_MATCH: 5
+  CROSSGRAD:
+    ALPHA_D: 0.5
+    ALPHA_F: 0.5
+    EPS_D: 1.0
+    EPS_F: 1.0
+  DAEL:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DAELDG:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DDAIG:
+    ALPHA: 0.5
+    CLAMP: False
+    CLAMP_MAX: 1.0
+    CLAMP_MIN: -1.0
+    G_ARCH: 
+    LMDA: 0.3
+    WARMUP: 0
+  DOMAINMIX:
+    ALPHA: 1.0
+    BETA: 1.0
+    TYPE: crossdomain
+  ENTMIN:
+    LMDA: 0.001
+  FEDPGP:
+    BOTTLENECK: 4
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    FEATURE: False
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    mu: 1
+    temp: 0.5
+  FIXMATCH:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 1.0
+  GLP_OT:
+    AVG_N: 1.0
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    EPS: 0.1
+    MAX_ITER: 100
+    N: 2
+    N_CTX: 16
+    OT: COT
+    PREC: fp16
+    THRESH: 0.001
+    TOP_PERCENT: 1
+  GL_SVDMSE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    DEBUG_TEXT_ENCODER_FORWARD_COUNT: True
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    SPF_ALIGNMENT_TYPE: mse
+    SPF_DEBUG_GATE: True
+    SPF_ENERGY: 0.9
+    SPF_FIXED_ROUND_BASIS: False
+    SPF_FREEZE_ANCHOR: True
+    SPF_GAMMA_BASE: 0.05
+    SPF_GAMMA_DELTA: 0.03
+    SPF_GAMMA_INIT: 0.05
+    SPF_GAMMA_MAX: 0.1
+    SPF_GAMMA_MIN: 0.005
+    SPF_GATE_LR_MULT: 3.0
+    SPF_GATE_TYPE: rankwise
+    SPF_MAX_RANK: 8
+    SPF_MIN_RANK: 1
+    SPF_SHARED_INIT: False
+    SPF_SHARED_LAMBDA: 0.1
+    SPF_USE_DYNAMIC_GATE: True
+    USE_SPF: True
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  GL_SVDMSE_HE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N: 1
+    N_CTX_GLOBAL: 16
+    PREC: fp16
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  M3SDA:
+    LMDA: 0.5
+    N_STEP_F: 4
+  MCD:
+    N_STEP_F: 4
+  MEANTEACHER:
+    EMA_ALPHA: 0.999
+    RAMPUP: 5
+    WEIGHT_U: 1.0
+  MIXMATCH:
+    MIXUP_BETA: 0.75
+    RAMPUP: 20000
+    TEMP: 2.0
+    WEIGHT_U: 100.0
+  MME:
+    LMDA: 0.1
+  NAME: GL_SVDMSE
+  PROMPTFL:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N_CTX: 16
+    PREC: fp16
+  SE:
+    CONF_THRE: 0.95
+    EMA_ALPHA: 0.999
+    RAMPUP: 300
+USE_CUDA: True
+VERBOSE: True
+VERSION: 1
+Loading trainer: GL_SVDMSE
+Loading dataset: DescribableTextures
+Reading split from /workspace/FedPHA/DATA/dtd/split_zhou_DescribableTextures.json
+Loading preprocessed few-shot data from /workspace/FedPHA/DATA/dtd/split_fewshot/shot_16-seed_1.pkl
+Creating a 16-shot federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22, 9, 18, 12, 26, 17, 37, 16, 13, 27, 8, 10, 31, 15, 41, 25, 1, 4, 35, 2]
+idx: 0 , output_dict_len: 384
+user class dict total [32, 38, 0, 42, 5, 30, 29, 14, 11, 40, 33, 34, 19, 7, 6, 21, 36, 39, 20, 46, 28, 44, 24]
+idx: 1 , output_dict_len: 368
+Creating a baseline federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22, 9, 18, 12, 26, 17, 37, 16, 13, 27, 8, 10, 31, 15, 41, 25, 1, 4, 35, 2]
+idx: 0 , output_dict_len: 864
+user class dict total [32, 38, 0, 42, 5, 30, 29, 14, 11, 40, 33, 34, 19, 7, 6, 21, 36, 39, 20, 46, 28, 44, 24]
+idx: 1 , output_dict_len: 828
+fewshot federated dataset
+Building transform_train
++ random resized crop (size=(224, 224), scale=(0.08, 1.0))
++ random flip
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+Building transform_test
++ resize the smaller edge to 224
++ 224x224 center crop
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+-------------------  -------------------
+Dataset              DescribableTextures
+# classes            47
+# federated_train_x  2
+# federated_test_x   2
+# test               1,692
+-------------------  -------------------
+Loading CLIP (backbone: ViT-B/16)
+Building custom CLIP
+Initializing a generic context
+Initial context: "X X X X X X X X X X X X X X X X"
+Number of context words (tokens): 16
+SPF method label: A2-rankwise
+SPF gate type: rankwise
+SPF rank_gate parameters:
+  rank_gate.0.weight: numel=16, requires_grad=True
+  rank_gate.0.bias: numel=8, requires_grad=True
+  rank_gate.2.weight: numel=8, requires_grad=True
+  rank_gate.2.bias: numel=1, requires_grad=True
+  rank_bias: numel=8, requires_grad=True
+SPF method label: A2-rankwise
+Turning off gradients in both the image and the text encoder
+Loading evaluator: Classification
++-----------------------------------+------------+
+|              Modules              | Parameters |
++-----------------------------------+------------+
+|     prompt_learner.ctx_global     |    8192    |
+|      prompt_learner.ctx_local     |    8192    |
+|      prompt_learner.rank_bias     |     8      |
+| prompt_learner.rank_gate.0.weight |     16     |
+|  prompt_learner.rank_gate.0.bias  |     8      |
+| prompt_learner.rank_gate.2.weight |     8      |
+|  prompt_learner.rank_gate.2.bias  |     1      |
++-----------------------------------+------------+
+Total Trainable Params: 16425
++-------------------------------------------------------------+------------+
+|                           Modules                           | Parameters |
++-------------------------------------------------------------+------------+
+|                image_encoder.class_embedding                |    768     |
+|              image_encoder.positional_embedding             |   151296   |
+|                      image_encoder.proj                     |   393216   |
+|                  image_encoder.conv1.weight                 |   589824   |
+|                 image_encoder.ln_pre.weight                 |    768     |
+|                  image_encoder.ln_pre.bias                  |    768     |
+|  image_encoder.transformer.resblocks.0.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.0.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.0.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.0.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.0.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.0.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.1.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.1.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.1.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.1.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.1.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.1.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.2.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.2.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.2.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.2.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.2.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.2.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.3.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.3.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.3.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.3.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.3.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.3.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.4.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.4.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.4.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.4.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.4.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.4.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.5.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.5.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.5.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.5.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.5.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.5.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.6.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.6.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.6.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.6.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.6.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.6.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.7.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.7.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.7.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.7.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.7.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.7.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.8.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.8.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.8.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.8.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.8.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.8.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.9.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.9.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.9.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.9.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.9.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.9.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.10.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.10.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.10.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.10.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.10.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.10.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.10.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.10.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.10.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.10.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_2.bias      |    768     |
+|  image_encoder.transformer.resblocks.11.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.11.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.11.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.11.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.11.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.11.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.11.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.11.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.11.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.11.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_2.bias      |    768     |
+|                 image_encoder.ln_post.weight                |    768     |
+|                  image_encoder.ln_post.bias                 |    768     |
++-------------------------------------------------------------+------------+
+Total Trainable Params: 86192640
++------------------------------------------------------------+------------+
+|                          Modules                           | Parameters |
++------------------------------------------------------------+------------+
+|             text_encoder.positional_embedding              |   39424    |
+|                text_encoder.text_projection                |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.0.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.0.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.0.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.0.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.1.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.1.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.1.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.1.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.1.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.1.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.2.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.2.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.2.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.2.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.2.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.2.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.3.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.3.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.3.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.3.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.3.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.3.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.4.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.4.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.4.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.4.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.4.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.4.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.5.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.5.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.5.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.5.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.5.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.5.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.6.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.6.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.6.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.6.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.6.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.6.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.7.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.7.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.7.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.7.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.7.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.7.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.8.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.8.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.8.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.8.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.8.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.8.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.9.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.9.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.9.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.9.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.9.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.9.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.10.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.10.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.10.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.10.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.10.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.10.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.10.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.10.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.10.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.10.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.11.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.11.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.11.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.11.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.11.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.11.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.11.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.11.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.11.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.11.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_2.bias       |    512     |
+|                text_encoder.ln_final.weight                |    512     |
+|                 text_encoder.ln_final.bias                 |    512     |
++------------------------------------------------------------+------------+
+Total Trainable Params: 38131200
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF private-state isolation check passed
+GM mode: global_only_ctx_global
+PM mode: client_private_fused_prompt
+idxs_users [0, 1]
+------------local train start epoch: 0 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.42958840e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.64680838e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] rank_gate.2.weight grad_is_none=False grad_norm=8.48508254e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] rank_gate.2.bias grad_is_none=False grad_norm=6.88495394e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] rank_bias grad_is_none=False grad_norm=6.33197511e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][after_step] weight_norm_before=5.08880951e-02 weight_norm_after=5.08872718e-02 bias_before=0.00000000e+00 bias_after=2.06548611e-05 rank_bias_delta=1.34037582e-05 max_abs_parameter_change=2.06548611e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=1] rank_gamma_mean=0.04993366 rank_gamma_std=1.80054776e-05 rank_gamma_min=0.04991331 rank_gamma_max=0.04996307 rank_gamma=[0.04992687, 0.04991939, 0.04995709, 0.04994497, 0.04991331, 0.04993039, 0.04991424, 0.04996307] max_abs_gamma_delta=8.66949558e-05 gate_input_token_std=2.25699246e-01 compatibility=[0.15017782, 0.18163675, -0.37283295, -0.08298097, 0.32073060, 0.17192128, 0.36673182, -0.48186782] relative_gap=[5.61428833, 7.36607170, 6.86430788, 4.84765387, 6.33995152, 4.33916521, 5.18609190, 7.26838160] effective_dynamic_delta_fp32=9.40370301e-05 effective_dynamic_delta_after_cast=2.84660549e-04 correction_ratio=3.79216075e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.69392253e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] rank_gate.0.bias grad_is_none=False grad_norm=6.15091776e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] rank_gate.2.weight grad_is_none=False grad_norm=2.67747161e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] rank_gate.2.bias grad_is_none=False grad_norm=2.57174205e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] rank_bias grad_is_none=False grad_norm=1.12483334e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][after_step] weight_norm_before=5.08872718e-02 weight_norm_after=5.08872047e-02 bias_before=2.06548611e-05 bias_after=3.15289799e-05 rank_bias_delta=1.89125876e-05 max_abs_parameter_change=1.89125876e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=2] rank_gamma_mean=0.04993503 rank_gamma_std=1.82285075e-05 rank_gamma_min=0.04991453 rank_gamma_max=0.04996497 rank_gamma=[0.04992818, 0.04992070, 0.04995884, 0.04994610, 0.04991453, 0.04993157, 0.04991533, 0.04996497] max_abs_gamma_delta=8.54693353e-05 gate_input_token_std=2.26260394e-01 compatibility=[0.15063316, 0.18100443, -0.37283418, -0.08436057, 0.32273477, 0.17276475, 0.36831492, -0.47902060] relative_gap=[5.61100626, 7.39539433, 6.87872124, 4.84060860, 6.35759544, 4.33867788, 5.20114422, 7.28737211] effective_dynamic_delta_fp32=9.22745530e-05 effective_dynamic_delta_after_cast=2.75876315e-04 correction_ratio=3.79093327e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=3][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.12501228e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=3][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.84736398e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=3][before_step] rank_gate.2.weight grad_is_none=False grad_norm=4.36140317e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=3][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.19049754e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=3][before_step] rank_bias grad_is_none=False grad_norm=1.00057563e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=3][after_step] weight_norm_before=5.08872047e-02 weight_norm_after=5.08869626e-02 bias_before=3.15289799e-05 bias_after=3.77441465e-05 rank_bias_delta=3.54015647e-05 max_abs_parameter_change=3.54015647e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=3] rank_gamma_mean=0.04993582 rank_gamma_std=1.84843957e-05 rank_gamma_min=0.04991525 rank_gamma_max=0.04996631 rank_gamma=[0.04992878, 0.04992125, 0.04995984, 0.04994710, 0.04991525, 0.04993228, 0.04991577, 0.04996631] max_abs_gamma_delta=8.47503543e-05 gate_input_token_std=2.26995021e-01 compatibility=[0.14812618, 0.17546810, -0.37386167, -0.08170020, 0.32694361, 0.17339653, 0.36831683, -0.47715151] relative_gap=[5.58888006, 7.42029762, 6.88908052, 4.83752489, 6.37795734, 4.33067465, 5.22479582, 7.33455944] effective_dynamic_delta_fp32=9.13018666e-05 effective_dynamic_delta_after_cast=2.89660529e-04 correction_ratio=3.78893800e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=4][before_step] rank_gate.0.weight grad_is_none=False grad_norm=8.25069583e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=4][before_step] rank_gate.0.bias grad_is_none=False grad_norm=3.74791634e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=4][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.97312725e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=4][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.56703510e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=4][before_step] rank_bias grad_is_none=False grad_norm=2.81041348e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=4][after_step] weight_norm_before=5.08869626e-02 weight_norm_after=5.08864671e-02 bias_before=3.77441465e-05 bias_after=4.80388444e-05 rank_bias_delta=2.99511412e-05 max_abs_parameter_change=2.99511412e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=4] rank_gamma_mean=0.04993606 rank_gamma_std=1.85998797e-05 rank_gamma_min=0.04991542 rank_gamma_max=0.04996675 rank_gamma=[0.04992912, 0.04992106, 0.04996021, 0.04994731, 0.04991542, 0.04993269, 0.04991592, 0.04996675] max_abs_gamma_delta=8.45827162e-05 gate_input_token_std=2.28355125e-01 compatibility=[0.14791057, 0.16494498, -0.37341660, -0.08185197, 0.33284691, 0.17557025, 0.37130484, -0.47769922] relative_gap=[5.53892517, 7.44480658, 6.89842367, 4.83138800, 6.42134333, 4.32061958, 5.25148153, 7.37038755] effective_dynamic_delta_fp32=9.10371600e-05 effective_dynamic_delta_after_cast=2.86526105e-04 correction_ratio=3.78621705e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=5][before_step] rank_gate.0.weight grad_is_none=False grad_norm=4.28490399e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=5][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.90927807e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=5][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.06869843e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=5][before_step] rank_gate.2.bias grad_is_none=False grad_norm=7.98306055e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=5][before_step] rank_bias grad_is_none=False grad_norm=1.22455172e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=5][after_step] weight_norm_before=5.08864671e-02 weight_norm_after=5.08849882e-02 bias_before=4.80388444e-05 bias_after=8.12531798e-05 rank_bias_delta=2.93070625e-05 max_abs_parameter_change=3.32143354e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=5] rank_gamma_mean=0.04993661 rank_gamma_std=1.87507321e-05 rank_gamma_min=0.04991589 rank_gamma_max=0.04996766 rank_gamma=[0.04992963, 0.04992127, 0.04996092, 0.04994774, 0.04991589, 0.04993338, 0.04991636, 0.04996766] max_abs_gamma_delta=8.41096044e-05 gate_input_token_std=2.29967073e-01 compatibility=[0.14672410, 0.15580520, -0.37129375, -0.08249471, 0.33919418, 0.17811686, 0.37372708, -0.48037094] relative_gap=[5.49893188, 7.45947409, 6.89637136, 4.82150316, 6.45688963, 4.31297541, 5.26774120, 7.43329954] effective_dynamic_delta_fp32=9.03678592e-05 effective_dynamic_delta_after_cast=2.98721367e-04 correction_ratio=3.78170088e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=6][before_step] rank_gate.0.weight grad_is_none=False grad_norm=5.73197554e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=6][before_step] rank_gate.0.bias grad_is_none=False grad_norm=3.09506810e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=6][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.14523144e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=6][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.29424985e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=6][before_step] rank_bias grad_is_none=False grad_norm=1.12136034e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=6][after_step] weight_norm_before=5.08849882e-02 weight_norm_after=5.08820228e-02 bias_before=8.12531798e-05 bias_after=1.49973450e-04 rank_bias_delta=2.53854087e-05 max_abs_parameter_change=6.87202701e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=6] rank_gamma_mean=0.04993879 rank_gamma_std=1.91433064e-05 rank_gamma_min=0.04991769 rank_gamma_max=0.04997071 rank_gamma=[0.04993177, 0.04992346, 0.04996382, 0.04994944, 0.04991769, 0.04993546, 0.04991799, 0.04997071] max_abs_gamma_delta=8.23102891e-05 gate_input_token_std=2.31997266e-01 compatibility=[0.14690508, 0.15366343, -0.36218205, -0.08642111, 0.34524268, 0.18179078, 0.37390551, -0.48768139] relative_gap=[5.44186163, 7.46570063, 6.87212086, 4.81529188, 6.51923037, 4.29719162, 5.29155064, 7.52534580] effective_dynamic_delta_fp32=8.75809055e-05 effective_dynamic_delta_after_cast=2.54422339e-04 correction_ratio=3.77541371e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=7][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.42644838e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=7][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.72445536e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=7][before_step] rank_gate.2.weight grad_is_none=False grad_norm=6.99482625e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=7][before_step] rank_gate.2.bias grad_is_none=False grad_norm=7.21279718e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=7][before_step] rank_bias grad_is_none=False grad_norm=4.75512398e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=7][after_step] weight_norm_before=5.08820228e-02 weight_norm_after=5.08784167e-02 bias_before=1.49973450e-04 bias_after=2.33459868e-04 rank_bias_delta=2.82068067e-05 max_abs_parameter_change=8.34864186e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=7] rank_gamma_mean=0.04994303 rank_gamma_std=1.96959081e-05 rank_gamma_min=0.04992133 rank_gamma_max=0.04997642 rank_gamma=[0.04993575, 0.04992778, 0.04996879, 0.04995307, 0.04992133, 0.04993934, 0.04992171, 0.04997642] max_abs_gamma_delta=7.86706805e-05 gate_input_token_std=2.34351248e-01 compatibility=[0.14711317, 0.15085438, -0.35332730, -0.08912255, 0.34847763, 0.18721095, 0.38049877, -0.49133420] relative_gap=[5.36962795, 7.44227362, 6.81877470, 4.79965782, 6.57622576, 4.27187538, 5.29434967, 7.64734793] effective_dynamic_delta_fp32=8.21845751e-05 effective_dynamic_delta_after_cast=2.72262958e-04 correction_ratio=3.76700759e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=8][before_step] rank_gate.0.weight grad_is_none=False grad_norm=7.11335670e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=8][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.94323618e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=8][before_step] rank_gate.2.weight grad_is_none=False grad_norm=2.01037549e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=8][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.23141415e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=8][before_step] rank_bias grad_is_none=False grad_norm=3.57204396e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=8][after_step] weight_norm_before=5.08784167e-02 weight_norm_after=5.08753061e-02 bias_before=2.33459868e-04 bias_after=3.04903049e-04 rank_bias_delta=2.92381010e-05 max_abs_parameter_change=7.14431808e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=8] rank_gamma_mean=0.04994812 rank_gamma_std=2.03264462e-05 rank_gamma_min=0.04992587 rank_gamma_max=0.04998314 rank_gamma=[0.04994053, 0.04993309, 0.04997478, 0.04995756, 0.04992587, 0.04994383, 0.04992617, 0.04998314] max_abs_gamma_delta=7.41258264e-05 gate_input_token_std=2.36468792e-01 compatibility=[0.14786395, 0.15103951, -0.34377462, -0.09088094, 0.35044196, 0.19170548, 0.38864449, -0.49465081] relative_gap=[5.29680777, 7.41767931, 6.77198410, 4.77866268, 6.61230040, 4.25171804, 5.30021191, 7.74581003] effective_dynamic_delta_fp32=7.57746311e-05 effective_dynamic_delta_after_cast=2.29849276e-04 correction_ratio=3.75738069e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=9][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.27645648e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=9][before_step] rank_gate.0.bias grad_is_none=False grad_norm=5.84145437e-06
+[SPF_DEBUG_GATE][client=0][round=0][batch=9][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.39464077e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=9][before_step] rank_gate.2.bias grad_is_none=False grad_norm=2.44459807e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=9][before_step] rank_bias grad_is_none=False grad_norm=3.16953473e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=9][after_step] weight_norm_before=5.08753061e-02 weight_norm_after=5.08723073e-02 bias_before=3.04903049e-04 bias_after=3.69934831e-04 rank_bias_delta=2.97693987e-05 max_abs_parameter_change=6.50317816e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=9] rank_gamma_mean=0.04995242 rank_gamma_std=2.08294859e-05 rank_gamma_min=0.04992986 rank_gamma_max=0.04998880 rank_gamma=[0.04994446, 0.04993754, 0.04997971, 0.04996140, 0.04992986, 0.04994763, 0.04992994, 0.04998880] max_abs_gamma_delta=7.01434910e-05 gate_input_token_std=2.38060743e-01 compatibility=[0.14758751, 0.15016773, -0.33664864, -0.09098431, 0.35132983, 0.19562833, 0.39726618, -0.49587953] relative_gap=[5.23102427, 7.39296675, 6.72574806, 4.75116110, 6.60971355, 4.23318195, 5.31201410, 7.81947708] effective_dynamic_delta_fp32=7.04947306e-05 effective_dynamic_delta_after_cast=2.45347299e-04 correction_ratio=3.74718457e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=10][before_step] rank_gate.0.weight grad_is_none=False grad_norm=7.02605103e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=10][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.94991842e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=10][before_step] rank_gate.2.weight grad_is_none=False grad_norm=8.32834397e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=10][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.23480498e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=10][before_step] rank_bias grad_is_none=False grad_norm=5.01520792e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=10][after_step] weight_norm_before=5.08723073e-02 weight_norm_after=5.08699715e-02 bias_before=3.69934831e-04 bias_after=4.24758473e-04 rank_bias_delta=2.41268281e-05 max_abs_parameter_change=5.48236421e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=10] rank_gamma_mean=0.04995620 rank_gamma_std=2.12249761e-05 rank_gamma_min=0.04993333 rank_gamma_max=0.04999365 rank_gamma=[0.04994792, 0.04994149, 0.04998396, 0.04996486, 0.04993338, 0.04995096, 0.04993333, 0.04999365] max_abs_gamma_delta=6.66677952e-05 gate_input_token_std=2.39470705e-01 compatibility=[0.14762801, 0.14954209, -0.33105090, -0.09029445, 0.35170290, 0.19864357, 0.40582407, -0.49730203] relative_gap=[5.16964960, 7.35754538, 6.68646765, 4.72902012, 6.60670757, 4.21188068, 5.31961918, 7.86768484] effective_dynamic_delta_fp32=6.59293364e-05 effective_dynamic_delta_after_cast=2.43881295e-04 correction_ratio=3.73635925e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+epoch [1/1] batch [10/12] time 0.072 (0.233) data 0.000 (0.086) loss 2.0269 (2.3468) acc 40.6250 (39.6875) spf_shared_loss 0.0150 (0.0150) spf_gamma_mean 0.0500 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0374 (0.0377) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=11][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.15600458e-04
+[SPF_DEBUG_GATE][client=0][round=0][batch=11][before_step] rank_gate.0.bias grad_is_none=False grad_norm=3.27547859e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=11][before_step] rank_gate.2.weight grad_is_none=False grad_norm=4.42903861e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=11][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.37131941e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=11][before_step] rank_bias grad_is_none=False grad_norm=5.98563533e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=11][after_step] weight_norm_before=5.08699715e-02 weight_norm_after=5.08674905e-02 bias_before=4.24758473e-04 bias_after=4.69985156e-04 rank_bias_delta=2.58955843e-05 max_abs_parameter_change=4.52266831e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=11] rank_gamma_mean=0.04995947 rank_gamma_std=2.16328190e-05 rank_gamma_min=0.04993627 rank_gamma_max=0.04999792 rank_gamma=[0.04995089, 0.04994490, 0.04998774, 0.04996800, 0.04993633, 0.04995370, 0.04993627, 0.04999792] max_abs_gamma_delta=6.37322664e-05 gate_input_token_std=2.40695298e-01 compatibility=[0.14735460, 0.14864072, -0.32426840, -0.08822586, 0.35129201, 0.19975731, 0.41235158, -0.50023818] relative_gap=[5.10981607, 7.33379507, 6.65224218, 4.71102715, 6.62334013, 4.19920111, 5.31783819, 7.91173697] effective_dynamic_delta_fp32=6.21067738e-05 effective_dynamic_delta_after_cast=2.39364541e-04 correction_ratio=3.72544713e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=0][batch=12][before_step] rank_gate.0.weight grad_is_none=False grad_norm=6.34140160e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=12][before_step] rank_gate.0.bias grad_is_none=False grad_norm=3.12246484e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=12][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.53836270e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=12][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.30749983e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=12][before_step] rank_bias grad_is_none=False grad_norm=3.40272370e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=12][after_step] weight_norm_before=5.08674905e-02 weight_norm_after=5.08651026e-02 bias_before=4.69985156e-04 bias_after=5.14610962e-04 rank_bias_delta=2.87541916e-05 max_abs_parameter_change=4.46258055e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=12] rank_gamma_mean=0.04996194 rank_gamma_std=2.18469504e-05 rank_gamma_min=0.04993858 rank_gamma_max=0.05000100 rank_gamma=[0.04995332, 0.04994746, 0.04999046, 0.04997027, 0.04993865, 0.04995579, 0.04993858, 0.05000100] max_abs_gamma_delta=6.14225864e-05 gate_input_token_std=2.42431670e-01 compatibility=[0.14953490, 0.14815809, -0.32093045, -0.08755868, 0.35079524, 0.20034094, 0.41955382, -0.50474036] relative_gap=[5.05167770, 7.31590223, 6.62960148, 4.69264174, 6.61815166, 4.18372631, 5.31788969, 7.94180298] effective_dynamic_delta_fp32=5.92303077e-05 effective_dynamic_delta_after_cast=2.24480522e-04 correction_ratio=3.71460393e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] rank_gate.0.weight grad_is_none=False grad_norm=7.91990824e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.12387458e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.78858184e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] rank_gate.2.bias grad_is_none=False grad_norm=8.87946226e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] rank_bias grad_is_none=False grad_norm=1.72086637e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][after_step] weight_norm_before=5.08880951e-02 weight_norm_after=5.08884117e-02 bias_before=0.00000000e+00 bias_after=2.66383881e-06 rank_bias_delta=3.89306733e-05 max_abs_parameter_change=3.89306733e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=1] rank_gamma_mean=0.04993366 rank_gamma_std=1.80054776e-05 rank_gamma_min=0.04991331 rank_gamma_max=0.04996307 rank_gamma=[0.04992687, 0.04991939, 0.04995709, 0.04994497, 0.04991331, 0.04993039, 0.04991424, 0.04996307] max_abs_gamma_delta=8.66949558e-05 gate_input_token_std=2.25699246e-01 compatibility=[0.15017782, 0.18163675, -0.37283295, -0.08298097, 0.32073060, 0.17192128, 0.36673182, -0.48186782] relative_gap=[5.61428833, 7.36607170, 6.86430788, 4.84765387, 6.33995152, 4.33916521, 5.18609190, 7.26838160] effective_dynamic_delta_fp32=9.40370301e-05 effective_dynamic_delta_after_cast=2.84660549e-04 correction_ratio=3.79216075e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] rank_gate.0.weight grad_is_none=False grad_norm=5.46216732e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.73095706e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.30441450e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.14171663e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] rank_bias grad_is_none=False grad_norm=6.86837686e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][after_step] weight_norm_before=5.08884117e-02 weight_norm_after=5.08873835e-02 bias_before=2.66383881e-06 bias_after=3.93127884e-05 rank_bias_delta=4.28701460e-05 max_abs_parameter_change=4.28701460e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=2] rank_gamma_mean=0.04993369 rank_gamma_std=1.81159703e-05 rank_gamma_min=0.04991310 rank_gamma_max=0.04996300 rank_gamma=[0.04992660, 0.04991915, 0.04995721, 0.04994565, 0.04991310, 0.04993043, 0.04991436, 0.04996300] max_abs_gamma_delta=8.68998468e-05 gate_input_token_std=2.25592643e-01 compatibility=[0.14666852, 0.17489958, -0.36779839, -0.07666497, 0.32069761, 0.17201440, 0.36785492, -0.48770934] relative_gap=[5.61865997, 7.35815239, 6.84320641, 4.86805296, 6.37406349, 4.33113337, 5.17673635, 7.28636980] effective_dynamic_delta_fp32=9.40582177e-05 effective_dynamic_delta_after_cast=2.78555992e-04 correction_ratio=3.79228331e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=3][before_step] rank_gate.0.weight grad_is_none=False grad_norm=8.81744898e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=3][before_step] rank_gate.0.bias grad_is_none=False grad_norm=4.43015510e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=3][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.88876931e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=3][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.85224246e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=3][before_step] rank_bias grad_is_none=False grad_norm=8.93499330e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=3][after_step] weight_norm_before=5.08873835e-02 weight_norm_after=5.08840308e-02 bias_before=3.93127884e-05 bias_after=1.27864056e-04 rank_bias_delta=5.42469134e-05 max_abs_parameter_change=8.85512709e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=3] rank_gamma_mean=0.04993593 rank_gamma_std=1.84736182e-05 rank_gamma_min=0.04991503 rank_gamma_max=0.04996568 rank_gamma=[0.04992851, 0.04992111, 0.04996004, 0.04994848, 0.04991503, 0.04993215, 0.04991641, 0.04996568] max_abs_gamma_delta=8.49664211e-05 gate_input_token_std=2.24855527e-01 compatibility=[0.14557053, 0.16854505, -0.36072296, -0.06964691, 0.32047573, 0.17046687, 0.37006462, -0.48812121] relative_gap=[5.64037323, 7.37647581, 6.82135296, 4.88934565, 6.38902521, 4.31965923, 5.15799379, 7.27865362] effective_dynamic_delta_fp32=9.11754323e-05 effective_dynamic_delta_after_cast=2.56283063e-04 correction_ratio=3.79030816e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=4][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.66918854e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=4][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.32355606e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=4][before_step] rank_gate.2.weight grad_is_none=False grad_norm=6.69425726e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=4][before_step] rank_gate.2.bias grad_is_none=False grad_norm=5.53534273e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=4][before_step] rank_bias grad_is_none=False grad_norm=1.23688094e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=4][after_step] weight_norm_before=5.08840308e-02 weight_norm_after=5.08806184e-02 bias_before=1.27864056e-04 bias_after=2.24166026e-04 rank_bias_delta=3.29006580e-05 max_abs_parameter_change=9.63019702e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=4] rank_gamma_mean=0.04994136 rank_gamma_std=1.91401923e-05 rank_gamma_min=0.04992007 rank_gamma_max=0.04997233 rank_gamma=[0.04993349, 0.04992658, 0.04996646, 0.04995447, 0.04992007, 0.04993642, 0.04992106, 0.04997233] max_abs_gamma_delta=7.99298286e-05 gate_input_token_std=2.24061340e-01 compatibility=[0.14552394, 0.16778520, -0.35221028, -0.06054578, 0.32227504, 0.16839662, 0.37348747, -0.48738864] relative_gap=[5.64597273, 7.38784361, 6.77905607, 4.91422892, 6.38359022, 4.30658817, 5.14725924, 7.28258753] effective_dynamic_delta_fp32=8.41499350e-05 effective_dynamic_delta_after_cast=2.58202752e-04 correction_ratio=3.78538370e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=5][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.90619030e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=5][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.18205739e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=5][before_step] rank_gate.2.weight grad_is_none=False grad_norm=2.16043880e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=5][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.94498294e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=5][before_step] rank_bias grad_is_none=False grad_norm=6.57559466e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=5][after_step] weight_norm_before=5.08806184e-02 weight_norm_after=5.08784130e-02 bias_before=2.24166026e-04 bias_after=2.96002516e-04 rank_bias_delta=3.20819308e-05 max_abs_parameter_change=7.18364900e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=5] rank_gamma_mean=0.04994728 rank_gamma_std=1.98809194e-05 rank_gamma_min=0.04992553 rank_gamma_max=0.04997969 rank_gamma=[0.04993938, 0.04993247, 0.04997345, 0.04996065, 0.04992553, 0.04994117, 0.04992594, 0.04997969] max_abs_gamma_delta=7.44685531e-05 gate_input_token_std=2.21819222e-01 compatibility=[0.15064111, 0.16185303, -0.33868220, -0.05726279, 0.32734567, 0.16690436, 0.37678796, -0.48244113] relative_gap=[5.63525915, 7.40284634, 6.69233847, 4.97089672, 6.41234636, 4.30315733, 5.16692829, 7.27228022] effective_dynamic_delta_fp32=7.66305166e-05 effective_dynamic_delta_after_cast=2.19439215e-04 correction_ratio=3.77848521e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=6][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.14103881e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=6][before_step] rank_gate.0.bias grad_is_none=False grad_norm=7.74019427e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=6][before_step] rank_gate.2.weight grad_is_none=False grad_norm=8.86026886e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=6][before_step] rank_gate.2.bias grad_is_none=False grad_norm=3.23857577e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=6][before_step] rank_bias grad_is_none=False grad_norm=7.03804800e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=6][after_step] weight_norm_before=5.08784130e-02 weight_norm_after=5.08770347e-02 bias_before=2.96002516e-04 bias_after=3.50939197e-04 rank_bias_delta=3.60883132e-05 max_abs_parameter_change=5.49366814e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=6] rank_gamma_mean=0.04995199 rank_gamma_std=2.05502274e-05 rank_gamma_min=0.04992972 rank_gamma_max=0.04998576 rank_gamma=[0.04994388, 0.04993723, 0.04997906, 0.04996557, 0.04992986, 0.04994481, 0.04992972, 0.04998576] max_abs_gamma_delta=7.02776015e-05 gate_input_token_std=2.20008254e-01 compatibility=[0.15258037, 0.15749082, -0.32462433, -0.05525830, 0.33399162, 0.16451928, 0.37628999, -0.48034370] relative_gap=[5.62976646, 7.39686108, 6.60565090, 5.02162409, 6.44605255, 4.29944277, 5.17451382, 7.29383183] effective_dynamic_delta_fp32=7.08633670e-05 effective_dynamic_delta_after_cast=2.39521556e-04 correction_ratio=3.76902744e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=7][before_step] rank_gate.0.weight grad_is_none=False grad_norm=5.90488198e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=7][before_step] rank_gate.0.bias grad_is_none=False grad_norm=3.08191462e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=7][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.22047216e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=7][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.28963012e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=7][before_step] rank_bias grad_is_none=False grad_norm=1.04686674e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=7][after_step] weight_norm_before=5.08770347e-02 weight_norm_after=5.08772060e-02 bias_before=3.50939197e-04 bias_after=3.61692772e-04 rank_bias_delta=3.05649701e-05 max_abs_parameter_change=3.05649701e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=7] rank_gamma_mean=0.04995589 rank_gamma_std=2.11831648e-05 rank_gamma_min=0.04993279 rank_gamma_max=0.04999099 rank_gamma=[0.04994741, 0.04994130, 0.04998377, 0.04996974, 0.04993347, 0.04994766, 0.04993279, 0.04999099] max_abs_gamma_delta=6.72154129e-05 gate_input_token_std=2.18313426e-01 compatibility=[0.15149967, 0.15557957, -0.30956084, -0.05332798, 0.34130496, 0.16075587, 0.37244058, -0.48061240] relative_gap=[5.63183880, 7.37617731, 6.51454544, 5.07510281, 6.47634077, 4.29474878, 5.16957951, 7.33146477] effective_dynamic_delta_fp32=6.62509628e-05 effective_dynamic_delta_after_cast=2.32504724e-04 correction_ratio=3.75758894e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=8][before_step] rank_gate.0.weight grad_is_none=False grad_norm=4.16738942e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=8][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.10432176e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=8][before_step] rank_gate.2.weight grad_is_none=False grad_norm=9.03126504e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=8][before_step] rank_gate.2.bias grad_is_none=False grad_norm=8.80517624e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=8][before_step] rank_bias grad_is_none=False grad_norm=4.75227088e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=8][after_step] weight_norm_before=5.08772060e-02 weight_norm_after=5.08782230e-02 bias_before=3.61692772e-04 bias_after=3.44954926e-04 rank_bias_delta=3.37332531e-05 max_abs_parameter_change=3.37332531e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=8] rank_gamma_mean=0.04995712 rank_gamma_std=2.15359760e-05 rank_gamma_min=0.04993382 rank_gamma_max=0.04999303 rank_gamma=[0.04994832, 0.04994246, 0.04998537, 0.04997125, 0.04993460, 0.04994814, 0.04993382, 0.04999303] max_abs_gamma_delta=6.61797822e-05 gate_input_token_std=2.17148930e-01 compatibility=[0.14767525, 0.14774984, -0.29605991, -0.05235108, 0.34992659, 0.15421230, 0.37130788, -0.48141029] relative_gap=[5.62985706, 7.35340786, 6.42399931, 5.11146450, 6.51563501, 4.29940557, 5.15443707, 7.37999725] effective_dynamic_delta_fp32=6.49415815e-05 effective_dynamic_delta_after_cast=2.44360679e-04 correction_ratio=3.74524966e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=9][before_step] rank_gate.0.weight grad_is_none=False grad_norm=6.16192352e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=9][before_step] rank_gate.0.bias grad_is_none=False grad_norm=3.11210024e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=9][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.40583776e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=9][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.30204866e-02
+[SPF_DEBUG_GATE][client=1][round=0][batch=9][before_step] rank_bias grad_is_none=False grad_norm=8.17841105e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=9][after_step] weight_norm_before=5.08782230e-02 weight_norm_after=5.08802719e-02 bias_before=3.44954926e-04 bias_after=2.90828873e-04 rank_bias_delta=4.59994553e-05 max_abs_parameter_change=5.41260524e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=9] rank_gamma_mean=0.04995663 rank_gamma_std=2.16654134e-05 rank_gamma_min=0.04993352 rank_gamma_max=0.04999289 rank_gamma=[0.04994756, 0.04994177, 0.04998491, 0.04997106, 0.04993416, 0.04994714, 0.04993352, 0.04999289] max_abs_gamma_delta=6.64778054e-05 gate_input_token_std=2.16228038e-01 compatibility=[0.14302385, 0.13848686, -0.28501698, -0.05142874, 0.35550857, 0.14706337, 0.37108392, -0.48257783] relative_gap=[5.63702345, 7.34102631, 6.33524704, 5.14107275, 6.53668547, 4.30288172, 5.13239956, 7.42139101] effective_dynamic_delta_fp32=6.56732300e-05 effective_dynamic_delta_after_cast=2.38004592e-04 correction_ratio=3.73247452e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=10][before_step] rank_gate.0.weight grad_is_none=False grad_norm=4.05562314e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=10][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.33167404e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=10][before_step] rank_gate.2.weight grad_is_none=False grad_norm=6.41231332e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=10][before_step] rank_gate.2.bias grad_is_none=False grad_norm=9.75321978e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=10][before_step] rank_bias grad_is_none=False grad_norm=9.11167730e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=10][after_step] weight_norm_before=5.08802719e-02 weight_norm_after=5.08807413e-02 bias_before=2.90828873e-04 bias_after=2.71374651e-04 rank_bias_delta=4.64025215e-05 max_abs_parameter_change=4.64025215e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=10] rank_gamma_mean=0.04995371 rank_gamma_std=2.14844094e-05 rank_gamma_min=0.04993134 rank_gamma_max=0.04998951 rank_gamma=[0.04994459, 0.04993848, 0.04998171, 0.04996862, 0.04993147, 0.04994399, 0.04993134, 0.04998951] max_abs_gamma_delta=6.86571002e-05 gate_input_token_std=2.15377659e-01 compatibility=[0.13897440, 0.12725997, -0.27754003, -0.05053472, 0.35821247, 0.13749148, 0.37263784, -0.48352495] relative_gap=[5.65846920, 7.35832262, 6.26006460, 5.17828751, 6.55838299, 4.30559635, 5.11102009, 7.42252111] effective_dynamic_delta_fp32=6.92720205e-05 effective_dynamic_delta_after_cast=2.40004505e-04 correction_ratio=3.71960588e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+epoch [1/1] batch [10/11] time 0.083 (0.167) data 0.000 (0.096) loss 2.2300 (2.4975) acc 40.6250 (38.4375) spf_shared_loss 0.0150 (0.0150) spf_gamma_mean 0.0500 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0372 (0.0377) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=0][batch=11][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.40022874e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=11][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.70113897e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=11][before_step] rank_gate.2.weight grad_is_none=False grad_norm=8.88676103e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=11][before_step] rank_gate.2.bias grad_is_none=False grad_norm=7.11519504e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=11][before_step] rank_bias grad_is_none=False grad_norm=6.56178780e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=11][after_step] weight_norm_before=5.08807413e-02 weight_norm_after=5.08815125e-02 bias_before=2.71374651e-04 bias_after=2.32519873e-04 rank_bias_delta=4.68083017e-05 max_abs_parameter_change=4.68083017e-05
+[SPF_DEBUG_GATE][client=1][round=0][batch=11] rank_gamma_mean=0.04995257 rank_gamma_std=2.14013271e-05 rank_gamma_min=0.04993048 rank_gamma_max=0.04998801 rank_gamma=[0.04994333, 0.04993689, 0.04998052, 0.04996794, 0.04993048, 0.04994243, 0.04993093, 0.04998801] max_abs_gamma_delta=6.95250928e-05 gate_input_token_std=2.14789331e-01 compatibility=[0.13650645, 0.11319321, -0.26950127, -0.04719036, 0.36198813, 0.12879682, 0.37833956, -0.48342285] relative_gap=[5.71386099, 7.38430119, 6.19705105, 5.20111465, 6.57637739, 4.30941772, 5.07624626, 7.39489317] effective_dynamic_delta_fp32=7.07313375e-05 effective_dynamic_delta_after_cast=2.46372976e-04 correction_ratio=3.70569676e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 0 -------------
+SPF FedAvg completed for round 0: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 205
+* accuracy: 23.7%
+* error: 76.3%
+* macro_f1: 25.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 193
+* accuracy: 23.3%
+* error: 76.7%
+* macro_f1: 20.3%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 433
+* accuracy: 50.1%
+* error: 49.9%
+* macro_f1: 51.2%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 416
+* accuracy: 50.2%
+* error: 49.8%
+* macro_f1: 49.1%
+0 --Local test acc: 50.11574074074074
+1 --Local test acc: 50.24154589371981
+Round 0 | GM(micro)=23.5225 | PM(micro)=50.1773 | PM(macro)=50.1786 | WorstClient=50.1157 | ClientStd=0.0629 | BestGM=23.5225@round0 | BestPM=50.1773@round0 | RoundTime=15.50s | PeakMem=1132.80MB
+legacy_mean_personalized_acc: 50.178643317230275
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 1 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=1][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.20661983e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=1][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.10583052e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=1][before_step] rank_gate.2.weight grad_is_none=False grad_norm=5.97614888e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=1][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.63136006e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=1][before_step] rank_bias grad_is_none=False grad_norm=6.10312400e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=1][after_step] weight_norm_before=5.08651026e-02 weight_norm_after=5.08648790e-02 bias_before=5.14610962e-04 bias_after=5.28504257e-04 rank_bias_delta=1.33334106e-05 max_abs_parameter_change=1.38932955e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=1] rank_gamma_mean=0.04996438 rank_gamma_std=2.20526399e-05 rank_gamma_min=0.04994047 rank_gamma_max=0.05000396 rank_gamma=[0.04995552, 0.04995021, 0.04999320, 0.04997237, 0.04994047, 0.04995813, 0.04994114, 0.05000396] max_abs_gamma_delta=5.95264137e-05 gate_input_token_std=2.44294941e-01 compatibility=[0.15579382, 0.14326707, -0.31686980, -0.08714297, 0.35592026, 0.19793220, 0.42451778, -0.50508106] relative_gap=[4.97827625, 7.34087706, 6.60266352, 4.68429422, 6.62288284, 4.15643930, 5.31047487, 7.96199894] effective_dynamic_delta_fp32=5.64593502e-05 effective_dynamic_delta_after_cast=2.26809279e-04 correction_ratio=3.70325856e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=2][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.22010950e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=2][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.73044435e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=2][before_step] rank_gate.2.weight grad_is_none=False grad_norm=6.35421043e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=2][before_step] rank_gate.2.bias grad_is_none=False grad_norm=7.24743074e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=2][before_step] rank_bias grad_is_none=False grad_norm=3.22848698e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=2][after_step] weight_norm_before=5.08648790e-02 weight_norm_after=5.08638397e-02 bias_before=5.28504257e-04 bias_after=5.62749745e-04 rank_bias_delta=1.26997256e-05 max_abs_parameter_change=3.42454878e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=2] rank_gamma_mean=0.04996532 rank_gamma_std=2.22028084e-05 rank_gamma_min=0.04994134 rank_gamma_max=0.05000528 rank_gamma=[0.04995630, 0.04995118, 0.04999430, 0.04997325, 0.04994134, 0.04995904, 0.04994189, 0.05000528] max_abs_gamma_delta=5.86584210e-05 gate_input_token_std=2.44220287e-01 compatibility=[0.15550002, 0.14318494, -0.31831664, -0.08654054, 0.35522592, 0.20019278, 0.42320484, -0.50072163] relative_gap=[4.97004890, 7.34792805, 6.61202145, 4.67782736, 6.61687946, 4.15002680, 5.30518055, 7.96820927] effective_dynamic_delta_fp32=5.54619473e-05 effective_dynamic_delta_after_cast=2.20587695e-04 correction_ratio=3.70270945e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=3][before_step] rank_gate.0.weight grad_is_none=False grad_norm=5.74081641e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=3][before_step] rank_gate.0.bias grad_is_none=False grad_norm=4.55650616e-06
+[SPF_DEBUG_GATE][client=0][round=1][batch=3][before_step] rank_gate.2.weight grad_is_none=False grad_norm=2.07971781e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=3][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.90850813e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=3][before_step] rank_bias grad_is_none=False grad_norm=6.14744239e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=3][after_step] weight_norm_before=5.08638397e-02 weight_norm_after=5.08628115e-02 bias_before=5.62749745e-04 bias_after=5.94142359e-04 rank_bias_delta=1.91173312e-05 max_abs_parameter_change=3.13926139e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=3] rank_gamma_mean=0.04996739 rank_gamma_std=2.24354317e-05 rank_gamma_min=0.04994335 rank_gamma_max=0.05000789 rank_gamma=[0.04995814, 0.04995330, 0.04999666, 0.04997527, 0.04994335, 0.04996089, 0.04994367, 0.05000789] max_abs_gamma_delta=5.66542149e-05 gate_input_token_std=2.43720829e-01 compatibility=[0.15571234, 0.14316060, -0.31733274, -0.08540895, 0.35448959, 0.20257872, 0.42354214, -0.49505383] relative_gap=[4.95782185, 7.37090635, 6.60323381, 4.67495060, 6.59240389, 4.14308882, 5.29357481, 7.95370674] effective_dynamic_delta_fp32=5.32429294e-05 effective_dynamic_delta_after_cast=2.40869354e-04 correction_ratio=3.70164514e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=4][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.47252169e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=4][before_step] rank_gate.0.bias grad_is_none=False grad_norm=9.83068167e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=4][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.99458119e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=4][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.11793496e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=4][before_step] rank_bias grad_is_none=False grad_norm=6.09685294e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=4][after_step] weight_norm_before=5.08628115e-02 weight_norm_after=5.08622974e-02 bias_before=5.94142359e-04 bias_after=6.10041025e-04 rank_bias_delta=2.49789737e-05 max_abs_parameter_change=2.49789737e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=4] rank_gamma_mean=0.04996943 rank_gamma_std=2.26725406e-05 rank_gamma_min=0.04994529 rank_gamma_max=0.05001055 rank_gamma=[0.04995981, 0.04995549, 0.04999901, 0.04997715, 0.04994529, 0.04996263, 0.04994552, 0.05001055] max_abs_gamma_delta=5.47058880e-05 gate_input_token_std=2.43342847e-01 compatibility=[0.15413254, 0.14570512, -0.31734866, -0.08576585, 0.35367763, 0.20433867, 0.42548203, -0.48709744] relative_gap=[4.93767166, 7.38615561, 6.59920645, 4.67332602, 6.57977676, 4.13586283, 5.27236080, 7.94214201] effective_dynamic_delta_fp32=5.11421713e-05 effective_dynamic_delta_after_cast=2.34196603e-04 correction_ratio=3.69958021e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=5][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.94855422e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=5][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.00644223e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=5][before_step] rank_gate.2.weight grad_is_none=False grad_norm=8.97229090e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=5][before_step] rank_gate.2.bias grad_is_none=False grad_norm=8.40493850e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=5][before_step] rank_bias grad_is_none=False grad_norm=4.18585073e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=5][after_step] weight_norm_before=5.08622974e-02 weight_norm_after=5.08624390e-02 bias_before=6.10041025e-04 bias_after=5.99134073e-04 rank_bias_delta=1.37682800e-05 max_abs_parameter_change=1.37682800e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=5] rank_gamma_mean=0.04997071 rank_gamma_std=2.28501431e-05 rank_gamma_min=0.04994653 rank_gamma_max=0.05001241 rank_gamma=[0.04996082, 0.04995697, 0.05000043, 0.04997820, 0.04994653, 0.04996360, 0.04994670, 0.05001241] max_abs_gamma_delta=5.34728169e-05 gate_input_token_std=2.42893130e-01 compatibility=[0.15300360, 0.14941980, -0.31870753, -0.08794443, 0.35053688, 0.20411852, 0.42847866, -0.47864088] relative_gap=[4.91254711, 7.38183880, 6.59054422, 4.67652988, 6.55819654, 4.13174200, 5.25686598, 7.95289516] effective_dynamic_delta_fp32=4.98890695e-05 effective_dynamic_delta_after_cast=2.01069342e-04 correction_ratio=3.69671807e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=6][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.12852300e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=6][before_step] rank_gate.0.bias grad_is_none=False grad_norm=5.59998953e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=6][before_step] rank_gate.2.weight grad_is_none=False grad_norm=3.10868607e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=6][before_step] rank_gate.2.bias grad_is_none=False grad_norm=2.34574149e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=6][before_step] rank_bias grad_is_none=False grad_norm=4.03171685e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=6][after_step] weight_norm_before=5.08624390e-02 weight_norm_after=5.08625321e-02 bias_before=5.99134073e-04 bias_after=5.82279696e-04 rank_bias_delta=1.55833768e-05 max_abs_parameter_change=1.68543775e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=6] rank_gamma_mean=0.04997028 rank_gamma_std=2.27705204e-05 rank_gamma_min=0.04994620 rank_gamma_max=0.05001195 rank_gamma=[0.04996040, 0.04995667, 0.04999985, 0.04997763, 0.04994620, 0.04996315, 0.04994640, 0.05001195] max_abs_gamma_delta=5.37969172e-05 gate_input_token_std=2.42170140e-01 compatibility=[0.15253696, 0.15234444, -0.31996888, -0.09036876, 0.34647945, 0.20282131, 0.43071315, -0.47220266] relative_gap=[4.88559437, 7.38409185, 6.57225609, 4.67626476, 6.53012228, 4.12964249, 5.25633669, 7.93505573] effective_dynamic_delta_fp32=5.02913681e-05 effective_dynamic_delta_after_cast=2.08249505e-04 correction_ratio=3.69378179e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=7][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.80331180e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=7][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.09832166e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=7][before_step] rank_gate.2.weight grad_is_none=False grad_norm=7.69805256e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=7][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.60053142e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=7][before_step] rank_bias grad_is_none=False grad_norm=6.21984014e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=7][after_step] weight_norm_before=5.08625321e-02 weight_norm_after=5.08628674e-02 bias_before=5.82279696e-04 bias_after=5.53308288e-04 rank_bias_delta=1.65020610e-05 max_abs_parameter_change=2.89714080e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=7] rank_gamma_mean=0.04996939 rank_gamma_std=2.25765507e-05 rank_gamma_min=0.04994544 rank_gamma_max=0.05001075 rank_gamma=[0.04995964, 0.04995591, 0.04999861, 0.04997671, 0.04994544, 0.04996229, 0.04994575, 0.05001075] max_abs_gamma_delta=5.45606017e-05 gate_input_token_std=2.41237640e-01 compatibility=[0.15233682, 0.15626110, -0.32146028, -0.09140442, 0.34397954, 0.20057802, 0.43180376, -0.46625361] relative_gap=[4.87364435, 7.39824200, 6.53940344, 4.67096138, 6.51268911, 4.12897110, 5.25384331, 7.89233065] effective_dynamic_delta_fp32=5.11206963e-05 effective_dynamic_delta_after_cast=2.24814488e-04 correction_ratio=3.69062014e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=8][before_step] rank_gate.0.weight grad_is_none=False grad_norm=6.51409937e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=8][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.65133931e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=8][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.72497809e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=8][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.11050089e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=8][before_step] rank_bias grad_is_none=False grad_norm=2.61104316e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=8][after_step] weight_norm_before=5.08628674e-02 weight_norm_after=5.08631952e-02 bias_before=5.53308288e-04 bias_after=5.23901719e-04 rank_bias_delta=1.07378364e-05 max_abs_parameter_change=2.94065685e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=8] rank_gamma_mean=0.04996750 rank_gamma_std=2.22218387e-05 rank_gamma_min=0.04994366 rank_gamma_max=0.05000814 rank_gamma=[0.04995809, 0.04995400, 0.04999614, 0.04997494, 0.04994366, 0.04996074, 0.04994430, 0.05000814] max_abs_gamma_delta=5.63412905e-05 gate_input_token_std=2.40538269e-01 compatibility=[0.15288976, 0.15608628, -0.32286233, -0.09051129, 0.34158087, 0.19929439, 0.43224767, -0.46378082] relative_gap=[4.87614155, 7.40781260, 6.50281143, 4.65757608, 6.52016973, 4.12501097, 5.25010395, 7.84018421] effective_dynamic_delta_fp32=5.29716708e-05 effective_dynamic_delta_after_cast=2.40541922e-04 correction_ratio=3.68734002e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=9][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.54789217e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=9][before_step] rank_gate.0.bias grad_is_none=False grad_norm=9.67041269e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=9][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.56172563e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=9][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.05016541e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=9][before_step] rank_bias grad_is_none=False grad_norm=4.90294769e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=9][after_step] weight_norm_before=5.08631952e-02 weight_norm_after=5.08627780e-02 bias_before=5.23901719e-04 bias_after=5.09585487e-04 rank_bias_delta=1.22026249e-05 max_abs_parameter_change=1.56997703e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=9] rank_gamma_mean=0.04996555 rank_gamma_std=2.18560945e-05 rank_gamma_min=0.04994180 rank_gamma_max=0.05000537 rank_gamma=[0.04995652, 0.04995200, 0.04999367, 0.04997309, 0.04994180, 0.04995915, 0.04994278, 0.05000537] max_abs_gamma_delta=5.82002103e-05 gate_input_token_std=2.39749238e-01 compatibility=[0.15384860, 0.15537882, -0.32308394, -0.08920501, 0.33877850, 0.19801348, 0.43295622, -0.46201092] relative_gap=[4.88246870, 7.41808891, 6.47045422, 4.63810062, 6.52964973, 4.12022781, 5.25005245, 7.77429581] effective_dynamic_delta_fp32=5.49662545e-05 effective_dynamic_delta_after_cast=2.08633312e-04 correction_ratio=3.68386097e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=10][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.32709960e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=10][before_step] rank_gate.0.bias grad_is_none=False grad_norm=6.57523997e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=10][before_step] rank_gate.2.weight grad_is_none=False grad_norm=2.88620288e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=10][before_step] rank_gate.2.bias grad_is_none=False grad_norm=2.75385613e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=10][before_step] rank_bias grad_is_none=False grad_norm=3.21042421e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=10][after_step] weight_norm_before=5.08627780e-02 weight_norm_after=5.08626327e-02 bias_before=5.09585487e-04 bias_after=4.88438585e-04 rank_bias_delta=1.51491113e-05 max_abs_parameter_change=2.11469014e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=10] rank_gamma_mean=0.04996430 rank_gamma_std=2.15149521e-05 rank_gamma_min=0.04994065 rank_gamma_max=0.05000338 rank_gamma=[0.04995567, 0.04995064, 0.04999188, 0.04997201, 0.04994065, 0.04995818, 0.04994198, 0.05000338] max_abs_gamma_delta=5.93550503e-05 gate_input_token_std=2.39462346e-01 compatibility=[0.15597096, 0.15299565, -0.32307938, -0.08648665, 0.33849880, 0.19718368, 0.43337774, -0.46172345] relative_gap=[4.88614464, 7.43473673, 6.43183947, 4.61790371, 6.53851604, 4.11034870, 5.23486471, 7.71161985] effective_dynamic_delta_fp32=5.61988454e-05 effective_dynamic_delta_after_cast=1.97932706e-04 correction_ratio=3.67992632e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+epoch [1/1] batch [10/12] time 0.068 (0.162) data 0.000 (0.092) loss 1.5884 (1.7487) acc 53.1250 (51.8750) spf_shared_loss 0.0150 (0.0150) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0368 (0.0369) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=11][before_step] rank_gate.0.weight grad_is_none=False grad_norm=7.57243615e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=11][before_step] rank_gate.0.bias grad_is_none=False grad_norm=5.11322105e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=11][before_step] rank_gate.2.weight grad_is_none=False grad_norm=7.46826525e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=11][before_step] rank_gate.2.bias grad_is_none=False grad_norm=2.14148499e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=11][before_step] rank_bias grad_is_none=False grad_norm=5.92225464e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=11][after_step] weight_norm_before=5.08626327e-02 weight_norm_after=5.08628674e-02 bias_before=4.88438585e-04 bias_after=4.62981174e-04 rank_bias_delta=1.28669926e-05 max_abs_parameter_change=2.54574115e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=11] rank_gamma_mean=0.04996270 rank_gamma_std=2.11349616e-05 rank_gamma_min=0.04993913 rank_gamma_max=0.05000096 rank_gamma=[0.04995446, 0.04994896, 0.04998963, 0.04997063, 0.04993913, 0.04995690, 0.04994088, 0.05000096] max_abs_gamma_delta=6.08675182e-05 gate_input_token_std=2.38961458e-01 compatibility=[0.15772994, 0.15197806, -0.32291561, -0.08341676, 0.33638462, 0.19612856, 0.43237299, -0.46310115] relative_gap=[4.87830591, 7.42395544, 6.38723707, 4.59952545, 6.53964758, 4.10346556, 5.21296740, 7.65770864] effective_dynamic_delta_fp32=5.78685540e-05 effective_dynamic_delta_after_cast=2.16936402e-04 correction_ratio=3.67581695e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=0][round=1][batch=12][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.15505119e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=12][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.10472931e-04
+[SPF_DEBUG_GATE][client=0][round=1][batch=12][before_step] rank_gate.2.weight grad_is_none=False grad_norm=5.24112349e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=12][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.62648552e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=12][before_step] rank_bias grad_is_none=False grad_norm=6.43677590e-03
+[SPF_DEBUG_GATE][client=0][round=1][batch=12][after_step] weight_norm_before=5.08628674e-02 weight_norm_after=5.08626923e-02 bias_before=4.62981174e-04 bias_after=4.53948276e-04 rank_bias_delta=1.45994381e-05 max_abs_parameter_change=1.45994381e-05
+[SPF_DEBUG_GATE][client=0][round=1][batch=12] rank_gamma_mean=0.04996108 rank_gamma_std=2.08475467e-05 rank_gamma_min=0.04993761 rank_gamma_max=0.04999872 rank_gamma=[0.04995300, 0.04994737, 0.04998753, 0.04996922, 0.04993761, 0.04995559, 0.04993962, 0.04999872] max_abs_gamma_delta=6.23948872e-05 gate_input_token_std=2.38507956e-01 compatibility=[0.15692614, 0.15386303, -0.32202256, -0.08128364, 0.33263740, 0.19548592, 0.43077886, -0.46533427] relative_gap=[4.85996580, 7.40655136, 6.35251617, 4.58723497, 6.52619696, 4.09692001, 5.19923019, 7.62663698] effective_dynamic_delta_fp32=5.96562786e-05 effective_dynamic_delta_after_cast=2.24605174e-04 correction_ratio=3.67186181e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=1][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.12580111e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=1][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.16503645e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=1][before_step] rank_gate.2.weight grad_is_none=False grad_norm=4.13264520e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=1][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.87237889e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=1][before_step] rank_bias grad_is_none=False grad_norm=4.90454119e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=1][after_step] weight_norm_before=5.08815125e-02 weight_norm_after=5.08819968e-02 bias_before=2.32519873e-04 bias_after=2.17902387e-04 rank_bias_delta=9.40129394e-06 max_abs_parameter_change=1.46174862e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=1] rank_gamma_mean=0.04995003 rank_gamma_std=2.11407751e-05 rank_gamma_min=0.04992782 rank_gamma_max=0.04998457 rank_gamma=[0.04994057, 0.04993403, 0.04997787, 0.04996589, 0.04992782, 0.04993980, 0.04992974, 0.04998457] max_abs_gamma_delta=7.21849501e-05 gate_input_token_std=2.16051534e-01 compatibility=[0.13667876, 0.09839305, -0.26150954, -0.04430908, 0.37127081, 0.11777553, 0.38247788, -0.48617080] relative_gap=[5.75041485, 7.46550608, 6.12986183, 5.22044086, 6.58786678, 4.30031061, 5.05459595, 7.40333509] effective_dynamic_delta_fp32=7.38834278e-05 effective_dynamic_delta_after_cast=2.59831373e-04 correction_ratio=3.69140282e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=2][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.86198900e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=2][before_step] rank_gate.0.bias grad_is_none=False grad_norm=7.95304513e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=2][before_step] rank_gate.2.weight grad_is_none=False grad_norm=4.80452180e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=2][before_step] rank_gate.2.bias grad_is_none=False grad_norm=3.32593592e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=2][before_step] rank_bias grad_is_none=False grad_norm=5.00605442e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=2][after_step] weight_norm_before=5.08819968e-02 weight_norm_after=5.08820303e-02 bias_before=2.17902387e-04 bias_after=2.14724132e-04 rank_bias_delta=1.25148508e-05 max_abs_parameter_change=1.25148508e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=2] rank_gamma_mean=0.04994921 rank_gamma_std=2.10805210e-05 rank_gamma_min=0.04992699 rank_gamma_max=0.04998365 rank_gamma=[0.04993976, 0.04993319, 0.04997701, 0.04996497, 0.04992699, 0.04993905, 0.04992910, 0.04998365] max_abs_gamma_delta=7.30119646e-05 gate_input_token_std=2.16470167e-01 compatibility=[0.13625552, 0.09988736, -0.26061952, -0.04623322, 0.36881927, 0.11691298, 0.38334551, -0.48835480] relative_gap=[5.75716162, 7.48233509, 6.12446117, 5.21714783, 6.59171200, 4.30437326, 5.05119658, 7.42103672] effective_dynamic_delta_fp32=7.49117607e-05 effective_dynamic_delta_after_cast=2.56140775e-04 correction_ratio=3.69153731e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=3][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.80073325e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=3][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.61164587e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=3][before_step] rank_gate.2.weight grad_is_none=False grad_norm=4.80565563e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=3][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.09216687e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=3][before_step] rank_bias grad_is_none=False grad_norm=4.47025243e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=3][after_step] weight_norm_before=5.08820303e-02 weight_norm_after=5.08817546e-02 bias_before=2.14724132e-04 bias_after=2.15139880e-04 rank_bias_delta=1.62388314e-05 max_abs_parameter_change=1.62388314e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=3] rank_gamma_mean=0.04994921 rank_gamma_std=2.11130427e-05 rank_gamma_min=0.04992696 rank_gamma_max=0.04998373 rank_gamma=[0.04993982, 0.04993330, 0.04997715, 0.04996482, 0.04992696, 0.04993883, 0.04992907, 0.04998373] max_abs_gamma_delta=7.30380416e-05 gate_input_token_std=2.16421366e-01 compatibility=[0.13743353, 0.10341414, -0.25933781, -0.04881657, 0.36553556, 0.11449856, 0.38481084, -0.48888892] relative_gap=[5.75967407, 7.48971319, 6.13179541, 5.22350502, 6.58238792, 4.30121326, 5.05972385, 7.42507839] effective_dynamic_delta_fp32=7.49287283e-05 effective_dynamic_delta_after_cast=2.60585250e-04 correction_ratio=3.69154103e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=4][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.84483307e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=4][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.59449541e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=4][before_step] rank_gate.2.weight grad_is_none=False grad_norm=3.57068353e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=4][before_step] rank_gate.2.bias grad_is_none=False grad_norm=6.66810852e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=4][before_step] rank_bias grad_is_none=False grad_norm=7.35476986e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=4][after_step] weight_norm_before=5.08817546e-02 weight_norm_after=5.08802794e-02 bias_before=2.15139880e-04 bias_after=2.35518062e-04 rank_bias_delta=2.49300210e-05 max_abs_parameter_change=2.49300210e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=4] rank_gamma_mean=0.04994930 rank_gamma_std=2.11330498e-05 rank_gamma_min=0.04992701 rank_gamma_max=0.04998391 rank_gamma=[0.04994000, 0.04993340, 0.04997741, 0.04996465, 0.04992701, 0.04993875, 0.04992925, 0.04998391] max_abs_gamma_delta=7.29933381e-05 gate_input_token_std=2.17066765e-01 compatibility=[0.13936299, 0.10516698, -0.25683373, -0.05216833, 0.36209393, 0.11277998, 0.38768101, -0.49185014] relative_gap=[5.76293659, 7.51227045, 6.13662291, 5.22238111, 6.57414627, 4.30250502, 5.05783653, 7.44587755] effective_dynamic_delta_fp32=7.48235689e-05 effective_dynamic_delta_after_cast=2.57134699e-04 correction_ratio=3.69102694e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=5][before_step] rank_gate.0.weight grad_is_none=False grad_norm=8.18299377e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=5][before_step] rank_gate.0.bias grad_is_none=False grad_norm=3.70123926e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=5][before_step] rank_gate.2.weight grad_is_none=False grad_norm=2.60272250e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=5][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.54801621e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=5][before_step] rank_bias grad_is_none=False grad_norm=6.25838339e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=5][after_step] weight_norm_before=5.08802794e-02 weight_norm_after=5.08794524e-02 bias_before=2.35518062e-04 bias_after=2.49214034e-04 rank_bias_delta=1.97282934e-05 max_abs_parameter_change=1.97282934e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=5] rank_gamma_mean=0.04995031 rank_gamma_std=2.11906899e-05 rank_gamma_min=0.04992797 rank_gamma_max=0.04998511 rank_gamma=[0.04994099, 0.04993432, 0.04997863, 0.04996543, 0.04992797, 0.04993950, 0.04993050, 0.04998511] max_abs_gamma_delta=7.20322132e-05 gate_input_token_std=2.18807727e-01 compatibility=[0.14078227, 0.10402879, -0.25365126, -0.05407975, 0.36290616, 0.11130206, 0.39346516, -0.49713644] relative_gap=[5.77949858, 7.55493593, 6.13862324, 5.21504259, 6.57131481, 4.31024742, 5.03486633, 7.47613525] effective_dynamic_delta_fp32=7.35642971e-05 effective_dynamic_delta_after_cast=2.58411601e-04 correction_ratio=3.68995704e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=6][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.56952015e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=6][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.38311676e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=6][before_step] rank_gate.2.weight grad_is_none=False grad_norm=5.77089703e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=6][before_step] rank_gate.2.bias grad_is_none=False grad_norm=5.78508526e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=6][before_step] rank_bias grad_is_none=False grad_norm=4.70144674e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=6][after_step] weight_norm_before=5.08794524e-02 weight_norm_after=5.08781448e-02 bias_before=2.49214034e-04 bias_after=2.78895284e-04 rank_bias_delta=2.26921402e-05 max_abs_parameter_change=2.96812505e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=6] rank_gamma_mean=0.04995126 rank_gamma_std=2.13307703e-05 rank_gamma_min=0.04992888 rank_gamma_max=0.04998647 rank_gamma=[0.04994194, 0.04993525, 0.04997993, 0.04996605, 0.04992888, 0.04994004, 0.04993152, 0.04998647] max_abs_gamma_delta=7.11195171e-05 gate_input_token_std=2.19589233e-01 compatibility=[0.14250918, 0.10236296, -0.24951133, -0.05789805, 0.36286506, 0.10828792, 0.39749774, -0.49890223] relative_gap=[5.79504061, 7.57162809, 6.14317465, 5.21214724, 6.55910110, 4.31787872, 5.01936722, 7.51433849] effective_dynamic_delta_fp32=7.24236743e-05 effective_dynamic_delta_after_cast=2.35704545e-04 correction_ratio=3.68859321e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=7][before_step] rank_gate.0.weight grad_is_none=False grad_norm=1.76454530e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=7][before_step] rank_gate.0.bias grad_is_none=False grad_norm=9.59547833e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=7][before_step] rank_gate.2.weight grad_is_none=False grad_norm=4.42725467e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=7][before_step] rank_gate.2.bias grad_is_none=False grad_norm=4.01381636e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=7][before_step] rank_bias grad_is_none=False grad_norm=7.11454730e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=7][after_step] weight_norm_before=5.08781448e-02 weight_norm_after=5.08767031e-02 bias_before=2.78895284e-04 bias_after=3.17649421e-04 rank_bias_delta=1.97957397e-05 max_abs_parameter_change=3.87541368e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=7] rank_gamma_mean=0.04995317 rank_gamma_std=2.15790096e-05 rank_gamma_min=0.04993065 rank_gamma_max=0.04998903 rank_gamma=[0.04994371, 0.04993723, 0.04998229, 0.04996762, 0.04993065, 0.04994158, 0.04993323, 0.04998903] max_abs_gamma_delta=6.93500042e-05 gate_input_token_std=2.19807386e-01 compatibility=[0.14276168, 0.10158672, -0.24482846, -0.06122422, 0.36345056, 0.10761368, 0.40118986, -0.49935189] relative_gap=[5.80641365, 7.56391859, 6.15125275, 5.21358681, 6.55257845, 4.32977343, 5.01027060, 7.54856157] effective_dynamic_delta_fp32=7.01327081e-05 effective_dynamic_delta_after_cast=2.30905731e-04 correction_ratio=3.68639268e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=8][before_step] rank_gate.0.weight grad_is_none=False grad_norm=3.73261937e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=8][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.55972122e-06
+[SPF_DEBUG_GATE][client=1][round=1][batch=8][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.40936032e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=8][before_step] rank_gate.2.bias grad_is_none=False grad_norm=1.07083935e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=8][before_step] rank_bias grad_is_none=False grad_norm=6.70162542e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=8][after_step] weight_norm_before=5.08767031e-02 weight_norm_after=5.08751608e-02 bias_before=3.17649421e-04 bias_after=3.52206436e-04 rank_bias_delta=2.32226448e-05 max_abs_parameter_change=3.45570152e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=8] rank_gamma_mean=0.04995565 rank_gamma_std=2.19249359e-05 rank_gamma_min=0.04993291 rank_gamma_max=0.04999246 rank_gamma=[0.04994592, 0.04993976, 0.04998524, 0.04996979, 0.04993291, 0.04994373, 0.04993543, 0.04999246] max_abs_gamma_delta=6.70887530e-05 gate_input_token_std=2.19733328e-01 compatibility=[0.14180338, 0.09766510, -0.24100925, -0.06451254, 0.36661178, 0.10849765, 0.40443999, -0.49707669] relative_gap=[5.82522774, 7.52304316, 6.16009951, 5.21973467, 6.55886269, 4.34780502, 4.99316454, 7.60305691] effective_dynamic_delta_fp32=6.72107926e-05 effective_dynamic_delta_after_cast=2.22703064e-04 correction_ratio=3.68344672e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=9][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.05174147e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=9][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.35727532e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=9][before_step] rank_gate.2.weight grad_is_none=False grad_norm=1.73965038e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=9][before_step] rank_gate.2.bias grad_is_none=False grad_norm=5.67869982e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=9][before_step] rank_bias grad_is_none=False grad_norm=1.17155183e-02
+[SPF_DEBUG_GATE][client=1][round=1][batch=9][after_step] weight_norm_before=5.08751608e-02 weight_norm_after=5.08748069e-02 bias_before=3.52206436e-04 bias_after=3.66271124e-04 rank_bias_delta=3.59754631e-05 max_abs_parameter_change=3.59754631e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=9] rank_gamma_mean=0.04995779 rank_gamma_std=2.21881874e-05 rank_gamma_min=0.04993494 rank_gamma_max=0.04999534 rank_gamma=[0.04994782, 0.04994197, 0.04998782, 0.04997147, 0.04993494, 0.04994572, 0.04993724, 0.04999534] max_abs_gamma_delta=6.50584698e-05 gate_input_token_std=2.20074713e-01 compatibility=[0.14090601, 0.09682266, -0.23659343, -0.06945495, 0.36835951, 0.11131342, 0.40703422, -0.49845576] relative_gap=[5.84671640, 7.49231911, 6.17016792, 5.22118855, 6.54218435, 4.35858107, 4.98904514, 7.65589190] effective_dynamic_delta_fp32=6.47227425e-05 effective_dynamic_delta_after_cast=2.33305676e-04 correction_ratio=3.67939733e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=10][before_step] rank_gate.0.weight grad_is_none=False grad_norm=4.20386670e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=10][before_step] rank_gate.0.bias grad_is_none=False grad_norm=2.25727679e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=10][before_step] rank_gate.2.weight grad_is_none=False grad_norm=8.91009159e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=10][before_step] rank_gate.2.bias grad_is_none=False grad_norm=9.44420695e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=10][before_step] rank_bias grad_is_none=False grad_norm=7.24468892e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=10][after_step] weight_norm_before=5.08748069e-02 weight_norm_after=5.08752987e-02 bias_before=3.66271124e-04 bias_after=3.50596150e-04 rank_bias_delta=2.60127417e-05 max_abs_parameter_change=2.60127417e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=10] rank_gamma_mean=0.04995919 rank_gamma_std=2.25073582e-05 rank_gamma_min=0.04993628 rank_gamma_max=0.04999767 rank_gamma=[0.04994886, 0.04994361, 0.04998974, 0.04997228, 0.04993628, 0.04994686, 0.04993820, 0.04999767] max_abs_gamma_delta=6.37248158e-05 gate_input_token_std=2.20239937e-01 compatibility=[0.13718802, 0.10242867, -0.23122139, -0.07746408, 0.36505708, 0.11241939, 0.40825027, -0.49998817] relative_gap=[5.84753323, 7.45776701, 6.18373775, 5.22832394, 6.49447727, 4.35673809, 5.00126171, 7.74056005] effective_dynamic_delta_fp32=6.32174269e-05 effective_dynamic_delta_after_cast=2.34233317e-04 correction_ratio=3.67511585e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+epoch [1/1] batch [10/11] time 0.067 (0.161) data 0.000 (0.088) loss 1.2867 (1.6424) acc 65.6250 (55.0000) spf_shared_loss 0.0150 (0.0150) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0368 (0.0369) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+text_encoder_forwards_per_batch=1
+[SPF_DEBUG_GATE][client=1][round=1][batch=11][before_step] rank_gate.0.weight grad_is_none=False grad_norm=2.69249256e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=11][before_step] rank_gate.0.bias grad_is_none=False grad_norm=1.29707027e-04
+[SPF_DEBUG_GATE][client=1][round=1][batch=11][before_step] rank_gate.2.weight grad_is_none=False grad_norm=5.24652377e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=11][before_step] rank_gate.2.bias grad_is_none=False grad_norm=5.42637892e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=11][before_step] rank_bias grad_is_none=False grad_norm=6.89677009e-03
+[SPF_DEBUG_GATE][client=1][round=1][batch=11][after_step] weight_norm_before=5.08752987e-02 weight_norm_after=5.08749261e-02 bias_before=3.50596150e-04 bias_after=3.52767296e-04 rank_bias_delta=2.37817294e-05 max_abs_parameter_change=2.37817294e-05
+[SPF_DEBUG_GATE][client=1][round=1][batch=11] rank_gamma_mean=0.04995876 rank_gamma_std=2.26188786e-05 rank_gamma_min=0.04993596 rank_gamma_max=0.04999751 rank_gamma=[0.04994820, 0.04994332, 0.04998965, 0.04997156, 0.04993596, 0.04994620, 0.04993763, 0.04999751] max_abs_gamma_delta=6.40377402e-05 gate_input_token_std=2.19641834e-01 compatibility=[0.13318445, 0.10629772, -0.22682175, -0.08473710, 0.36285797, 0.10967781, 0.40961608, -0.50090063] relative_gap=[5.82090616, 7.41954517, 6.19388533, 5.25962543, 6.45349550, 4.35755157, 5.02828169, 7.78145266] effective_dynamic_delta_fp32=6.38259226e-05 effective_dynamic_delta_after_cast=2.24613730e-04 correction_ratio=3.67032066e-02 rank=8 fused_ctx_dtype_is_fp32=1 text_encoder_input_dtype_is_fp32=0
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 1 -------------
+SPF FedAvg completed for round 1: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 208
+* accuracy: 24.1%
+* error: 75.9%
+* macro_f1: 26.2%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 194
+* accuracy: 23.4%
+* error: 76.6%
+* macro_f1: 20.4%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 477
+* accuracy: 55.2%
+* error: 44.8%
+* macro_f1: 55.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 559
+* accuracy: 67.5%
+* error: 32.5%
+* macro_f1: 68.9%
+0 --Local test acc: 55.208333333333336
+1 --Local test acc: 67.512077294686
+Round 1 | GM(micro)=23.7589 | PM(micro)=61.2293 | PM(macro)=61.3602 | WorstClient=55.2083 | ClientStd=6.1519 | BestGM=23.7589@round1 | BestPM=61.2293@round1 | RoundTime=14.45s | PeakMem=1134.51MB
+legacy_mean_personalized_acc: 61.36020531400966
+------------local test finish-------------
+Total time Elapsed: 0:00:30
+Total time Elapsed: 0:00:30
+0 global_test_acc_list: [50.11574074074074, 55.208333333333336]
+0 maximum test acc: 55.208333333333336
+0 mean of acc: 52.66203703703704
+0 std of acc: 2.5462962962962976
+1 global_test_acc_list: [50.24154589371981, 67.512077294686]
+1 maximum test acc: 67.512077294686
+1 mean of acc: 58.876811594202906
+1 std of acc: 8.635265700483092

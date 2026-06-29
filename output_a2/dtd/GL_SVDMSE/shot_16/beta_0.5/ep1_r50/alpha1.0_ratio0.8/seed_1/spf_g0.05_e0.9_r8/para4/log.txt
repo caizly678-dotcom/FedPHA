@@ -1,0 +1,3787 @@
+***************
+** Arguments **
+***************
+alpha: 1.0
+avg_prompt: 1
+backbone: ViT-B/16
+beta: 0.5
+dataset: dtd
+device_id: 0
+eval_only: False
+frac: 1
+gamma: 1
+head: 
+iid: False
+load_epoch: None
+logdir: ./logs/
+n_ctx: 16
+no_train: False
+num_prompt: 2
+num_shots: 16
+num_users: 2
+opts: []
+output_dir: output/..
+para_dir: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8/para4
+partition: noniid-labeldir
+prompts_lens: None
+ratio: 0.8
+resume: None
+root: /workspace/FedPHA/DATA
+seed: 1
+smoke_text_encoder_counter: False
+specify: False
+spf_alignment_type: mse
+spf_debug_gate: False
+spf_energy: 0.9
+spf_fixed_round_basis: False
+spf_freeze_anchor: True
+spf_gamma_base: 0.05
+spf_gamma_delta: 0.03
+spf_gamma_init: 0.05
+spf_gamma_max: 0.1
+spf_gamma_min: 0.005
+spf_gate_lr_mult: 3.0
+spf_gate_type: rankwise
+spf_max_rank: 8
+spf_min_rank: 1
+spf_shared_init: False
+spf_shared_lambda: 0.1
+spf_use_dynamic_gate: True
+spf_variant: 
+test_batch_size: 128
+train_batch_size: 32
+trainer: GL_SVDMSE
+transforms: None
+use_spf: True
+useall: False
+************
+** Config **
+************
+DATALOADER:
+  K_TRANSFORMS: 1
+  NUM_WORKERS: 8
+  RETURN_IMG0: False
+  TEST:
+    BATCH_SIZE: 128
+    SAMPLER: SequentialSampler
+  TRAIN_U:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAME_AS_X: True
+    SAMPLER: RandomSampler
+  TRAIN_X:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAMPLER: RandomSampler
+DATASET:
+  ALL_AS_UNLABELED: False
+  BETA: 0.5
+  CIFAR_C_LEVEL: 1
+  CIFAR_C_TYPE: 
+  DOMAIN_NUM: 1
+  IID: False
+  NAME: DescribableTextures
+  NUM_LABELED: -1
+  NUM_SHOTS: 16
+  PARTITION: noniid-labeldir
+  REPEATRATE: 0.0
+  ROOT: /workspace/FedPHA/DATA
+  SOURCE_DOMAINS: ()
+  STL10_FOLD: -1
+  SUBSAMPLE_CLASSES: all
+  TARGET_DOMAINS: ()
+  USEALL: False
+  USERS: 2
+  USER_PROMPT_LENGTHS: []
+  VAL_PERCENT: 0.1
+INPUT:
+  COLORJITTER_B: 0.4
+  COLORJITTER_C: 0.4
+  COLORJITTER_H: 0.1
+  COLORJITTER_S: 0.4
+  CROP_PADDING: 4
+  CUTOUT_LEN: 16
+  CUTOUT_N: 1
+  GB_K: 21
+  GB_P: 0.5
+  GN_MEAN: 0.0
+  GN_STD: 0.15
+  INTERPOLATION: bicubic
+  NO_TRANSFORM: False
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  RANDAUGMENT_M: 10
+  RANDAUGMENT_N: 2
+  RGS_P: 0.2
+  RRCROP_SCALE: (0.08, 1.0)
+  SIZE: (224, 224)
+  TRANSFORMS: ('random_resized_crop', 'random_flip', 'normalize')
+MODEL:
+  BACKBONE:
+    NAME: ViT-B/16
+    PRETRAINED: True
+  HEAD:
+    ACTIVATION: relu
+    BN: True
+    DROPOUT: 0.0
+    HIDDEN_LAYERS: ()
+    NAME: 
+  INIT_WEIGHTS: 
+OPTIM:
+  ADAM_BETA1: 0.9
+  ADAM_BETA2: 0.999
+  BASE_LR_MULT: 0.1
+  GAMMA: 1
+  LR: 0.001
+  LR_SCHEDULER: single_step
+  MAX_EPOCH: 1
+  MOMENTUM: 0.9
+  NAME: sgd
+  NEW_LAYERS: ()
+  RMSPROP_ALPHA: 0.99
+  ROUND: 50
+  SGD_DAMPNING: 0
+  SGD_NESTEROV: False
+  STAGED_LR: False
+  STEPSIZE: (-1,)
+  WARMUP_CONS_LR: 1e-05
+  WARMUP_EPOCH: 0
+  WARMUP_MIN_LR: 1e-05
+  WARMUP_RECOUNT: True
+  WARMUP_TYPE: constant
+  WEIGHT_DECAY: 0.0005
+OUTPUT_DIR: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8
+RESUME: 
+SEED: 1
+TEST:
+  COMPUTE_CMAT: False
+  EVALUATOR: Classification
+  FINAL_MODEL: last_step
+  NO_TEST: False
+  PER_CLASS_RESULT: False
+  SPLIT: test
+TRAIN:
+  CHECKPOINT_FREQ: 0
+  COUNT_ITER: train_x
+  PRINT_FREQ: 10
+TRAINER:
+  CDAC:
+    CLASS_LR_MULTI: 10
+    P_THRESH: 0.95
+    RAMPUP_COEF: 30
+    RAMPUP_ITRS: 1000
+    STRONG_TRANSFORMS: ()
+    TOPK_MATCH: 5
+  CROSSGRAD:
+    ALPHA_D: 0.5
+    ALPHA_F: 0.5
+    EPS_D: 1.0
+    EPS_F: 1.0
+  DAEL:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DAELDG:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DDAIG:
+    ALPHA: 0.5
+    CLAMP: False
+    CLAMP_MAX: 1.0
+    CLAMP_MIN: -1.0
+    G_ARCH: 
+    LMDA: 0.3
+    WARMUP: 0
+  DOMAINMIX:
+    ALPHA: 1.0
+    BETA: 1.0
+    TYPE: crossdomain
+  ENTMIN:
+    LMDA: 0.001
+  FEDPGP:
+    BOTTLENECK: 4
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    FEATURE: False
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    mu: 1
+    temp: 0.5
+  FIXMATCH:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 1.0
+  GLP_OT:
+    AVG_N: 1.0
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    EPS: 0.1
+    MAX_ITER: 100
+    N: 2
+    N_CTX: 16
+    OT: COT
+    PREC: fp16
+    THRESH: 0.001
+    TOP_PERCENT: 1
+  GL_SVDMSE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    DEBUG_TEXT_ENCODER_FORWARD_COUNT: False
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    SPF_ALIGNMENT_TYPE: mse
+    SPF_DEBUG_GATE: False
+    SPF_ENERGY: 0.9
+    SPF_FIXED_ROUND_BASIS: False
+    SPF_FREEZE_ANCHOR: True
+    SPF_GAMMA_BASE: 0.05
+    SPF_GAMMA_DELTA: 0.03
+    SPF_GAMMA_INIT: 0.05
+    SPF_GAMMA_MAX: 0.1
+    SPF_GAMMA_MIN: 0.005
+    SPF_GATE_LR_MULT: 3.0
+    SPF_GATE_TYPE: rankwise
+    SPF_MAX_RANK: 8
+    SPF_MIN_RANK: 1
+    SPF_SHARED_INIT: False
+    SPF_SHARED_LAMBDA: 0.1
+    SPF_USE_DYNAMIC_GATE: True
+    USE_SPF: True
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  GL_SVDMSE_HE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N: 1
+    N_CTX_GLOBAL: 16
+    PREC: fp16
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  M3SDA:
+    LMDA: 0.5
+    N_STEP_F: 4
+  MCD:
+    N_STEP_F: 4
+  MEANTEACHER:
+    EMA_ALPHA: 0.999
+    RAMPUP: 5
+    WEIGHT_U: 1.0
+  MIXMATCH:
+    MIXUP_BETA: 0.75
+    RAMPUP: 20000
+    TEMP: 2.0
+    WEIGHT_U: 100.0
+  MME:
+    LMDA: 0.1
+  NAME: GL_SVDMSE
+  PROMPTFL:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N_CTX: 16
+    PREC: fp16
+  SE:
+    CONF_THRE: 0.95
+    EMA_ALPHA: 0.999
+    RAMPUP: 300
+USE_CUDA: True
+VERBOSE: True
+VERSION: 1
+Loading trainer: GL_SVDMSE
+Loading dataset: DescribableTextures
+Reading split from /workspace/FedPHA/DATA/dtd/split_zhou_DescribableTextures.json
+Loading preprocessed few-shot data from /workspace/FedPHA/DATA/dtd/split_fewshot/shot_16-seed_1.pkl
+Creating a 16-shot federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22, 9, 18, 12, 26, 17, 37, 16, 13, 27, 8, 10, 31, 15, 41, 25, 1, 4, 35, 2]
+idx: 0 , output_dict_len: 384
+user class dict total [32, 38, 0, 42, 5, 30, 29, 14, 11, 40, 33, 34, 19, 7, 6, 21, 36, 39, 20, 46, 28, 44, 24]
+idx: 1 , output_dict_len: 368
+Creating a baseline federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22, 9, 18, 12, 26, 17, 37, 16, 13, 27, 8, 10, 31, 15, 41, 25, 1, 4, 35, 2]
+idx: 0 , output_dict_len: 864
+user class dict total [32, 38, 0, 42, 5, 30, 29, 14, 11, 40, 33, 34, 19, 7, 6, 21, 36, 39, 20, 46, 28, 44, 24]
+idx: 1 , output_dict_len: 828
+fewshot federated dataset
+Building transform_train
++ random resized crop (size=(224, 224), scale=(0.08, 1.0))
++ random flip
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+Building transform_test
++ resize the smaller edge to 224
++ 224x224 center crop
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+-------------------  -------------------
+Dataset              DescribableTextures
+# classes            47
+# federated_train_x  2
+# federated_test_x   2
+# test               1,692
+-------------------  -------------------
+Loading CLIP (backbone: ViT-B/16)
+Building custom CLIP
+Initializing a generic context
+Initial context: "X X X X X X X X X X X X X X X X"
+Number of context words (tokens): 16
+SPF method label: A2-rankwise
+SPF gate type: rankwise
+SPF rank_gate parameters:
+  rank_gate.0.weight: numel=16, requires_grad=True
+  rank_gate.0.bias: numel=8, requires_grad=True
+  rank_gate.2.weight: numel=8, requires_grad=True
+  rank_gate.2.bias: numel=1, requires_grad=True
+  rank_bias: numel=8, requires_grad=True
+SPF method label: A2-rankwise
+Turning off gradients in both the image and the text encoder
+Loading evaluator: Classification
++-----------------------------------+------------+
+|              Modules              | Parameters |
++-----------------------------------+------------+
+|     prompt_learner.ctx_global     |    8192    |
+|      prompt_learner.ctx_local     |    8192    |
+|      prompt_learner.rank_bias     |     8      |
+| prompt_learner.rank_gate.0.weight |     16     |
+|  prompt_learner.rank_gate.0.bias  |     8      |
+| prompt_learner.rank_gate.2.weight |     8      |
+|  prompt_learner.rank_gate.2.bias  |     1      |
++-----------------------------------+------------+
+Total Trainable Params: 16425
++-------------------------------------------------------------+------------+
+|                           Modules                           | Parameters |
++-------------------------------------------------------------+------------+
+|                image_encoder.class_embedding                |    768     |
+|              image_encoder.positional_embedding             |   151296   |
+|                      image_encoder.proj                     |   393216   |
+|                  image_encoder.conv1.weight                 |   589824   |
+|                 image_encoder.ln_pre.weight                 |    768     |
+|                  image_encoder.ln_pre.bias                  |    768     |
+|  image_encoder.transformer.resblocks.0.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.0.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.0.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.0.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.0.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.0.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.1.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.1.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.1.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.1.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.1.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.1.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.2.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.2.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.2.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.2.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.2.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.2.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.3.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.3.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.3.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.3.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.3.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.3.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.4.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.4.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.4.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.4.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.4.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.4.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.5.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.5.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.5.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.5.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.5.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.5.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.6.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.6.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.6.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.6.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.6.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.6.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.7.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.7.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.7.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.7.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.7.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.7.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.8.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.8.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.8.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.8.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.8.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.8.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.9.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.9.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.9.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.9.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.9.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.9.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.10.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.10.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.10.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.10.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.10.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.10.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.10.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.10.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.10.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.10.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_2.bias      |    768     |
+|  image_encoder.transformer.resblocks.11.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.11.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.11.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.11.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.11.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.11.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.11.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.11.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.11.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.11.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_2.bias      |    768     |
+|                 image_encoder.ln_post.weight                |    768     |
+|                  image_encoder.ln_post.bias                 |    768     |
++-------------------------------------------------------------+------------+
+Total Trainable Params: 86192640
++------------------------------------------------------------+------------+
+|                          Modules                           | Parameters |
++------------------------------------------------------------+------------+
+|             text_encoder.positional_embedding              |   39424    |
+|                text_encoder.text_projection                |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.0.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.0.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.0.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.0.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.1.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.1.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.1.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.1.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.1.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.1.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.2.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.2.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.2.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.2.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.2.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.2.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.3.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.3.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.3.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.3.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.3.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.3.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.4.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.4.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.4.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.4.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.4.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.4.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.5.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.5.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.5.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.5.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.5.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.5.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.6.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.6.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.6.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.6.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.6.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.6.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.7.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.7.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.7.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.7.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.7.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.7.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.8.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.8.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.8.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.8.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.8.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.8.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.9.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.9.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.9.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.9.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.9.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.9.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.10.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.10.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.10.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.10.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.10.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.10.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.10.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.10.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.10.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.10.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.11.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.11.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.11.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.11.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.11.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.11.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.11.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.11.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.11.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.11.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_2.bias       |    512     |
+|                text_encoder.ln_final.weight                |    512     |
+|                 text_encoder.ln_final.bias                 |    512     |
++------------------------------------------------------------+------------+
+Total Trainable Params: 38131200
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF private-state isolation check passed
+GM mode: global_only_ctx_global
+PM mode: client_private_fused_prompt
+idxs_users [0, 1]
+------------local train start epoch: 0 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.061 (0.229) data 0.000 (0.072) loss 2.2633 (2.6358) acc 31.2500 (34.0625) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0387 (0.0394) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.061 (0.194) data 0.000 (0.090) loss 2.1715 (2.8045) acc 53.1250 (32.1875) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0385 (0.0392) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 0 -------------
+SPF FedAvg completed for round 0: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 198
+* accuracy: 23.9%
+* error: 76.1%
+* macro_f1: 22.7%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 427
+* accuracy: 49.4%
+* error: 50.6%
+* macro_f1: 49.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 434
+* accuracy: 52.4%
+* error: 47.6%
+* macro_f1: 51.7%
+0 --Local test acc: 49.4212962962963
+1 --Local test acc: 52.41545893719807
+Round 0 | GM(micro)=25.9456 | PM(micro)=50.8865 | PM(macro)=50.9184 | WorstClient=49.4213 | ClientStd=1.4971 | BestGM=25.9456@round0 | BestPM=50.8865@round0 | RoundTime=16.62s | PeakMem=1132.74MB
+legacy_mean_personalized_acc: 50.91837761674718
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 1 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.061 (0.172) data 0.000 (0.076) loss 1.8131 (1.7500) acc 50.0000 (50.9375) spf_shared_loss 0.0162 (0.0161) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0499 (0.0500) spf_correction_ratio 0.0379 (0.0380) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.061 (0.183) data 0.000 (0.088) loss 1.5104 (1.9345) acc 65.6250 (52.1875) spf_shared_loss 0.0161 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0379 (0.0380) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 1 -------------
+SPF FedAvg completed for round 1: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 242
+* accuracy: 28.0%
+* error: 72.0%
+* macro_f1: 27.2%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 198
+* accuracy: 23.9%
+* error: 76.1%
+* macro_f1: 22.8%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 473
+* accuracy: 54.7%
+* error: 45.3%
+* macro_f1: 56.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 529
+* accuracy: 63.9%
+* error: 36.1%
+* macro_f1: 63.8%
+0 --Local test acc: 54.745370370370374
+1 --Local test acc: 63.888888888888886
+Round 1 | GM(micro)=26.0047 | PM(micro)=59.2199 | PM(macro)=59.3171 | WorstClient=54.7454 | ClientStd=4.5718 | BestGM=26.0047@round1 | BestPM=59.2199@round1 | RoundTime=14.99s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 59.31712962962963
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 2 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.153) data 0.000 (0.090) loss 2.0231 (1.5615) acc 31.2500 (53.4375) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0376 (0.0377) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.150) data 0.000 (0.086) loss 1.3473 (1.4420) acc 62.5000 (61.5625) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0378 (0.0378) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 2 -------------
+SPF FedAvg completed for round 2: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 524
+* accuracy: 60.6%
+* error: 39.4%
+* macro_f1: 61.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 545
+* accuracy: 65.8%
+* error: 34.2%
+* macro_f1: 65.5%
+0 --Local test acc: 60.648148148148145
+1 --Local test acc: 65.82125603864735
+Round 2 | GM(micro)=26.0047 | PM(micro)=63.1797 | PM(macro)=63.2347 | WorstClient=60.6481 | ClientStd=2.5866 | BestGM=26.0047@round1 | BestPM=63.1797@round2 | RoundTime=14.72s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 63.23470209339774
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 3 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.149) data 0.000 (0.086) loss 1.1032 (1.2482) acc 65.6250 (67.1875) spf_shared_loss 0.0162 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0374 (0.0375) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.148) data 0.000 (0.082) loss 1.1422 (1.1346) acc 65.6250 (66.5625) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0376 (0.0376) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 3 -------------
+SPF FedAvg completed for round 3: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 197
+* accuracy: 23.8%
+* error: 76.2%
+* macro_f1: 22.7%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 501
+* accuracy: 58.0%
+* error: 42.0%
+* macro_f1: 59.3%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 616
+* accuracy: 74.4%
+* error: 25.6%
+* macro_f1: 76.4%
+0 --Local test acc: 57.986111111111114
+1 --Local test acc: 74.39613526570048
+Round 3 | GM(micro)=25.7683 | PM(micro)=66.0165 | PM(macro)=66.1911 | WorstClient=57.9861 | ClientStd=8.2050 | BestGM=26.0047@round1 | BestPM=66.0165@round3 | RoundTime=14.59s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 66.1911231884058
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 4 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.141) data 0.000 (0.077) loss 1.0631 (1.1972) acc 68.7500 (63.4375) spf_shared_loss 0.0162 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0499 (0.0500) spf_correction_ratio 0.0373 (0.0373) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0004 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.154) data 0.000 (0.091) loss 0.9376 (0.9680) acc 68.7500 (72.8125) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0499) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0374 (0.0375) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0000 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 4 -------------
+SPF FedAvg completed for round 4: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 197
+* accuracy: 23.8%
+* error: 76.2%
+* macro_f1: 22.6%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 542
+* accuracy: 62.7%
+* error: 37.3%
+* macro_f1: 63.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 637
+* accuracy: 76.9%
+* error: 23.1%
+* macro_f1: 77.3%
+0 --Local test acc: 62.73148148148148
+1 --Local test acc: 76.93236714975845
+Round 4 | GM(micro)=25.8274 | PM(micro)=69.6809 | PM(macro)=69.8319 | WorstClient=62.7315 | ClientStd=7.1004 | BestGM=26.0047@round1 | BestPM=69.6809@round4 | RoundTime=14.63s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 69.83192431561997
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 5 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.178) data 0.000 (0.083) loss 0.9997 (1.0391) acc 75.0000 (71.8750) spf_shared_loss 0.0162 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0371 (0.0371) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0003 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.144 (0.172) data 0.000 (0.096) loss 0.7721 (0.8297) acc 78.1250 (78.4375) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0373 (0.0373) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 5 -------------
+SPF FedAvg completed for round 5: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 197
+* accuracy: 23.8%
+* error: 76.2%
+* macro_f1: 22.6%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 556
+* accuracy: 64.4%
+* error: 35.6%
+* macro_f1: 65.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 643
+* accuracy: 77.7%
+* error: 22.3%
+* macro_f1: 77.7%
+0 --Local test acc: 64.35185185185185
+1 --Local test acc: 77.65700483091787
+Round 5 | GM(micro)=25.8274 | PM(micro)=70.8629 | PM(macro)=71.0044 | WorstClient=64.3519 | ClientStd=6.6526 | BestGM=26.0047@round1 | BestPM=70.8629@round5 | RoundTime=15.50s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 71.00442834138485
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 6 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.091 (0.154) data 0.000 (0.087) loss 1.2116 (1.0604) acc 62.5000 (67.8125) spf_shared_loss 0.0162 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0500 (0.0499) spf_correction_ratio 0.0368 (0.0369) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.147) data 0.000 (0.084) loss 0.8790 (0.6745) acc 71.8750 (83.1250) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0371 (0.0372) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 6 -------------
+SPF FedAvg completed for round 6: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 242
+* accuracy: 28.0%
+* error: 72.0%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 197
+* accuracy: 23.8%
+* error: 76.2%
+* macro_f1: 22.7%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 555
+* accuracy: 64.2%
+* error: 35.8%
+* macro_f1: 64.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 655
+* accuracy: 79.1%
+* error: 20.9%
+* macro_f1: 79.8%
+0 --Local test acc: 64.23611111111111
+1 --Local test acc: 79.10628019323671
+Round 6 | GM(micro)=25.9456 | PM(micro)=71.5130 | PM(macro)=71.6712 | WorstClient=64.2361 | ClientStd=7.4351 | BestGM=26.0047@round1 | BestPM=71.5130@round6 | RoundTime=15.61s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 71.6711956521739
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 7 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.061 (0.181) data 0.000 (0.084) loss 0.7355 (0.9001) acc 78.1250 (74.6875) spf_shared_loss 0.0162 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0366 (0.0367) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0004 (0.0003) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.200) data 0.000 (0.081) loss 0.5211 (0.6700) acc 78.1250 (80.3125) spf_shared_loss 0.0160 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0370 (0.0371) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 7 -------------
+SPF FedAvg completed for round 7: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 22.9%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 553
+* accuracy: 64.0%
+* error: 36.0%
+* macro_f1: 64.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 626
+* accuracy: 75.6%
+* error: 24.4%
+* macro_f1: 75.9%
+0 --Local test acc: 64.00462962962963
+1 --Local test acc: 75.60386473429952
+Round 7 | GM(micro)=25.9456 | PM(micro)=69.6809 | PM(macro)=69.8042 | WorstClient=64.0046 | ClientStd=5.7996 | BestGM=26.0047@round1 | BestPM=71.5130@round6 | RoundTime=15.40s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 69.80424718196457
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 8 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.069 (0.180) data 0.000 (0.082) loss 1.1735 (0.9304) acc 56.2500 (69.6875) spf_shared_loss 0.0163 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0499) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0365 (0.0366) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.147) data 0.000 (0.081) loss 0.8693 (0.5840) acc 81.2500 (83.1250) spf_shared_loss 0.0160 (0.0160) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0368 (0.0369) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 8 -------------
+SPF FedAvg completed for round 8: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 237
+* accuracy: 27.4%
+* error: 72.6%
+* macro_f1: 26.5%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 547
+* accuracy: 63.3%
+* error: 36.7%
+* macro_f1: 64.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 650
+* accuracy: 78.5%
+* error: 21.5%
+* macro_f1: 79.3%
+0 --Local test acc: 63.31018518518518
+1 --Local test acc: 78.5024154589372
+Round 8 | GM(micro)=25.8274 | PM(micro)=70.7447 | PM(macro)=70.9063 | WorstClient=63.3102 | ClientStd=7.5961 | BestGM=26.0047@round1 | BestPM=71.5130@round6 | RoundTime=15.33s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 70.90630032206118
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 9 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.064 (0.202) data 0.000 (0.081) loss 0.7253 (0.9276) acc 78.1250 (69.6875) spf_shared_loss 0.0163 (0.0162) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0364 (0.0364) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.153 (0.198) data 0.000 (0.084) loss 0.6505 (0.6445) acc 75.0000 (81.2500) spf_shared_loss 0.0160 (0.0160) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0367 (0.0367) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 9 -------------
+SPF FedAvg completed for round 9: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 584
+* accuracy: 67.6%
+* error: 32.4%
+* macro_f1: 67.9%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 638
+* accuracy: 77.1%
+* error: 22.9%
+* macro_f1: 77.2%
+0 --Local test acc: 67.5925925925926
+1 --Local test acc: 77.05314009661836
+Round 9 | GM(micro)=26.0047 | PM(micro)=72.2222 | PM(macro)=72.3229 | WorstClient=67.5926 | ClientStd=4.7303 | BestGM=26.0047@round1 | BestPM=72.2222@round9 | RoundTime=16.17s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 72.32286634460547
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 10 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.074 (0.210) data 0.000 (0.091) loss 0.6881 (0.8068) acc 84.3750 (76.5625) spf_shared_loss 0.0163 (0.0163) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0499 (0.0499) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0362 (0.0363) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.165) data 0.000 (0.079) loss 0.4305 (0.4933) acc 87.5000 (84.6875) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0365 (0.0365) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 10 -------------
+SPF FedAvg completed for round 10: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 238
+* accuracy: 27.5%
+* error: 72.5%
+* macro_f1: 26.6%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 569
+* accuracy: 65.9%
+* error: 34.1%
+* macro_f1: 67.3%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 658
+* accuracy: 79.5%
+* error: 20.5%
+* macro_f1: 79.6%
+0 --Local test acc: 65.85648148148148
+1 --Local test acc: 79.46859903381643
+Round 10 | GM(micro)=25.8865 | PM(micro)=72.5177 | PM(macro)=72.6625 | WorstClient=65.8565 | ClientStd=6.8061 | BestGM=26.0047@round1 | BestPM=72.5177@round10 | RoundTime=15.57s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 72.66254025764896
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 11 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.173) data 0.000 (0.082) loss 0.9108 (0.8659) acc 71.8750 (75.3125) spf_shared_loss 0.0163 (0.0163) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0361 (0.0361) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.200) data 0.000 (0.084) loss 0.5704 (0.4936) acc 84.3750 (84.6875) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0364 (0.0364) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 11 -------------
+SPF FedAvg completed for round 11: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 22.9%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 570
+* accuracy: 66.0%
+* error: 34.0%
+* macro_f1: 65.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 674
+* accuracy: 81.4%
+* error: 18.6%
+* macro_f1: 81.8%
+0 --Local test acc: 65.97222222222223
+1 --Local test acc: 81.40096618357488
+Round 11 | GM(micro)=25.9456 | PM(micro)=73.5225 | PM(macro)=73.6866 | WorstClient=65.9722 | ClientStd=7.7144 | BestGM=26.0047@round1 | BestPM=73.5225@round11 | RoundTime=15.76s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 73.68659420289856
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 12 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.068 (0.180) data 0.000 (0.084) loss 0.7175 (0.7840) acc 78.1250 (75.9375) spf_shared_loss 0.0163 (0.0163) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0359 (0.0360) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.146) data 0.000 (0.080) loss 0.2933 (0.4824) acc 87.5000 (83.7500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0362 (0.0363) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 12 -------------
+SPF FedAvg completed for round 12: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 581
+* accuracy: 67.2%
+* error: 32.8%
+* macro_f1: 68.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 629
+* accuracy: 76.0%
+* error: 24.0%
+* macro_f1: 75.4%
+0 --Local test acc: 67.24537037037037
+1 --Local test acc: 75.96618357487922
+Round 12 | GM(micro)=26.0047 | PM(micro)=71.5130 | PM(macro)=71.6058 | WorstClient=67.2454 | ClientStd=4.3604 | BestGM=26.0047@round1 | BestPM=73.5225@round11 | RoundTime=14.73s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 71.6057769726248
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 13 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.154) data 0.000 (0.088) loss 0.8044 (0.7806) acc 71.8750 (75.6250) spf_shared_loss 0.0163 (0.0163) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0357 (0.0358) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.163) data 0.000 (0.099) loss 0.5909 (0.5328) acc 84.3750 (85.6250) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0360 (0.0361) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 13 -------------
+SPF FedAvg completed for round 13: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 243
+* accuracy: 28.1%
+* error: 71.9%
+* macro_f1: 27.5%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 198
+* accuracy: 23.9%
+* error: 76.1%
+* macro_f1: 22.8%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 572
+* accuracy: 66.2%
+* error: 33.8%
+* macro_f1: 66.6%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 657
+* accuracy: 79.3%
+* error: 20.7%
+* macro_f1: 79.7%
+0 --Local test acc: 66.20370370370371
+1 --Local test acc: 79.34782608695652
+Round 13 | GM(micro)=26.0638 | PM(micro)=72.6359 | PM(macro)=72.7758 | WorstClient=66.2037 | ClientStd=6.5721 | BestGM=26.0638@round13 | BestPM=73.5225@round11 | RoundTime=15.19s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 72.77576489533011
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 14 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.134 (0.245) data 0.000 (0.117) loss 0.6388 (0.6943) acc 84.3750 (79.3750) spf_shared_loss 0.0163 (0.0163) spf_gamma_mean 0.0499 (0.0499) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0356 (0.0357) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.095 (0.227) data 0.000 (0.105) loss 0.4813 (0.4977) acc 87.5000 (86.2500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0359 (0.0359) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 14 -------------
+SPF FedAvg completed for round 14: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 242
+* accuracy: 28.0%
+* error: 72.0%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 607
+* accuracy: 70.3%
+* error: 29.7%
+* macro_f1: 70.9%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 656
+* accuracy: 79.2%
+* error: 20.8%
+* macro_f1: 79.5%
+0 --Local test acc: 70.25462962962963
+1 --Local test acc: 79.22705314009661
+Round 14 | GM(micro)=26.1229 | PM(micro)=74.6454 | PM(macro)=74.7408 | WorstClient=70.2546 | ClientStd=4.4862 | BestGM=26.1229@round14 | BestPM=74.6454@round14 | RoundTime=18.71s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 74.74084138486313
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 15 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.167) data 0.000 (0.098) loss 0.6388 (0.6342) acc 84.3750 (80.0000) spf_shared_loss 0.0163 (0.0163) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0355 (0.0355) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.210) data 0.000 (0.108) loss 0.2977 (0.3538) acc 90.6250 (90.0000) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0358 (0.0359) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 15 -------------
+SPF FedAvg completed for round 15: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.0%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 596
+* accuracy: 69.0%
+* error: 31.0%
+* macro_f1: 69.4%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 668
+* accuracy: 80.7%
+* error: 19.3%
+* macro_f1: 81.1%
+0 --Local test acc: 68.98148148148148
+1 --Local test acc: 80.67632850241546
+Round 15 | GM(micro)=26.0638 | PM(micro)=74.7045 | PM(macro)=74.8289 | WorstClient=68.9815 | ClientStd=5.8474 | BestGM=26.1229@round14 | BestPM=74.7045@round15 | RoundTime=17.58s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 74.82890499194846
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 16 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.083 (0.186) data 0.000 (0.110) loss 0.6984 (0.7803) acc 75.0000 (75.6250) spf_shared_loss 0.0164 (0.0163) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0354 (0.0354) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0004 (0.0004) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.075 (0.181) data 0.000 (0.091) loss 0.4777 (0.3488) acc 84.3750 (88.1250) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0357 (0.0358) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 16 -------------
+SPF FedAvg completed for round 16: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 588
+* accuracy: 68.1%
+* error: 31.9%
+* macro_f1: 68.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 675
+* accuracy: 81.5%
+* error: 18.5%
+* macro_f1: 81.7%
+0 --Local test acc: 68.05555555555556
+1 --Local test acc: 81.52173913043478
+Round 16 | GM(micro)=25.9456 | PM(micro)=74.6454 | PM(macro)=74.7886 | WorstClient=68.0556 | ClientStd=6.7331 | BestGM=26.1229@round14 | BestPM=74.7045@round15 | RoundTime=17.93s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 74.78864734299518
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 17 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.184) data 0.000 (0.114) loss 0.8342 (0.6827) acc 71.8750 (78.4375) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0353 (0.0353) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.069 (0.190) data 0.000 (0.104) loss 0.2252 (0.4077) acc 90.6250 (86.8750) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0356 (0.0357) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 17 -------------
+SPF FedAvg completed for round 17: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 242
+* accuracy: 28.0%
+* error: 72.0%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 22.9%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 593
+* accuracy: 68.6%
+* error: 31.4%
+* macro_f1: 69.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 677
+* accuracy: 81.8%
+* error: 18.2%
+* macro_f1: 81.9%
+0 --Local test acc: 68.63425925925925
+1 --Local test acc: 81.76328502415458
+Round 17 | GM(micro)=26.0638 | PM(micro)=75.0591 | PM(macro)=75.1988 | WorstClient=68.6343 | ClientStd=6.5645 | BestGM=26.1229@round14 | BestPM=75.0591@round17 | RoundTime=18.79s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.19877214170691
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 18 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.203) data 0.000 (0.101) loss 0.7179 (0.5668) acc 84.3750 (83.4375) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0352 (0.0352) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.121 (0.199) data 0.000 (0.119) loss 0.3326 (0.4274) acc 87.5000 (87.5000) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0355 (0.0356) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 18 -------------
+SPF FedAvg completed for round 18: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 598
+* accuracy: 69.2%
+* error: 30.8%
+* macro_f1: 69.8%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 677
+* accuracy: 81.8%
+* error: 18.2%
+* macro_f1: 81.7%
+0 --Local test acc: 69.21296296296296
+1 --Local test acc: 81.76328502415458
+Round 18 | GM(micro)=25.9456 | PM(micro)=75.3546 | PM(macro)=75.4881 | WorstClient=69.2130 | ClientStd=6.2752 | BestGM=26.1229@round14 | BestPM=75.3546@round18 | RoundTime=19.95s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.48812399355877
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 19 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.077 (0.224) data 0.000 (0.120) loss 0.6271 (0.6001) acc 81.2500 (82.5000) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0350 (0.0351) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.241) data 0.000 (0.104) loss 0.3673 (0.3203) acc 87.5000 (90.6250) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0354 (0.0355) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 19 -------------
+SPF FedAvg completed for round 19: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 603
+* accuracy: 69.8%
+* error: 30.2%
+* macro_f1: 70.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 676
+* accuracy: 81.6%
+* error: 18.4%
+* macro_f1: 82.3%
+0 --Local test acc: 69.79166666666667
+1 --Local test acc: 81.64251207729468
+Round 19 | GM(micro)=25.8865 | PM(micro)=75.5910 | PM(macro)=75.7171 | WorstClient=69.7917 | ClientStd=5.9254 | BestGM=26.1229@round14 | BestPM=75.5910@round19 | RoundTime=18.92s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.71708937198068
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 20 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.064 (0.197) data 0.000 (0.116) loss 0.4411 (0.6305) acc 84.3750 (79.0625) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0349 (0.0350) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0002) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.197) data 0.000 (0.120) loss 0.4691 (0.3319) acc 87.5000 (91.8750) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0353 (0.0354) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 20 -------------
+SPF FedAvg completed for round 20: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 601
+* accuracy: 69.6%
+* error: 30.4%
+* macro_f1: 70.2%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 682
+* accuracy: 82.4%
+* error: 17.6%
+* macro_f1: 82.8%
+0 --Local test acc: 69.56018518518519
+1 --Local test acc: 82.3671497584541
+Round 20 | GM(micro)=26.0047 | PM(micro)=75.8274 | PM(macro)=75.9637 | WorstClient=69.5602 | ClientStd=6.4035 | BestGM=26.1229@round14 | BestPM=75.8274@round20 | RoundTime=18.46s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.96366747181965
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 21 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.190) data 0.000 (0.103) loss 0.5954 (0.5791) acc 90.6250 (82.8125) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0498 (0.0499) spf_correction_ratio 0.0348 (0.0349) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.064 (0.213) data 0.000 (0.122) loss 0.2926 (0.2868) acc 87.5000 (91.5625) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0353 (0.0353) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 21 -------------
+SPF FedAvg completed for round 21: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.2%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 602
+* accuracy: 69.7%
+* error: 30.3%
+* macro_f1: 70.5%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 675
+* accuracy: 81.5%
+* error: 18.5%
+* macro_f1: 81.9%
+0 --Local test acc: 69.67592592592592
+1 --Local test acc: 81.52173913043478
+Round 21 | GM(micro)=26.0047 | PM(micro)=75.4728 | PM(macro)=75.5988 | WorstClient=69.6759 | ClientStd=5.9229 | BestGM=26.1229@round14 | BestPM=75.8274@round20 | RoundTime=19.38s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.59883252818035
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 22 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.159 (0.233) data 0.000 (0.096) loss 0.5309 (0.5393) acc 84.3750 (84.6875) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0347 (0.0348) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0002 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.064 (0.182) data 0.000 (0.101) loss 0.2853 (0.2757) acc 93.7500 (91.2500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0352 (0.0353) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 22 -------------
+SPF FedAvg completed for round 22: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 242
+* accuracy: 28.0%
+* error: 72.0%
+* macro_f1: 27.0%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 202
+* accuracy: 24.4%
+* error: 75.6%
+* macro_f1: 23.5%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 586
+* accuracy: 67.8%
+* error: 32.2%
+* macro_f1: 68.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 674
+* accuracy: 81.4%
+* error: 18.6%
+* macro_f1: 81.6%
+0 --Local test acc: 67.82407407407408
+1 --Local test acc: 81.40096618357488
+Round 22 | GM(micro)=26.2411 | PM(micro)=74.4681 | PM(macro)=74.6125 | WorstClient=67.8241 | ClientStd=6.7884 | BestGM=26.2411@round22 | BestPM=75.8274@round20 | RoundTime=19.44s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 74.61252012882449
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 23 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.070 (0.186) data 0.000 (0.096) loss 0.4885 (0.6243) acc 84.3750 (80.6250) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0499 (0.0499) spf_correction_ratio 0.0346 (0.0346) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0002) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.200) data 0.000 (0.128) loss 0.4576 (0.3256) acc 87.5000 (88.7500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0351 (0.0352) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 23 -------------
+SPF FedAvg completed for round 23: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.2%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 587
+* accuracy: 67.9%
+* error: 32.1%
+* macro_f1: 68.5%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 661
+* accuracy: 79.8%
+* error: 20.2%
+* macro_f1: 80.0%
+0 --Local test acc: 67.93981481481481
+1 --Local test acc: 79.83091787439614
+Round 23 | GM(micro)=26.0047 | PM(micro)=73.7589 | PM(macro)=73.8854 | WorstClient=67.9398 | ClientStd=5.9456 | BestGM=26.2411@round22 | BestPM=75.8274@round20 | RoundTime=19.48s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 73.88536634460547
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 24 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.239) data 0.000 (0.131) loss 0.8176 (0.6781) acc 75.0000 (79.0625) spf_shared_loss 0.0164 (0.0164) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0498) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0344 (0.0345) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.235) data 0.000 (0.126) loss 0.3888 (0.3563) acc 90.6250 (89.0625) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0350 (0.0351) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 24 -------------
+SPF FedAvg completed for round 24: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 591
+* accuracy: 68.4%
+* error: 31.6%
+* macro_f1: 69.4%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 660
+* accuracy: 79.7%
+* error: 20.3%
+* macro_f1: 80.1%
+0 --Local test acc: 68.40277777777777
+1 --Local test acc: 79.71014492753623
+Round 24 | GM(micro)=26.0047 | PM(micro)=73.9362 | PM(macro)=74.0565 | WorstClient=68.4028 | ClientStd=5.6537 | BestGM=26.2411@round22 | BestPM=75.8274@round20 | RoundTime=20.02s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 74.05646135265701
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 25 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.073 (0.192) data 0.000 (0.123) loss 0.5104 (0.6718) acc 81.2500 (78.1250) spf_shared_loss 0.0165 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0343 (0.0344) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.077 (0.194) data 0.000 (0.123) loss 0.1729 (0.2391) acc 96.8750 (93.1250) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0350 (0.0350) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 25 -------------
+SPF FedAvg completed for round 25: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 202
+* accuracy: 24.4%
+* error: 75.6%
+* macro_f1: 23.4%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 621
+* accuracy: 71.9%
+* error: 28.1%
+* macro_f1: 72.4%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 689
+* accuracy: 83.2%
+* error: 16.8%
+* macro_f1: 83.4%
+0 --Local test acc: 71.875
+1 --Local test acc: 83.21256038647343
+Round 25 | GM(micro)=26.0638 | PM(micro)=77.4232 | PM(macro)=77.5438 | WorstClient=71.8750 | ClientStd=5.6688 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.99s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 77.54378019323671
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 26 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.074 (0.258) data 0.000 (0.124) loss 0.3613 (0.5887) acc 87.5000 (80.9375) spf_shared_loss 0.0165 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0498) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0342 (0.0342) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.064 (0.239) data 0.000 (0.148) loss 0.4862 (0.2806) acc 84.3750 (92.1875) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0349 (0.0349) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 26 -------------
+SPF FedAvg completed for round 26: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 202
+* accuracy: 24.4%
+* error: 75.6%
+* macro_f1: 23.4%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 600
+* accuracy: 69.4%
+* error: 30.6%
+* macro_f1: 69.8%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 681
+* accuracy: 82.2%
+* error: 17.8%
+* macro_f1: 82.6%
+0 --Local test acc: 69.44444444444444
+1 --Local test acc: 82.2463768115942
+Round 26 | GM(micro)=26.1820 | PM(micro)=75.7092 | PM(macro)=75.8454 | WorstClient=69.4444 | ClientStd=6.4010 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.58s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.84541062801932
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 27 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.191) data 0.000 (0.117) loss 0.6330 (0.5289) acc 81.2500 (83.7500) spf_shared_loss 0.0165 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0498 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0341 (0.0342) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.185) data 0.000 (0.099) loss 0.3546 (0.2493) acc 87.5000 (93.1250) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0348 (0.0349) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 27 -------------
+SPF FedAvg completed for round 27: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.2%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 609
+* accuracy: 70.5%
+* error: 29.5%
+* macro_f1: 70.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 684
+* accuracy: 82.6%
+* error: 17.4%
+* macro_f1: 82.9%
+0 --Local test acc: 70.48611111111111
+1 --Local test acc: 82.6086956521739
+Round 27 | GM(micro)=26.1229 | PM(micro)=76.4184 | PM(macro)=76.5474 | WorstClient=70.4861 | ClientStd=6.0613 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.92s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.54740338164251
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 28 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.162 (0.217) data 0.000 (0.107) loss 0.5515 (0.5132) acc 78.1250 (84.0625) spf_shared_loss 0.0165 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0498) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0341 (0.0341) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0005 (0.0005) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.071 (0.197) data 0.000 (0.129) loss 0.2853 (0.3138) acc 93.7500 (91.2500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0347 (0.0347) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 28 -------------
+SPF FedAvg completed for round 28: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 242
+* accuracy: 28.0%
+* error: 72.0%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 598
+* accuracy: 69.2%
+* error: 30.8%
+* macro_f1: 69.5%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 685
+* accuracy: 82.7%
+* error: 17.3%
+* macro_f1: 83.0%
+0 --Local test acc: 69.21296296296296
+1 --Local test acc: 82.72946859903382
+Round 28 | GM(micro)=26.1229 | PM(micro)=75.8274 | PM(macro)=75.9712 | WorstClient=69.2130 | ClientStd=6.7583 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.52s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.97121578099839
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 29 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.224) data 0.000 (0.123) loss 0.8386 (0.5935) acc 71.8750 (81.8750) spf_shared_loss 0.0165 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0339 (0.0340) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.201 (0.217) data 0.000 (0.117) loss 0.3412 (0.2712) acc 87.5000 (92.8125) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0346 (0.0347) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 29 -------------
+SPF FedAvg completed for round 29: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 604
+* accuracy: 69.9%
+* error: 30.1%
+* macro_f1: 70.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 693
+* accuracy: 83.7%
+* error: 16.3%
+* macro_f1: 84.0%
+0 --Local test acc: 69.9074074074074
+1 --Local test acc: 83.69565217391305
+Round 29 | GM(micro)=26.0047 | PM(micro)=76.6548 | PM(macro)=76.8015 | WorstClient=69.9074 | ClientStd=6.8941 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.68s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.80152979066023
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 30 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.093 (0.263) data 0.000 (0.116) loss 0.7390 (0.5908) acc 78.1250 (80.0000) spf_shared_loss 0.0165 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0339 (0.0339) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0003) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.144 (0.250) data 0.000 (0.117) loss 0.2502 (0.2662) acc 90.6250 (91.5625) spf_shared_loss 0.0158 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0501 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0345 (0.0346) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 30 -------------
+SPF FedAvg completed for round 30: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.2%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 606
+* accuracy: 70.1%
+* error: 29.9%
+* macro_f1: 69.9%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 643
+* accuracy: 77.7%
+* error: 22.3%
+* macro_f1: 77.9%
+0 --Local test acc: 70.13888888888889
+1 --Local test acc: 77.65700483091787
+Round 30 | GM(micro)=26.0047 | PM(micro)=73.8180 | PM(macro)=73.8979 | WorstClient=70.1389 | ClientStd=3.7591 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.31s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 73.89794685990339
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 31 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.096 (0.258) data 0.000 (0.119) loss 0.6682 (0.5586) acc 78.1250 (83.4375) spf_shared_loss 0.0165 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0338 (0.0338) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0003 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.151 (0.234) data 0.000 (0.116) loss 0.3912 (0.2524) acc 84.3750 (92.8125) spf_shared_loss 0.0158 (0.0158) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0501 (0.0501) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0344 (0.0344) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 31 -------------
+SPF FedAvg completed for round 31: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 603
+* accuracy: 69.8%
+* error: 30.2%
+* macro_f1: 70.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 675
+* accuracy: 81.5%
+* error: 18.5%
+* macro_f1: 81.5%
+0 --Local test acc: 69.79166666666667
+1 --Local test acc: 81.52173913043478
+Round 31 | GM(micro)=25.9456 | PM(micro)=75.5319 | PM(macro)=75.6567 | WorstClient=69.7917 | ClientStd=5.8650 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.20s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.65670289855072
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 32 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.108 (0.235) data 0.000 (0.126) loss 0.4060 (0.4718) acc 84.3750 (85.0000) spf_shared_loss 0.0166 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0337 (0.0337) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.157 (0.202) data 0.000 (0.110) loss 0.2483 (0.2403) acc 90.6250 (92.1875) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0344 (0.0344) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 32 -------------
+SPF FedAvg completed for round 32: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.7%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 613
+* accuracy: 70.9%
+* error: 29.1%
+* macro_f1: 71.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 651
+* accuracy: 78.6%
+* error: 21.4%
+* macro_f1: 78.7%
+0 --Local test acc: 70.94907407407408
+1 --Local test acc: 78.6231884057971
+Round 32 | GM(micro)=26.0047 | PM(micro)=74.7045 | PM(macro)=74.7861 | WorstClient=70.9491 | ClientStd=3.8371 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.87s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 74.78613123993559
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 33 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.086 (0.260) data 0.000 (0.109) loss 0.4074 (0.4306) acc 87.5000 (88.7500) spf_shared_loss 0.0165 (0.0166) spf_gamma_mean 0.0498 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0336 (0.0337) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.158 (0.234) data 0.000 (0.105) loss 0.2570 (0.2455) acc 93.7500 (94.3750) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0343 (0.0343) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 33 -------------
+SPF FedAvg completed for round 33: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 238
+* accuracy: 27.5%
+* error: 72.5%
+* macro_f1: 26.6%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 609
+* accuracy: 70.5%
+* error: 29.5%
+* macro_f1: 71.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 669
+* accuracy: 80.8%
+* error: 19.2%
+* macro_f1: 80.9%
+0 --Local test acc: 70.48611111111111
+1 --Local test acc: 80.79710144927536
+Round 33 | GM(micro)=25.8274 | PM(micro)=75.5319 | PM(macro)=75.6416 | WorstClient=70.4861 | ClientStd=5.1555 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.81s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.64160628019323
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 34 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.107 (0.203) data 0.000 (0.104) loss 0.4182 (0.5243) acc 90.6250 (82.5000) spf_shared_loss 0.0166 (0.0165) spf_gamma_mean 0.0498 (0.0498) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0335 (0.0336) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.184) data 0.000 (0.097) loss 0.2604 (0.2482) acc 90.6250 (91.5625) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0342 (0.0342) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 34 -------------
+SPF FedAvg completed for round 34: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 27.0%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 615
+* accuracy: 71.2%
+* error: 28.8%
+* macro_f1: 71.8%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 665
+* accuracy: 80.3%
+* error: 19.7%
+* macro_f1: 80.5%
+0 --Local test acc: 71.18055555555556
+1 --Local test acc: 80.31400966183575
+Round 34 | GM(micro)=26.0638 | PM(micro)=75.6501 | PM(macro)=75.7473 | WorstClient=71.1806 | ClientStd=4.5667 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.98s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.74728260869566
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 35 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.080 (0.246) data 0.000 (0.118) loss 0.5539 (0.4175) acc 84.3750 (87.5000) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0335 (0.0335) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.077 (0.183) data 0.000 (0.107) loss 0.3368 (0.2101) acc 93.7500 (96.2500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0342 (0.0342) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 35 -------------
+SPF FedAvg completed for round 35: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 242
+* accuracy: 28.0%
+* error: 72.0%
+* macro_f1: 27.3%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 601
+* accuracy: 69.6%
+* error: 30.4%
+* macro_f1: 69.9%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 677
+* accuracy: 81.8%
+* error: 18.2%
+* macro_f1: 81.9%
+0 --Local test acc: 69.56018518518519
+1 --Local test acc: 81.76328502415458
+Round 35 | GM(micro)=26.0638 | PM(micro)=75.5319 | PM(macro)=75.6617 | WorstClient=69.5602 | ClientStd=6.1015 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.25s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.66173510466989
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 36 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.170 (0.203) data 0.000 (0.105) loss 0.5290 (0.5091) acc 81.2500 (83.4375) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0334 (0.0334) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.230 (0.248) data 0.000 (0.119) loss 0.1979 (0.1701) acc 96.8750 (96.2500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0341 (0.0341) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 36 -------------
+SPF FedAvg completed for round 36: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 27.0%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 22.9%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 611
+* accuracy: 70.7%
+* error: 29.3%
+* macro_f1: 71.2%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 673
+* accuracy: 81.3%
+* error: 18.7%
+* macro_f1: 81.7%
+0 --Local test acc: 70.7175925925926
+1 --Local test acc: 81.28019323671498
+Round 36 | GM(micro)=25.9456 | PM(micro)=75.8865 | PM(macro)=75.9989 | WorstClient=70.7176 | ClientStd=5.2813 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.43s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.9988929146538
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 37 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.064 (0.213) data 0.000 (0.122) loss 0.5847 (0.4997) acc 78.1250 (84.3750) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0333 (0.0333) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.182) data 0.000 (0.102) loss 0.1105 (0.2149) acc 100.0000 (95.0000) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0341 (0.0341) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 37 -------------
+SPF FedAvg completed for round 37: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 611
+* accuracy: 70.7%
+* error: 29.3%
+* macro_f1: 71.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 675
+* accuracy: 81.5%
+* error: 18.5%
+* macro_f1: 81.8%
+0 --Local test acc: 70.7175925925926
+1 --Local test acc: 81.52173913043478
+Round 37 | GM(micro)=26.0638 | PM(micro)=76.0047 | PM(macro)=76.1197 | WorstClient=70.7176 | ClientStd=5.4021 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.07s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.11966586151368
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 38 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.239) data 0.000 (0.118) loss 0.5622 (0.4698) acc 87.5000 (85.9375) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0332 (0.0332) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.062 (0.225) data 0.000 (0.120) loss 0.0789 (0.1209) acc 100.0000 (96.8750) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0341 (0.0341) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 38 -------------
+SPF FedAvg completed for round 38: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 596
+* accuracy: 69.0%
+* error: 31.0%
+* macro_f1: 69.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 682
+* accuracy: 82.4%
+* error: 17.6%
+* macro_f1: 82.5%
+0 --Local test acc: 68.98148148148148
+1 --Local test acc: 82.3671497584541
+Round 38 | GM(micro)=26.0638 | PM(micro)=75.5319 | PM(macro)=75.6743 | WorstClient=68.9815 | ClientStd=6.6928 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.66s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.67431561996779
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 39 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.193) data 0.000 (0.102) loss 0.4758 (0.4833) acc 90.6250 (88.4375) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0331 (0.0332) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.064 (0.237) data 0.000 (0.113) loss 0.1022 (0.1329) acc 100.0000 (95.9375) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0340 (0.0340) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 39 -------------
+SPF FedAvg completed for round 39: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.2%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 612
+* accuracy: 70.8%
+* error: 29.2%
+* macro_f1: 71.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 681
+* accuracy: 82.2%
+* error: 17.8%
+* macro_f1: 82.5%
+0 --Local test acc: 70.83333333333333
+1 --Local test acc: 82.2463768115942
+Round 39 | GM(micro)=26.0638 | PM(micro)=76.4184 | PM(macro)=76.5399 | WorstClient=70.8333 | ClientStd=5.7065 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.36s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.53985507246377
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 40 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.102 (0.202) data 0.000 (0.125) loss 0.2020 (0.3480) acc 93.7500 (89.6875) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0331 (0.0331) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.183) data 0.000 (0.106) loss 0.1449 (0.1642) acc 96.8750 (95.3125) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0340 (0.0340) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 40 -------------
+SPF FedAvg completed for round 40: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.0%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.3%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 608
+* accuracy: 70.4%
+* error: 29.6%
+* macro_f1: 70.8%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 678
+* accuracy: 81.9%
+* error: 18.1%
+* macro_f1: 82.3%
+0 --Local test acc: 70.37037037037037
+1 --Local test acc: 81.8840579710145
+Round 40 | GM(micro)=26.1229 | PM(micro)=76.0047 | PM(macro)=76.1272 | WorstClient=70.3704 | ClientStd=5.7568 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.56s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.12721417069244
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 41 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.140 (0.198) data 0.000 (0.091) loss 0.2541 (0.3973) acc 96.8750 (88.1250) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0330 (0.0330) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.150 (0.195) data 0.000 (0.113) loss 0.1758 (0.1846) acc 96.8750 (95.6250) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0340 (0.0340) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 41 -------------
+SPF FedAvg completed for round 41: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 238
+* accuracy: 27.5%
+* error: 72.5%
+* macro_f1: 26.7%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 23.0%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 611
+* accuracy: 70.7%
+* error: 29.3%
+* macro_f1: 70.8%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 688
+* accuracy: 83.1%
+* error: 16.9%
+* macro_f1: 83.4%
+0 --Local test acc: 70.7175925925926
+1 --Local test acc: 83.09178743961353
+Round 41 | GM(micro)=25.8274 | PM(micro)=76.7730 | PM(macro)=76.9047 | WorstClient=70.7176 | ClientStd=6.1871 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.25s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.90469001610306
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 42 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.074 (0.202) data 0.000 (0.104) loss 0.6853 (0.4431) acc 71.8750 (85.0000) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0329 (0.0330) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.123 (0.243) data 0.000 (0.117) loss 0.1207 (0.1798) acc 93.7500 (93.7500) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0339 (0.0339) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0002) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 42 -------------
+SPF FedAvg completed for round 42: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 199
+* accuracy: 24.0%
+* error: 76.0%
+* macro_f1: 22.9%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 600
+* accuracy: 69.4%
+* error: 30.6%
+* macro_f1: 70.0%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 681
+* accuracy: 82.2%
+* error: 17.8%
+* macro_f1: 82.4%
+0 --Local test acc: 69.44444444444444
+1 --Local test acc: 82.2463768115942
+Round 42 | GM(micro)=25.9456 | PM(micro)=75.7092 | PM(macro)=75.8454 | WorstClient=69.4444 | ClientStd=6.4010 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.86s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 75.84541062801932
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 43 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.157 (0.213) data 0.000 (0.101) loss 0.6325 (0.4059) acc 81.2500 (89.3750) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0329 (0.0329) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.138 (0.252) data 0.000 (0.126) loss 0.1544 (0.1697) acc 93.7500 (95.0000) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0339 (0.0339) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0002 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 43 -------------
+SPF FedAvg completed for round 43: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.2%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 596
+* accuracy: 69.0%
+* error: 31.0%
+* macro_f1: 68.9%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 668
+* accuracy: 80.7%
+* error: 19.3%
+* macro_f1: 81.0%
+0 --Local test acc: 68.98148148148148
+1 --Local test acc: 80.67632850241546
+Round 43 | GM(micro)=26.0638 | PM(micro)=74.7045 | PM(macro)=74.8289 | WorstClient=68.9815 | ClientStd=5.8474 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=20.91s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 74.82890499194846
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 44 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.064 (0.195) data 0.000 (0.113) loss 0.5119 (0.4573) acc 84.3750 (85.0000) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0496 (0.0496) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0328 (0.0328) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.183) data 0.000 (0.095) loss 0.3051 (0.2103) acc 90.6250 (95.0000) spf_shared_loss 0.0158 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0337 (0.0338) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 44 -------------
+SPF FedAvg completed for round 44: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 239
+* accuracy: 27.7%
+* error: 72.3%
+* macro_f1: 26.8%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 619
+* accuracy: 71.6%
+* error: 28.4%
+* macro_f1: 72.1%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 677
+* accuracy: 81.8%
+* error: 18.2%
+* macro_f1: 82.1%
+0 --Local test acc: 71.64351851851852
+1 --Local test acc: 81.76328502415458
+Round 44 | GM(micro)=25.9456 | PM(micro)=76.5957 | PM(macro)=76.7034 | WorstClient=71.6435 | ClientStd=5.0599 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=18.59s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.70340177133656
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 45 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.062 (0.199) data 0.000 (0.121) loss 0.5266 (0.4341) acc 84.3750 (86.8750) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0496 (0.0496) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0327 (0.0327) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0007) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.199) data 0.000 (0.118) loss 0.1860 (0.1842) acc 93.7500 (95.6250) spf_shared_loss 0.0158 (0.0158) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0337 (0.0337) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 45 -------------
+SPF FedAvg completed for round 45: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 600
+* accuracy: 69.4%
+* error: 30.6%
+* macro_f1: 69.8%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 694
+* accuracy: 83.8%
+* error: 16.2%
+* macro_f1: 84.1%
+0 --Local test acc: 69.44444444444444
+1 --Local test acc: 83.81642512077295
+Round 45 | GM(micro)=26.0638 | PM(micro)=76.4775 | PM(macro)=76.6304 | WorstClient=69.4444 | ClientStd=7.1860 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=18.86s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.63043478260869
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 46 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.063 (0.240) data 0.000 (0.120) loss 0.3037 (0.3824) acc 93.7500 (88.7500) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0496 (0.0496) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0326 (0.0326) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0007 (0.0007) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.202) data 0.000 (0.105) loss 0.2611 (0.2014) acc 93.7500 (94.0625) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0337 (0.0337) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 46 -------------
+SPF FedAvg completed for round 46: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 240
+* accuracy: 27.8%
+* error: 72.2%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 200
+* accuracy: 24.2%
+* error: 75.8%
+* macro_f1: 23.1%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 612
+* accuracy: 70.8%
+* error: 29.2%
+* macro_f1: 71.3%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 685
+* accuracy: 82.7%
+* error: 17.3%
+* macro_f1: 82.8%
+0 --Local test acc: 70.83333333333333
+1 --Local test acc: 82.72946859903382
+Round 46 | GM(micro)=26.0047 | PM(micro)=76.6548 | PM(macro)=76.7814 | WorstClient=70.8333 | ClientStd=5.9481 | BestGM=26.2411@round22 | BestPM=77.4232@round25 | RoundTime=19.96s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.78140096618358
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 47 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.165 (0.220) data 0.000 (0.110) loss 0.2712 (0.3975) acc 90.6250 (88.1250) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0496) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0325 (0.0326) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0007) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.074 (0.212) data 0.000 (0.111) loss 0.1195 (0.1403) acc 96.8750 (96.8750) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0336 (0.0337) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 47 -------------
+SPF FedAvg completed for round 47: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.0%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 202
+* accuracy: 24.4%
+* error: 75.6%
+* macro_f1: 23.4%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 625
+* accuracy: 72.3%
+* error: 27.7%
+* macro_f1: 72.4%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 687
+* accuracy: 83.0%
+* error: 17.0%
+* macro_f1: 83.2%
+0 --Local test acc: 72.33796296296296
+1 --Local test acc: 82.97101449275362
+Round 47 | GM(micro)=26.1820 | PM(micro)=77.5414 | PM(macro)=77.6545 | WorstClient=72.3380 | ClientStd=5.3165 | BestGM=26.2411@round22 | BestPM=77.5414@round47 | RoundTime=20.26s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 77.6544887278583
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 48 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.064 (0.188) data 0.000 (0.109) loss 0.3249 (0.4020) acc 90.6250 (88.1250) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0497 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0325 (0.0325) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0006 (0.0006) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.203) data 0.000 (0.115) loss 0.1473 (0.2002) acc 96.8750 (94.3750) spf_shared_loss 0.0159 (0.0159) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0336 (0.0336) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 48 -------------
+SPF FedAvg completed for round 48: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 241
+* accuracy: 27.9%
+* error: 72.1%
+* macro_f1: 27.1%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 204
+* accuracy: 24.6%
+* error: 75.4%
+* macro_f1: 23.7%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 616
+* accuracy: 71.3%
+* error: 28.7%
+* macro_f1: 71.8%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 678
+* accuracy: 81.9%
+* error: 18.1%
+* macro_f1: 82.1%
+0 --Local test acc: 71.29629629629629
+1 --Local test acc: 81.8840579710145
+Round 48 | GM(micro)=26.3002 | PM(micro)=76.4775 | PM(macro)=76.5902 | WorstClient=71.2963 | ClientStd=5.2939 | BestGM=26.3002@round48 | BestPM=77.5414@round47 | RoundTime=20.26s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.5901771336554
+------------local test finish-------------
+idxs_users [0, 1]
+------------local train start epoch: 49 -------------
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/12] time 0.116 (0.223) data 0.000 (0.108) loss 0.3554 (0.4874) acc 90.6250 (86.8750) spf_shared_loss 0.0166 (0.0166) spf_gamma_mean 0.0497 (0.0497) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0496 (0.0497) spf_gamma_max 0.0498 (0.0498) spf_correction_ratio 0.0324 (0.0324) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0004 (0.0004) spf_effective_dynamic_delta_after_cast 0.0007 (0.0007) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:03
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + rank_gate
+SPF optimizer state entries after rebuild: 0
+epoch [1/1] batch [10/11] time 0.063 (0.193) data 0.000 (0.094) loss 0.4508 (0.2225) acc 90.6250 (94.3750) spf_shared_loss 0.0158 (0.0158) spf_gamma_mean 0.0501 (0.0501) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0501 (0.0501) spf_correction_ratio 0.0335 (0.0335) spf_rank 8.0000 (8.0000) spf_fused_ctx_dtype_is_fp32 1.0000 (1.0000) spf_text_encoder_input_dtype_is_fp32 0.0000 (0.0000) spf_effective_dynamic_delta_fp32 0.0001 (0.0001) spf_effective_dynamic_delta_after_cast 0.0003 (0.0003) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 49 -------------
+SPF FedAvg completed for round 49: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 244
+* accuracy: 28.2%
+* error: 71.8%
+* macro_f1: 27.4%
+SPF client state restored: ctx_local + rank_gate
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 201
+* accuracy: 24.3%
+* error: 75.7%
+* macro_f1: 23.2%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 864
+* correct: 603
+* accuracy: 69.8%
+* error: 30.2%
+* macro_f1: 69.7%
+SPF client state restored: ctx_local + rank_gate
+SPF global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 828
+* correct: 693
+* accuracy: 83.7%
+* error: 16.3%
+* macro_f1: 83.9%
+0 --Local test acc: 69.79166666666667
+1 --Local test acc: 83.69565217391305
+Round 49 | GM(micro)=26.3002 | PM(micro)=76.5957 | PM(macro)=76.7437 | WorstClient=69.7917 | ClientStd=6.9520 | BestGM=26.3002@round48 | BestPM=77.5414@round47 | RoundTime=20.13s | PeakMem=1134.62MB
+legacy_mean_personalized_acc: 76.74365942028986
+------------local test finish-------------
+Total time Elapsed: 0:15:25
+Total time Elapsed: 0:15:25
+0 global_test_acc_list: [49.4212962962963, 54.745370370370374, 60.648148148148145, 57.986111111111114, 62.73148148148148, 64.35185185185185, 64.23611111111111, 64.00462962962963, 63.31018518518518, 67.5925925925926, 65.85648148148148, 65.97222222222223, 67.24537037037037, 66.20370370370371, 70.25462962962963, 68.98148148148148, 68.05555555555556, 68.63425925925925, 69.21296296296296, 69.79166666666667, 69.56018518518519, 69.67592592592592, 67.82407407407408, 67.93981481481481, 68.40277777777777, 71.875, 69.44444444444444, 70.48611111111111, 69.21296296296296, 69.9074074074074, 70.13888888888889, 69.79166666666667, 70.94907407407408, 70.48611111111111, 71.18055555555556, 69.56018518518519, 70.7175925925926, 70.7175925925926, 68.98148148148148, 70.83333333333333, 70.37037037037037, 70.7175925925926, 69.44444444444444, 68.98148148148148, 71.64351851851852, 69.44444444444444, 70.83333333333333, 72.33796296296296, 71.29629629629629, 69.79166666666667]
+0 maximum test acc: 72.33796296296296
+0 mean of acc: 70.74074074074073
+0 std of acc: 1.0439789151647838
+1 global_test_acc_list: [52.41545893719807, 63.888888888888886, 65.82125603864735, 74.39613526570048, 76.93236714975845, 77.65700483091787, 79.10628019323671, 75.60386473429952, 78.5024154589372, 77.05314009661836, 79.46859903381643, 81.40096618357488, 75.96618357487922, 79.34782608695652, 79.22705314009661, 80.67632850241546, 81.52173913043478, 81.76328502415458, 81.76328502415458, 81.64251207729468, 82.3671497584541, 81.52173913043478, 81.40096618357488, 79.83091787439614, 79.71014492753623, 83.21256038647343, 82.2463768115942, 82.6086956521739, 82.72946859903382, 83.69565217391305, 77.65700483091787, 81.52173913043478, 78.6231884057971, 80.79710144927536, 80.31400966183575, 81.76328502415458, 81.28019323671498, 81.52173913043478, 82.3671497584541, 82.2463768115942, 81.8840579710145, 83.09178743961353, 82.2463768115942, 80.67632850241546, 81.76328502415458, 83.81642512077295, 82.72946859903382, 82.97101449275362, 81.8840579710145, 83.69565217391305]
+1 maximum test acc: 83.81642512077295
+1 mean of acc: 83.01932367149759
+1 std of acc: 0.7025622981762778

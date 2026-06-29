@@ -1,0 +1,15 @@
+{
+  "best_gm_micro": 67.7481529071635,
+  "best_gm_round": 7,
+  "final_gm_micro": 67.55541278509476,
+  "best_pm_micro": 90.07388371345968,
+  "best_pm_round": 43,
+  "final_pm_micro": 89.62415676196595,
+  "final_mean_client_acc": 89.34035093731318,
+  "final_worst_client_acc": 79.45544554455445,
+  "final_client_acc_std": 6.094700483099299,
+  "mean_round_total_sec": 339.08149300223215,
+  "peak_memory_mb": 1414.06005859375,
+  "seed": 1,
+  "method_label": "custom(dynamic_gate=True, freeze_anchor=False, alignment=mse)"
+}

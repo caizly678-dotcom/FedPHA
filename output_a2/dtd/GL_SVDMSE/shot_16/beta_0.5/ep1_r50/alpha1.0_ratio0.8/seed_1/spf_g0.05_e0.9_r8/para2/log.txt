@@ -1,0 +1,991 @@
+***************
+** Arguments **
+***************
+alpha: 1.0
+avg_prompt: 1
+backbone: ViT-B/16
+beta: 0.5
+dataset: dtd
+device_id: 0
+eval_only: False
+frac: 1
+gamma: 1
+head: 
+iid: False
+load_epoch: None
+logdir: ./logs/
+n_ctx: 16
+no_train: False
+num_prompt: 2
+num_shots: 16
+num_users: 10
+opts: []
+output_dir: output/..
+para_dir: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8/para2
+partition: noniid-labeldir
+prompts_lens: None
+ratio: 0.8
+resume: None
+root: /workspace/FedPHA/DATA
+seed: 1
+smoke_text_encoder_counter: False
+specify: False
+spf_alignment_type: mse
+spf_debug_gate: True
+spf_energy: 0.9
+spf_fixed_round_basis: False
+spf_freeze_anchor: True
+spf_gamma_init: 0.05
+spf_gamma_max: 0.1
+spf_gate_hidden_ratio: 8
+spf_max_rank: 8
+spf_min_rank: 1
+spf_shared_init: False
+spf_shared_lambda: 0.1
+spf_use_dynamic_gate: True
+spf_variant: 
+test_batch_size: 128
+train_batch_size: 32
+trainer: GL_SVDMSE
+transforms: None
+use_spf: True
+useall: False
+************
+** Config **
+************
+DATALOADER:
+  K_TRANSFORMS: 1
+  NUM_WORKERS: 8
+  RETURN_IMG0: False
+  TEST:
+    BATCH_SIZE: 128
+    SAMPLER: SequentialSampler
+  TRAIN_U:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAME_AS_X: True
+    SAMPLER: RandomSampler
+  TRAIN_X:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAMPLER: RandomSampler
+DATASET:
+  ALL_AS_UNLABELED: False
+  BETA: 0.5
+  CIFAR_C_LEVEL: 1
+  CIFAR_C_TYPE: 
+  DOMAIN_NUM: 1
+  IID: False
+  NAME: DescribableTextures
+  NUM_LABELED: -1
+  NUM_SHOTS: 16
+  PARTITION: noniid-labeldir
+  REPEATRATE: 0.0
+  ROOT: /workspace/FedPHA/DATA
+  SOURCE_DOMAINS: ()
+  STL10_FOLD: -1
+  SUBSAMPLE_CLASSES: all
+  TARGET_DOMAINS: ()
+  USEALL: False
+  USERS: 10
+  USER_PROMPT_LENGTHS: []
+  VAL_PERCENT: 0.1
+INPUT:
+  COLORJITTER_B: 0.4
+  COLORJITTER_C: 0.4
+  COLORJITTER_H: 0.1
+  COLORJITTER_S: 0.4
+  CROP_PADDING: 4
+  CUTOUT_LEN: 16
+  CUTOUT_N: 1
+  GB_K: 21
+  GB_P: 0.5
+  GN_MEAN: 0.0
+  GN_STD: 0.15
+  INTERPOLATION: bicubic
+  NO_TRANSFORM: False
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  RANDAUGMENT_M: 10
+  RANDAUGMENT_N: 2
+  RGS_P: 0.2
+  RRCROP_SCALE: (0.08, 1.0)
+  SIZE: (224, 224)
+  TRANSFORMS: ('random_resized_crop', 'random_flip', 'normalize')
+MODEL:
+  BACKBONE:
+    NAME: ViT-B/16
+    PRETRAINED: True
+  HEAD:
+    ACTIVATION: relu
+    BN: True
+    DROPOUT: 0.0
+    HIDDEN_LAYERS: ()
+    NAME: 
+  INIT_WEIGHTS: 
+OPTIM:
+  ADAM_BETA1: 0.9
+  ADAM_BETA2: 0.999
+  BASE_LR_MULT: 0.1
+  GAMMA: 1
+  LR: 0.001
+  LR_SCHEDULER: single_step
+  MAX_EPOCH: 1
+  MOMENTUM: 0.9
+  NAME: sgd
+  NEW_LAYERS: ()
+  RMSPROP_ALPHA: 0.99
+  ROUND: 50
+  SGD_DAMPNING: 0
+  SGD_NESTEROV: False
+  STAGED_LR: False
+  STEPSIZE: (-1,)
+  WARMUP_CONS_LR: 1e-05
+  WARMUP_EPOCH: 0
+  WARMUP_MIN_LR: 1e-05
+  WARMUP_RECOUNT: True
+  WARMUP_TYPE: constant
+  WEIGHT_DECAY: 0.0005
+OUTPUT_DIR: output/dtd/GL_SVDMSE/shot_16/beta_0.5/ep1_r50/alpha1.0_ratio0.8/seed_1/spf_g0.05_e0.9_r8
+RESUME: 
+SEED: 1
+TEST:
+  COMPUTE_CMAT: False
+  EVALUATOR: Classification
+  FINAL_MODEL: last_step
+  NO_TEST: False
+  PER_CLASS_RESULT: False
+  SPLIT: test
+TRAIN:
+  CHECKPOINT_FREQ: 0
+  COUNT_ITER: train_x
+  PRINT_FREQ: 10
+TRAINER:
+  CDAC:
+    CLASS_LR_MULTI: 10
+    P_THRESH: 0.95
+    RAMPUP_COEF: 30
+    RAMPUP_ITRS: 1000
+    STRONG_TRANSFORMS: ()
+    TOPK_MATCH: 5
+  CROSSGRAD:
+    ALPHA_D: 0.5
+    ALPHA_F: 0.5
+    EPS_D: 1.0
+    EPS_F: 1.0
+  DAEL:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DAELDG:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DDAIG:
+    ALPHA: 0.5
+    CLAMP: False
+    CLAMP_MAX: 1.0
+    CLAMP_MIN: -1.0
+    G_ARCH: 
+    LMDA: 0.3
+    WARMUP: 0
+  DOMAINMIX:
+    ALPHA: 1.0
+    BETA: 1.0
+    TYPE: crossdomain
+  ENTMIN:
+    LMDA: 0.001
+  FEDPGP:
+    BOTTLENECK: 4
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    FEATURE: False
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    mu: 1
+    temp: 0.5
+  FIXMATCH:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 1.0
+  GLP_OT:
+    AVG_N: 1.0
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    EPS: 0.1
+    MAX_ITER: 100
+    N: 2
+    N_CTX: 16
+    OT: COT
+    PREC: fp16
+    THRESH: 0.001
+    TOP_PERCENT: 1
+  GL_SVDMSE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    DEBUG_TEXT_ENCODER_FORWARD_COUNT: False
+    N: 1
+    N_CTX: 16
+    PREC: fp16
+    SPF_ALIGNMENT_TYPE: mse
+    SPF_DEBUG_GATE: True
+    SPF_ENERGY: 0.9
+    SPF_FIXED_ROUND_BASIS: False
+    SPF_FREEZE_ANCHOR: True
+    SPF_GAMMA_INIT: 0.05
+    SPF_GAMMA_MAX: 0.1
+    SPF_GATE_HIDDEN_RATIO: 8
+    SPF_MAX_RANK: 8
+    SPF_MIN_RANK: 1
+    SPF_SHARED_INIT: False
+    SPF_SHARED_LAMBDA: 0.1
+    SPF_USE_DYNAMIC_GATE: True
+    USE_SPF: True
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  GL_SVDMSE_HE:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N: 1
+    N_CTX_GLOBAL: 16
+    PREC: fp16
+    alpha: 1.0
+    lambda_orthogonal: 1
+    ratio: 0.8
+  M3SDA:
+    LMDA: 0.5
+    N_STEP_F: 4
+  MCD:
+    N_STEP_F: 4
+  MEANTEACHER:
+    EMA_ALPHA: 0.999
+    RAMPUP: 5
+    WEIGHT_U: 1.0
+  MIXMATCH:
+    MIXUP_BETA: 0.75
+    RAMPUP: 20000
+    TEMP: 2.0
+    WEIGHT_U: 100.0
+  MME:
+    LMDA: 0.1
+  NAME: GL_SVDMSE
+  PROMPTFL:
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: False
+    N_CTX: 16
+    PREC: fp16
+  SE:
+    CONF_THRE: 0.95
+    EMA_ALPHA: 0.999
+    RAMPUP: 300
+USE_CUDA: True
+VERBOSE: True
+VERSION: 1
+Loading trainer: GL_SVDMSE
+Loading dataset: DescribableTextures
+Reading split from /workspace/FedPHA/DATA/dtd/split_zhou_DescribableTextures.json
+Loading preprocessed few-shot data from /workspace/FedPHA/DATA/dtd/split_fewshot/shot_16-seed_1.pkl
+Creating a 16-shot federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22]
+idx: 0 , output_dict_len: 80
+user class dict total [9, 18, 12, 26, 17]
+idx: 1 , output_dict_len: 80
+user class dict total [37, 16, 13, 27, 8]
+idx: 2 , output_dict_len: 80
+user class dict total [10, 31, 15, 41, 25]
+idx: 3 , output_dict_len: 80
+user class dict total [1, 4, 35, 2, 32]
+idx: 4 , output_dict_len: 80
+user class dict total [38, 0, 42, 5, 30]
+idx: 5 , output_dict_len: 80
+user class dict total [29, 14, 11, 40, 33]
+idx: 6 , output_dict_len: 80
+user class dict total [34, 19, 7, 6, 21]
+idx: 7 , output_dict_len: 80
+user class dict total [36, 39, 20, 46, 28]
+idx: 8 , output_dict_len: 80
+user class dict total [44, 24]
+idx: 9 , output_dict_len: 32
+Creating a baseline federated dataset
+class_num 47
+user class dict total [45, 3, 23, 43, 22]
+idx: 0 , output_dict_len: 180
+user class dict total [9, 18, 12, 26, 17]
+idx: 1 , output_dict_len: 180
+user class dict total [37, 16, 13, 27, 8]
+idx: 2 , output_dict_len: 180
+user class dict total [10, 31, 15, 41, 25]
+idx: 3 , output_dict_len: 180
+user class dict total [1, 4, 35, 2, 32]
+idx: 4 , output_dict_len: 180
+user class dict total [38, 0, 42, 5, 30]
+idx: 5 , output_dict_len: 180
+user class dict total [29, 14, 11, 40, 33]
+idx: 6 , output_dict_len: 180
+user class dict total [34, 19, 7, 6, 21]
+idx: 7 , output_dict_len: 180
+user class dict total [36, 39, 20, 46, 28]
+idx: 8 , output_dict_len: 180
+user class dict total [44, 24]
+idx: 9 , output_dict_len: 72
+fewshot federated dataset
+Building transform_train
++ random resized crop (size=(224, 224), scale=(0.08, 1.0))
++ random flip
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+Building transform_test
++ resize the smaller edge to 224
++ 224x224 center crop
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+-------------------  -------------------
+Dataset              DescribableTextures
+# classes            47
+# federated_train_x  10
+# federated_test_x   10
+# test               1,692
+-------------------  -------------------
+Loading CLIP (backbone: ViT-B/16)
+Building custom CLIP
+Initializing a generic context
+Initial context: "X X X X X X X X X X X X X X X X"
+Number of context words (tokens): 16
+SPF method label: A2
+SPF gamma_net parameters:
+  gamma_net.0.weight: numel=65536, requires_grad=True
+  gamma_net.0.bias: numel=64, requires_grad=True
+  gamma_net.2.weight: numel=64, requires_grad=True
+  gamma_net.2.bias: numel=1, requires_grad=True
+SPF method label: A2
+Turning off gradients in both the image and the text encoder
+Loading evaluator: Classification
++-----------------------------------+------------+
+|              Modules              | Parameters |
++-----------------------------------+------------+
+|     prompt_learner.ctx_global     |    8192    |
+|      prompt_learner.ctx_local     |    8192    |
+| prompt_learner.gamma_net.0.weight |   65536    |
+|  prompt_learner.gamma_net.0.bias  |     64     |
+| prompt_learner.gamma_net.2.weight |     64     |
+|  prompt_learner.gamma_net.2.bias  |     1      |
++-----------------------------------+------------+
+Total Trainable Params: 82049
++-------------------------------------------------------------+------------+
+|                           Modules                           | Parameters |
++-------------------------------------------------------------+------------+
+|                image_encoder.class_embedding                |    768     |
+|              image_encoder.positional_embedding             |   151296   |
+|                      image_encoder.proj                     |   393216   |
+|                  image_encoder.conv1.weight                 |   589824   |
+|                 image_encoder.ln_pre.weight                 |    768     |
+|                  image_encoder.ln_pre.bias                  |    768     |
+|  image_encoder.transformer.resblocks.0.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.0.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.0.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.0.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.0.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.0.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.0.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.1.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.1.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.1.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.1.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.1.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.1.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.1.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.2.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.2.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.2.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.2.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.2.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.2.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.2.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.3.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.3.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.3.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.3.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.3.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.3.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.3.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.4.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.4.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.4.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.4.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.4.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.4.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.4.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.5.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.5.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.5.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.5.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.5.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.5.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.5.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.6.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.6.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.6.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.6.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.6.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.6.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.6.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.7.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.7.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.7.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.7.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.7.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.7.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.7.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.8.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.8.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.8.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.8.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.8.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.8.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.8.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.9.attn.in_proj_weight  |  1769472   |
+|   image_encoder.transformer.resblocks.9.attn.in_proj_bias   |    2304    |
+|  image_encoder.transformer.resblocks.9.attn.out_proj.weight |   589824   |
+|   image_encoder.transformer.resblocks.9.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.9.ln_1.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_1.bias       |    768     |
+|    image_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  2359296   |
+|     image_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    3072    |
+|   image_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  2359296   |
+|    image_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    768     |
+|      image_encoder.transformer.resblocks.9.ln_2.weight      |    768     |
+|       image_encoder.transformer.resblocks.9.ln_2.bias       |    768     |
+|  image_encoder.transformer.resblocks.10.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.10.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.10.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.10.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.10.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.10.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.10.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.10.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.10.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.10.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.10.ln_2.bias      |    768     |
+|  image_encoder.transformer.resblocks.11.attn.in_proj_weight |  1769472   |
+|   image_encoder.transformer.resblocks.11.attn.in_proj_bias  |    2304    |
+| image_encoder.transformer.resblocks.11.attn.out_proj.weight |   589824   |
+|  image_encoder.transformer.resblocks.11.attn.out_proj.bias  |    768     |
+|      image_encoder.transformer.resblocks.11.ln_1.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_1.bias      |    768     |
+|    image_encoder.transformer.resblocks.11.mlp.c_fc.weight   |  2359296   |
+|     image_encoder.transformer.resblocks.11.mlp.c_fc.bias    |    3072    |
+|   image_encoder.transformer.resblocks.11.mlp.c_proj.weight  |  2359296   |
+|    image_encoder.transformer.resblocks.11.mlp.c_proj.bias   |    768     |
+|      image_encoder.transformer.resblocks.11.ln_2.weight     |    768     |
+|       image_encoder.transformer.resblocks.11.ln_2.bias      |    768     |
+|                 image_encoder.ln_post.weight                |    768     |
+|                  image_encoder.ln_post.bias                 |    768     |
++-------------------------------------------------------------+------------+
+Total Trainable Params: 86192640
++------------------------------------------------------------+------------+
+|                          Modules                           | Parameters |
++------------------------------------------------------------+------------+
+|             text_encoder.positional_embedding              |   39424    |
+|                text_encoder.text_projection                |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.0.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.0.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.0.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.0.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.0.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.0.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.0.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.0.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.0.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.0.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.1.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.1.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.1.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.1.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.1.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.1.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.1.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.1.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.1.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.1.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.1.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.2.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.2.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.2.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.2.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.2.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.2.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.2.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.2.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.2.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.2.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.2.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.3.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.3.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.3.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.3.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.3.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.3.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.3.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.3.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.3.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.3.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.3.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.4.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.4.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.4.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.4.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.4.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.4.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.4.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.4.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.4.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.4.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.4.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.5.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.5.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.5.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.5.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.5.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.5.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.5.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.5.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.5.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.5.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.5.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.6.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.6.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.6.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.6.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.6.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.6.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.6.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.6.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.6.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.6.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.6.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.7.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.7.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.7.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.7.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.7.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.7.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.7.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.7.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.7.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.7.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.7.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.8.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.8.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.8.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.8.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.8.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.8.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.8.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.8.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.8.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.8.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.8.ln_2.bias       |    512     |
+|  text_encoder.transformer.resblocks.9.attn.in_proj_weight  |   786432   |
+|   text_encoder.transformer.resblocks.9.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.9.attn.out_proj.weight  |   262144   |
+|  text_encoder.transformer.resblocks.9.attn.out_proj.bias   |    512     |
+|      text_encoder.transformer.resblocks.9.ln_1.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_1.bias       |    512     |
+|    text_encoder.transformer.resblocks.9.mlp.c_fc.weight    |  1048576   |
+|     text_encoder.transformer.resblocks.9.mlp.c_fc.bias     |    2048    |
+|   text_encoder.transformer.resblocks.9.mlp.c_proj.weight   |  1048576   |
+|    text_encoder.transformer.resblocks.9.mlp.c_proj.bias    |    512     |
+|      text_encoder.transformer.resblocks.9.ln_2.weight      |    512     |
+|       text_encoder.transformer.resblocks.9.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.10.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.10.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.10.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.10.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.10.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.10.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.10.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.10.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.10.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.10.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.10.ln_2.bias       |    512     |
+| text_encoder.transformer.resblocks.11.attn.in_proj_weight  |   786432   |
+|  text_encoder.transformer.resblocks.11.attn.in_proj_bias   |    1536    |
+| text_encoder.transformer.resblocks.11.attn.out_proj.weight |   262144   |
+|  text_encoder.transformer.resblocks.11.attn.out_proj.bias  |    512     |
+|     text_encoder.transformer.resblocks.11.ln_1.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_1.bias       |    512     |
+|   text_encoder.transformer.resblocks.11.mlp.c_fc.weight    |  1048576   |
+|    text_encoder.transformer.resblocks.11.mlp.c_fc.bias     |    2048    |
+|  text_encoder.transformer.resblocks.11.mlp.c_proj.weight   |  1048576   |
+|   text_encoder.transformer.resblocks.11.mlp.c_proj.bias    |    512     |
+|     text_encoder.transformer.resblocks.11.ln_2.weight      |    512     |
+|      text_encoder.transformer.resblocks.11.ln_2.bias       |    512     |
+|                text_encoder.ln_final.weight                |    512     |
+|                 text_encoder.ln_final.bias                 |    512     |
++------------------------------------------------------------+------------+
+Total Trainable Params: 38131200
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF private-state isolation check passed
+GM mode: global_only_ctx_global
+PM mode: client_private_fused_prompt
+idxs_users [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+------------local train start epoch: 0 -------------
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=2.11096858e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=1.75279602e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=2.11096881e-06 bias_before=0.00000000e+00 bias_after=-1.75279620e-05 max_abs_parameter_change=1.75279620e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 1.558 (1.558) data 0.743 (0.743) loss 2.8555 (2.8555) acc 46.8750 (46.8750) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:01 user 0
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=2.75494880e-08
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=2.75204339e-08
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=1.74672401e-03
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=1.18097309e-02
+[SPF_DEBUG_GATE][client=0][round=0][batch=2][after_step] weight_norm_before=2.11096881e-06 weight_norm_after=5.56855457e-06 bias_before=-1.75279620e-05 bias_after=-4.51128508e-05 max_abs_parameter_change=2.75848888e-05
+[SPF_DEBUG_GATE][client=0][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.69009194e-02
+epoch [1/1] batch [2/2] time 0.114 (0.836) data 0.000 (0.372) loss 2.4199 (2.6377) acc 56.2500 (51.5625) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 0
+Finish training: 0 user
+Deploy the last-epoch model
+0 User, Elapsed: 0:00:02
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=9.55889293e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=2.19192449e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=9.55889277e-07 bias_before=0.00000000e+00 bias_after=2.19192452e-06 max_abs_parameter_change=2.19192452e-06
+[SPF_DEBUG_GATE][client=1][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 0.914 (0.914) data 0.843 (0.843) loss 3.4980 (3.4980) acc 18.7500 (18.7500) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 1
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=5.08090325e-09
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=3.87835852e-09
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=7.48343125e-04
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=3.97162465e-03
+[SPF_DEBUG_GATE][client=1][round=0][batch=2][after_step] weight_norm_before=9.55889277e-07 weight_norm_after=2.28148929e-06 bias_before=2.19192452e-06 bias_after=8.13628048e-06 max_abs_parameter_change=5.94435596e-06
+[SPF_DEBUG_GATE][client=1][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68992076e-02
+epoch [1/1] batch [2/2] time 0.067 (0.490) data 0.000 (0.421) loss 3.4258 (3.4619) acc 18.7500 (18.7500) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 1
+Finish training: 1 user
+Deploy the last-epoch model
+1 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=2][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=2][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=2][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=1.18779682e-03
+[SPF_DEBUG_GATE][client=2][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=1.00191114e-02
+[SPF_DEBUG_GATE][client=2][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=1.18779690e-06 bias_before=0.00000000e+00 bias_after=1.00191119e-05 max_abs_parameter_change=1.00191119e-05
+[SPF_DEBUG_GATE][client=2][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 1.153 (1.153) data 1.078 (1.078) loss 3.1211 (3.1211) acc 18.7500 (18.7500) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:01 user 2
+[SPF_DEBUG_GATE][client=2][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=9.20342202e-09
+[SPF_DEBUG_GATE][client=2][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=2.55071537e-08
+[SPF_DEBUG_GATE][client=2][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=2.52318289e-03
+[SPF_DEBUG_GATE][client=2][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=2.19785720e-02
+[SPF_DEBUG_GATE][client=2][round=0][batch=2][after_step] weight_norm_before=1.18779690e-06 weight_norm_after=8.15032593e-07 bias_before=1.00191119e-05 bias_after=-2.94226606e-06 max_abs_parameter_change=1.29613782e-05
+[SPF_DEBUG_GATE][client=2][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68979783e-02
+epoch [1/1] batch [2/2] time 0.071 (0.612) data 0.000 (0.539) loss 3.1934 (3.1572) acc 21.8750 (20.3125) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 2
+Finish training: 2 user
+Deploy the last-epoch model
+2 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=3][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=3][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=3][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=5.36091859e-03
+[SPF_DEBUG_GATE][client=3][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=4.71739322e-02
+[SPF_DEBUG_GATE][client=3][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=5.36091875e-06 bias_before=0.00000000e+00 bias_after=4.71739331e-05 max_abs_parameter_change=4.71739331e-05
+[SPF_DEBUG_GATE][client=3][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 0.837 (0.837) data 0.757 (0.757) loss 3.7598 (3.7598) acc 0.0000 (0.0000) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 3
+[SPF_DEBUG_GATE][client=3][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=1.42974743e-08
+[SPF_DEBUG_GATE][client=3][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=4.75662638e-08
+[SPF_DEBUG_GATE][client=3][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=1.01997459e-03
+[SPF_DEBUG_GATE][client=3][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=9.03792493e-03
+[SPF_DEBUG_GATE][client=3][round=0][batch=2][after_step] weight_norm_before=5.36091875e-06 weight_norm_after=1.11718236e-05 bias_before=4.71739331e-05 bias_after=9.86683735e-05 max_abs_parameter_change=5.14944404e-05
+[SPF_DEBUG_GATE][client=3][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.69007126e-02
+epoch [1/1] batch [2/2] time 0.146 (0.491) data 0.067 (0.412) loss 3.7422 (3.7510) acc 0.0000 (0.0000) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0397 (0.0397) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 3
+Finish training: 3 user
+Deploy the last-epoch model
+3 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=4][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=4][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=4][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=5.25785843e-04
+[SPF_DEBUG_GATE][client=4][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=2.42023473e-03
+[SPF_DEBUG_GATE][client=4][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=5.25785879e-07 bias_before=0.00000000e+00 bias_after=-2.42023475e-06 max_abs_parameter_change=2.42023475e-06
+[SPF_DEBUG_GATE][client=4][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 0.954 (0.954) data 0.858 (0.858) loss 3.0293 (3.0293) acc 31.2500 (31.2500) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 4
+[SPF_DEBUG_GATE][client=4][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=2.95973113e-09
+[SPF_DEBUG_GATE][client=4][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=3.34294037e-09
+[SPF_DEBUG_GATE][client=4][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=9.79703967e-04
+[SPF_DEBUG_GATE][client=4][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=5.79675986e-03
+[SPF_DEBUG_GATE][client=4][round=0][batch=2][after_step] weight_norm_before=5.25785879e-07 weight_norm_after=1.85933777e-06 bias_before=-2.42023475e-06 bias_after=-1.03952043e-05 max_abs_parameter_change=7.97496978e-06
+[SPF_DEBUG_GATE][client=4][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.69005804e-02
+epoch [1/1] batch [2/2] time 0.071 (0.512) data 0.000 (0.429) loss 3.0332 (3.0312) acc 25.0000 (28.1250) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 4
+Finish training: 4 user
+Deploy the last-epoch model
+4 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=5][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=5][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=5][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=2.09078519e-03
+[SPF_DEBUG_GATE][client=5][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=1.77927017e-02
+[SPF_DEBUG_GATE][client=5][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=2.09078530e-06 bias_before=0.00000000e+00 bias_after=-1.77927031e-05 max_abs_parameter_change=1.77927031e-05
+[SPF_DEBUG_GATE][client=5][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 0.890 (0.890) data 0.819 (0.819) loss 2.5625 (2.5625) acc 50.0000 (50.0000) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 5
+[SPF_DEBUG_GATE][client=5][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=1.19043460e-08
+[SPF_DEBUG_GATE][client=5][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=2.60995527e-08
+[SPF_DEBUG_GATE][client=5][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=1.49832957e-03
+[SPF_DEBUG_GATE][client=5][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=1.27075193e-02
+[SPF_DEBUG_GATE][client=5][round=0][batch=2][after_step] weight_norm_before=2.09078530e-06 weight_norm_after=2.68179406e-06 bias_before=-1.77927031e-05 bias_after=-2.10986054e-05 max_abs_parameter_change=3.30590228e-06
+[SPF_DEBUG_GATE][client=5][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.69030018e-02
+epoch [1/1] batch [2/2] time 0.110 (0.500) data 0.030 (0.425) loss 2.1484 (2.3555) acc 46.8750 (48.4375) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 5
+Finish training: 5 user
+Deploy the last-epoch model
+5 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=6][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=6][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=6][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=1.03860581e-03
+[SPF_DEBUG_GATE][client=6][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=5.01942635e-03
+[SPF_DEBUG_GATE][client=6][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=1.03860589e-06 bias_before=0.00000000e+00 bias_after=5.01942668e-06 max_abs_parameter_change=5.01942668e-06
+[SPF_DEBUG_GATE][client=6][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 0.983 (0.983) data 0.897 (0.897) loss 3.1211 (3.1211) acc 9.3750 (9.3750) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 6
+[SPF_DEBUG_GATE][client=6][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=7.91924659e-09
+[SPF_DEBUG_GATE][client=6][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=2.01358734e-08
+[SPF_DEBUG_GATE][client=6][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=2.39851791e-03
+[SPF_DEBUG_GATE][client=6][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=2.14252472e-02
+[SPF_DEBUG_GATE][client=6][round=0][batch=2][after_step] weight_norm_before=1.03860589e-06 weight_norm_after=2.58396676e-06 bias_before=5.01942668e-06 bias_after=-1.18883409e-05 max_abs_parameter_change=1.69077684e-05
+[SPF_DEBUG_GATE][client=6][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68985780e-02
+epoch [1/1] batch [2/2] time 0.087 (0.535) data 0.000 (0.448) loss 2.8984 (3.0098) acc 34.3750 (21.8750) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 6
+Finish training: 6 user
+Deploy the last-epoch model
+6 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=7][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=7][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=7][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=2.58161593e-03
+[SPF_DEBUG_GATE][client=7][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=1.76986679e-02
+[SPF_DEBUG_GATE][client=7][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=2.58161595e-06 bias_before=0.00000000e+00 bias_after=1.76986687e-05 max_abs_parameter_change=1.76986687e-05
+[SPF_DEBUG_GATE][client=7][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 1.057 (1.057) data 0.966 (0.966) loss 3.6816 (3.6816) acc 18.7500 (18.7500) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:01 user 7
+[SPF_DEBUG_GATE][client=7][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=7.22600957e-09
+[SPF_DEBUG_GATE][client=7][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=7.76101583e-09
+[SPF_DEBUG_GATE][client=7][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=4.12918016e-04
+[SPF_DEBUG_GATE][client=7][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=3.11172055e-03
+[SPF_DEBUG_GATE][client=7][round=0][batch=2][after_step] weight_norm_before=2.58161595e-06 weight_norm_after=5.22451455e-06 bias_before=1.76986687e-05 bias_after=3.67391840e-05 max_abs_parameter_change=1.90405153e-05
+[SPF_DEBUG_GATE][client=7][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.69037282e-02
+epoch [1/1] batch [2/2] time 0.074 (0.566) data 0.007 (0.487) loss 3.5176 (3.5996) acc 25.0000 (21.8750) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0397 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 7
+Finish training: 7 user
+Deploy the last-epoch model
+7 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=8][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=8][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=8][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=2.17839284e-03
+[SPF_DEBUG_GATE][client=8][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=1.38654746e-02
+[SPF_DEBUG_GATE][client=8][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=2.17839283e-06 bias_before=0.00000000e+00 bias_after=1.38654750e-05 max_abs_parameter_change=1.38654750e-05
+[SPF_DEBUG_GATE][client=8][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/2] time 1.206 (1.206) data 1.041 (1.041) loss 3.3848 (3.3848) acc 31.2500 (31.2500) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:01 user 8
+[SPF_DEBUG_GATE][client=8][round=0][batch=2][before_step] gamma_net.0.weight grad_is_none=False grad_norm=7.28594030e-09
+[SPF_DEBUG_GATE][client=8][round=0][batch=2][before_step] gamma_net.0.bias grad_is_none=False grad_norm=1.86765661e-08
+[SPF_DEBUG_GATE][client=8][round=0][batch=2][before_step] gamma_net.2.weight grad_is_none=False grad_norm=9.47707857e-04
+[SPF_DEBUG_GATE][client=8][round=0][batch=2][before_step] gamma_net.2.bias grad_is_none=False grad_norm=8.63776263e-03
+[SPF_DEBUG_GATE][client=8][round=0][batch=2][after_step] weight_norm_before=2.17839283e-06 weight_norm_after=3.43209240e-06 bias_before=1.38654750e-05 bias_after=1.77066340e-05 max_abs_parameter_change=3.84115901e-06
+[SPF_DEBUG_GATE][client=8][round=0][batch=2] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.69070326e-02
+epoch [1/1] batch [2/2] time 0.122 (0.664) data 0.000 (0.521) loss 3.0215 (3.2031) acc 37.5000 (34.3750) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0397 (0.0397) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 8
+Finish training: 8 user
+Deploy the last-epoch model
+8 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+SPF client state restored: ctx_local + gamma_net
+SPF optimizer state entries after rebuild: 0
+[SPF_DEBUG_GATE][client=9][round=0][batch=1][before_step] gamma_net.0.weight grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=9][round=0][batch=1][before_step] gamma_net.0.bias grad_is_none=False grad_norm=0.00000000e+00
+[SPF_DEBUG_GATE][client=9][round=0][batch=1][before_step] gamma_net.2.weight grad_is_none=False grad_norm=3.32039152e-03
+[SPF_DEBUG_GATE][client=9][round=0][batch=1][before_step] gamma_net.2.bias grad_is_none=False grad_norm=2.82713920e-02
+[SPF_DEBUG_GATE][client=9][round=0][batch=1][after_step] weight_norm_before=0.00000000e+00 weight_norm_after=3.32039190e-06 bias_before=0.00000000e+00 bias_after=2.82713936e-05 max_abs_parameter_change=2.82713936e-05
+[SPF_DEBUG_GATE][client=9][round=0][batch=1] gamma_mean=0.04998779 gamma_std=0.00000000e+00 gamma_min=0.04998779 gamma_max=0.04998779 max_abs_gamma_delta=1.22077763e-05 gate_input_token_std=1.68984383e-02
+epoch [1/1] batch [1/1] time 1.155 (1.155) data 1.040 (1.040) loss 3.1797 (3.1797) acc 3.1250 (3.1250) spf_shared_loss 0.0161 (0.0161) spf_gamma_mean 0.0500 (0.0500) spf_gamma_std 0.0000 (0.0000) spf_gamma_min 0.0500 (0.0500) spf_gamma_max 0.0500 (0.0500) spf_correction_ratio 0.0398 (0.0398) spf_rank 8.0000 (8.0000) lr 1.0000e-03 eta 0:00:00 user 9
+Finish training: 9 user
+Deploy the last-epoch model
+9 User, Elapsed: 0:00:01
+SPF upload parameter keys: ['ctx_global']
+------------local train finish epoch: 0 -------------
+SPF FedAvg completed for round 0: keys=['ctx_global']
+------------local test start-------------
+------------strict GM test start-------------
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 0
+Evaluate on the client0_test set
+=> result
+* total: 180
+* correct: 96
+* accuracy: 53.3%
+* error: 46.7%
+* macro_f1: 61.5%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 1
+Evaluate on the client1_test set
+=> result
+* total: 180
+* correct: 52
+* accuracy: 28.9%
+* error: 71.1%
+* macro_f1: 33.4%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 2
+Evaluate on the client2_test set
+=> result
+* total: 180
+* correct: 47
+* accuracy: 26.1%
+* error: 73.9%
+* macro_f1: 30.1%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 3
+Evaluate on the client3_test set
+=> result
+* total: 180
+* correct: 16
+* accuracy: 8.9%
+* error: 91.1%
+* macro_f1: 14.9%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 4
+Evaluate on the client4_test set
+=> result
+* total: 180
+* correct: 31
+* accuracy: 17.2%
+* error: 82.8%
+* macro_f1: 24.1%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 5
+Evaluate on the client5_test set
+=> result
+* total: 180
+* correct: 65
+* accuracy: 36.1%
+* error: 63.9%
+* macro_f1: 34.1%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 6
+Evaluate on the client6_test set
+=> result
+* total: 180
+* correct: 31
+* accuracy: 17.2%
+* error: 82.8%
+* macro_f1: 24.8%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 7
+Evaluate on the client7_test set
+=> result
+* total: 180
+* correct: 33
+* accuracy: 18.3%
+* error: 81.7%
+* macro_f1: 26.9%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 8
+Evaluate on the client8_test set
+=> result
+* total: 180
+* correct: 44
+* accuracy: 24.4%
+* error: 75.6%
+* macro_f1: 25.3%
+SPF client state restored: ctx_local + gamma_net
+SPF strict global state dispatched to client 9
+Evaluate on the client9_test set
+=> result
+* total: 72
+* correct: 26
+* accuracy: 36.1%
+* error: 63.9%
+* macro_f1: 52.8%
+------------personalized PM test start-------------
+SPF client state restored: ctx_local + gamma_net
+SPF global state dispatched to client 0
+Evaluate on the client0_test set

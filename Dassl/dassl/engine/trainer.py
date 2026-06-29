@@ -517,7 +517,7 @@ class SimpleTrainer(TrainerBase):
                 self.best_result = curr_result
 
     @torch.no_grad()
-    def test(self, split=None, is_global=False, current_epoch=0, idx=-1,global_test=False):
+    def test(self, split=None, is_global=False, current_epoch=0, idx=-1,global_test=False, forward_mode=None):
         self.set_model_mode("eval")
         self.evaluator.reset()
 
@@ -535,7 +535,7 @@ class SimpleTrainer(TrainerBase):
 
         for batch_idx, batch in enumerate(tqdm(data_loader)):
             input, label = self.parse_batch_test(batch)
-            output = self.model_inference(input, idx)
+            output = self.model_inference(input, idx, forward_mode=forward_mode)
             self.evaluator.process(output, label)
 
         results = self.evaluator.evaluate()
@@ -553,9 +553,12 @@ class SimpleTrainer(TrainerBase):
             # print("tag",tag,"value:",v, ",current_epoch:",current_epoch)
         return results
 
-    def model_inference(self, input, idx):
+    def model_inference(self, input, idx, forward_mode=None):
         self.model.eval()
-        output = self.model(input, idx)
+        if forward_mode is None:
+            output = self.model(input, idx)
+        else:
+            output = self.model(input, idx, forward_mode=forward_mode)
         if isinstance(output,tuple):
             output = output[0]
         return output

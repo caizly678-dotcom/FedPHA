@@ -1,0 +1,8 @@
+Dataset,Global_Last10_Mean,Global_Last10_Var
+caltech101,98.9947,0.010651
+dtd,91.8954,0.157966
+food101,96.2749,0.008215
+Office31,94.8282,0.129285
+OfficeHome,89.2043,0.077636
+oxford_flowers,99.3385,0.004745
+oxford_pets,99.1817,0.006646

@@ -1,4 +1,6 @@
 from collections import defaultdict
+import csv
+import json
 
 from utils.fed_utils import average_weights, count_parameters, show_results, save_acc_csv
 from Dassl.dassl.utils import setup_logger, set_random_seed
@@ -13,6 +15,36 @@ import torch
 import time
 import copy
 import os
+
+
+METRICS_FIELDS = [
+    "round",
+    "gm_micro",
+    "gm_macro_client",
+    "pm_micro",
+    "pm_macro_client",
+    "worst_client_acc",
+    "client_acc_std",
+    "spf_shared_loss_mean",
+    "spf_push_loss_mean",
+    "spf_gamma_mean",
+    "spf_gamma_std",
+    "spf_gamma_min",
+    "spf_gamma_max",
+    "spf_negative_gamma_ratio",
+    "spf_correction_ratio_mean",
+    "method_label",
+    "seed",
+]
+
+PER_CLIENT_METRICS_FIELDS = [
+    "round",
+    "client_id",
+    "global_acc",
+    "personalized_acc",
+    "seed",
+    "method_label",
+]
 
 
 def print_args(args, cfg):
@@ -88,13 +120,24 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK = args.spf_max_rank
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MAX = args.spf_gamma_max
-    cfg.TRAINER.GL_SVDMSE.SPF_GATE_HIDDEN_RATIO = args.spf_gate_hidden_ratio
+    cfg.TRAINER.GL_SVDMSE.SPF_GATE_TYPE = args.spf_gate_type
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_BASE = args.spf_gamma_base
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_DELTA = args.spf_gamma_delta
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_MIN = args.spf_gamma_min
+    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_NEG_MIN = args.spf_gamma_neg_min
+    cfg.TRAINER.GL_SVDMSE.SPF_BIPOLAR_BIAS_INIT = args.spf_bipolar_bias_init
+    cfg.TRAINER.GL_SVDMSE.SPF_GATE_LR_MULT = args.spf_gate_lr_mult
+    cfg.TRAINER.GL_SVDMSE.SPF_BIPOLAR_GATE = args.spf_bipolar_gate
     cfg.TRAINER.GL_SVDMSE.SPF_USE_DYNAMIC_GATE = args.spf_use_dynamic_gate
     cfg.TRAINER.GL_SVDMSE.SPF_ALIGNMENT_TYPE = args.spf_alignment_type
     cfg.TRAINER.GL_SVDMSE.SPF_FREEZE_ANCHOR = args.spf_freeze_anchor
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_GLOBAL_LAMBDA = args.spf_global_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_PUSH_LAMBDA = args.spf_push_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_PUSH_ALPHA = args.spf_push_alpha
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_INIT = args.spf_shared_init
     cfg.TRAINER.GL_SVDMSE.SPF_FIXED_ROUND_BASIS = args.spf_fixed_round_basis
+    cfg.TRAINER.GL_SVDMSE.SPF_DEBUG_GATE = args.spf_debug_gate
     cfg.TRAINER.GL_SVDMSE.DEBUG_TEXT_ENCODER_FORWARD_COUNT = args.smoke_text_encoder_counter
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
@@ -259,8 +302,9 @@ def clone_spf_private_state(prompt_learner):
     state = {
         "ctx_local": prompt_learner.ctx_local.detach().cpu().clone(),
     }
-    if hasattr(prompt_learner, "gamma_net"):
-        state["gamma_net"] = clone_state_dict_cpu(prompt_learner.gamma_net.state_dict())
+    if hasattr(prompt_learner, "rank_gate"):
+        state["rank_gate"] = clone_state_dict_cpu(prompt_learner.rank_gate.state_dict())
+        state["rank_bias"] = prompt_learner.rank_bias.detach().cpu().clone()
     return state
 
 
@@ -280,25 +324,49 @@ def load_spf_client_state(local_trainer, global_state, private_state):
                 dtype=prompt_learner.ctx_local.dtype,
             )
         )
-    if hasattr(prompt_learner, "gamma_net") and "gamma_net" in private_state:
-        gamma_state = {
+    if hasattr(prompt_learner, "rank_gate") and "rank_gate" in private_state:
+        gate_state = {
             key: value.to(
-                device=next(prompt_learner.gamma_net.parameters()).device,
-                dtype=next(prompt_learner.gamma_net.parameters()).dtype,
+                device=next(prompt_learner.rank_gate.parameters()).device,
+                dtype=next(prompt_learner.rank_gate.parameters()).dtype,
             )
-            for key, value in private_state["gamma_net"].items()
+            for key, value in private_state["rank_gate"].items()
         }
-        prompt_learner.gamma_net.load_state_dict(gamma_state)
+        prompt_learner.rank_gate.load_state_dict(gate_state)
+        with torch.no_grad():
+            prompt_learner.rank_bias.copy_(
+                private_state["rank_bias"].to(
+                    device=prompt_learner.rank_bias.device,
+                    dtype=prompt_learner.rank_bias.dtype,
+                )
+            )
     print(
         "SPF client state restored:",
         "ctx_local",
-        "+ gamma_net" if hasattr(prompt_learner, "gamma_net") and "gamma_net" in private_state else "",
+        "+ rank_gate" if hasattr(prompt_learner, "rank_gate") and "rank_gate" in private_state else "",
     )
 
 
 def rebuild_prompt_optimizer(local_trainer):
     prompt_learner = get_prompt_learner(local_trainer)
-    local_trainer.optim = build_optimizer(prompt_learner, local_trainer.cfg.OPTIM)
+    if (
+        prompt_learner.use_spf
+        and prompt_learner.use_dynamic_gate
+        and hasattr(prompt_learner, "rank_gate")
+    ):
+        param_groups = [
+            {
+                "params": [prompt_learner.ctx_global, prompt_learner.ctx_local],
+                "lr": local_trainer.cfg.OPTIM.LR,
+            },
+            {
+                "params": list(prompt_learner.rank_gate.parameters()) + [prompt_learner.rank_bias],
+                "lr": local_trainer.cfg.OPTIM.LR * local_trainer.cfg.TRAINER.GL_SVDMSE.SPF_GATE_LR_MULT,
+            },
+        ]
+        local_trainer.optim = build_optimizer(prompt_learner, local_trainer.cfg.OPTIM, param_groups=param_groups)
+    else:
+        local_trainer.optim = build_optimizer(prompt_learner, local_trainer.cfg.OPTIM)
     local_trainer.sched = build_lr_scheduler(local_trainer.optim, local_trainer.cfg.OPTIM)
     local_trainer._optims["prompt_learner"] = local_trainer.optim
     local_trainer._scheds["prompt_learner"] = local_trainer.sched
@@ -307,10 +375,11 @@ def rebuild_prompt_optimizer(local_trainer):
         for group in local_trainer.optim.param_groups
         for param in group["params"]
     }
-    if hasattr(prompt_learner, "gamma_net"):
-        for name, param in prompt_learner.gamma_net.named_parameters():
+    if hasattr(prompt_learner, "rank_gate"):
+        for name, param in prompt_learner.rank_gate.named_parameters():
             assert param.requires_grad
-            assert id(param) in optim_param_ids, f"gamma_net parameter missing from optimizer: {name}"
+            assert id(param) in optim_param_ids, f"rank_gate parameter missing from optimizer: {name}"
+        assert id(prompt_learner.rank_bias) in optim_param_ids, "rank_bias missing from optimizer"
     assert len(local_trainer.optim.state) == 0
     print(f"SPF optimizer state entries after rebuild: {len(local_trainer.optim.state)}")
 
@@ -325,7 +394,7 @@ def extract_spf_global_state(local_trainer):
     prompt_learner = get_prompt_learner(local_trainer)
     global_state = {"ctx_global": prompt_learner.ctx_global.detach().cpu().clone()}
     assert set(global_state.keys()) == {"ctx_global"}
-    assert all("ctx_local" not in key and "gamma_net" not in key for key in global_state)
+    assert all("ctx_local" not in key and "rank_gate" not in key and "rank_bias" not in key for key in global_state)
     print(f"SPF upload parameter keys: {list(global_state.keys())}")
     return global_state
 
@@ -339,20 +408,32 @@ def run_spf_state_isolation_check(local_trainer, private_states):
     client_b_ctx = private_states[1]["ctx_local"].clone()
     modified_a_ctx = client_a_ctx.clone().add_(1.0)
     private_states[0]["ctx_local"] = modified_a_ctx
-    if hasattr(prompt_learner, "gamma_net") and "gamma_net" in private_states[0]:
-        client_a = clone_state_dict_cpu(private_states[0]["gamma_net"])
-        client_b = clone_state_dict_cpu(private_states[1]["gamma_net"])
+    if hasattr(prompt_learner, "rank_gate") and "rank_gate" in private_states[0]:
+        client_a = clone_state_dict_cpu(private_states[0]["rank_gate"])
+        client_b = clone_state_dict_cpu(private_states[1]["rank_gate"])
+        client_a_bias = private_states[0]["rank_bias"].clone()
+        client_b_bias = private_states[1]["rank_bias"].clone()
         modified_a = {key: value.clone() for key, value in client_a.items()}
         first_key = next(iter(modified_a))
         modified_a[first_key].add_(1.0)
-        private_states[0]["gamma_net"] = modified_a
+        private_states[0]["rank_gate"] = modified_a
+        private_states[0]["rank_bias"] = client_a_bias.clone().add_(1.0)
         load_spf_client_state(local_trainer, global_state, private_states[1])
-        restored_b = clone_state_dict_cpu(prompt_learner.gamma_net.state_dict())
+        restored_b = clone_state_dict_cpu(prompt_learner.rank_gate.state_dict())
         for key in client_b:
             assert torch.allclose(restored_b[key], client_b[key])
             assert not torch.allclose(restored_b[key], modified_a[key])
             break
-        private_states[0]["gamma_net"] = client_a
+        assert torch.allclose(
+            prompt_learner.rank_bias.detach().cpu(),
+            client_b_bias,
+        )
+        assert not torch.allclose(
+            prompt_learner.rank_bias.detach().cpu(),
+            private_states[0]["rank_bias"],
+        )
+        private_states[0]["rank_gate"] = client_a
+        private_states[0]["rank_bias"] = client_a_bias
     else:
         load_spf_client_state(local_trainer, global_state, private_states[1])
         device = prompt_learner.ctx_local.device
@@ -364,7 +445,171 @@ def run_spf_state_isolation_check(local_trainer, private_states):
     print("SPF private-state isolation check passed")
 
 
+def _append_csv_row(path, fields, row):
+    exists = os.path.exists(path)
+    with open(path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        if not exists:
+            writer.writeheader()
+        writer.writerow({field: row.get(field, "") for field in fields})
+
+
+def _result_correct_total(result):
+    correct = result.get("correct")
+    total = result.get("total")
+    if correct is None or total is None:
+        total = result.get("total", 0)
+        correct = int(round(float(result["accuracy"]) * float(total) / 100.0)) if total else 0
+    return int(correct), int(total)
+
+
+def summarize_eval_results(results):
+    correct_total = [_result_correct_total(result) for result in results]
+    total_correct = sum(correct for correct, _ in correct_total)
+    total_samples = sum(total for _, total in correct_total)
+    accs = [float(result["accuracy"]) for result in results]
+    macro_f1s = [float(result["macro_f1"]) for result in results]
+    return {
+        "micro_acc": 100.0 * total_correct / total_samples if total_samples else 0.0,
+        "macro_client_acc": float(np.mean(accs)) if accs else 0.0,
+        "client_accs": accs,
+        "macro_f1s": macro_f1s,
+        "totals": [total for _, total in correct_total],
+        "correct": [correct for correct, _ in correct_total],
+        "total": total_samples,
+    }
+
+
+def _mean_metric(metrics, key):
+    values = [float(item[key]) for item in metrics if key in item]
+    return float(np.mean(values)) if values else ""
+
+
+def collect_spf_train_metrics(local_trainer):
+    metrics = getattr(local_trainer, "_last_spf_train_metrics", [])
+    return {
+        "spf_shared_loss_mean": _mean_metric(metrics, "spf_shared_loss"),
+        "spf_push_loss_mean": _mean_metric(metrics, "spf_push_loss"),
+        "spf_gamma_mean": _mean_metric(metrics, "spf_gamma_mean"),
+        "spf_gamma_std": _mean_metric(metrics, "spf_gamma_std"),
+        "spf_gamma_min": _mean_metric(metrics, "spf_gamma_min"),
+        "spf_gamma_max": _mean_metric(metrics, "spf_gamma_max"),
+        "spf_negative_gamma_ratio": _mean_metric(metrics, "spf_negative_gamma_ratio"),
+        "spf_correction_ratio_mean": _mean_metric(metrics, "spf_correction_ratio"),
+    }
+
+
+def evaluate_spf_clients(local_trainer, global_state, private_states, client_ids, mode):
+    results = []
+    for idx in client_ids:
+        load_spf_client_state(local_trainer, global_state, private_states[idx])
+        prompt_learner = get_prompt_learner(local_trainer)
+        if mode == "personal":
+            if prompt_learner.freeze_anchor:
+                refresh_spf_anchor_for_client(local_trainer)
+            print(f"SPF global state dispatched to client {idx}")
+            results.append(local_trainer.test(idx=idx, forward_mode="personal"))
+        elif mode == "global_only":
+            print(f"SPF strict global state dispatched to client {idx}")
+            results.append(local_trainer.test(idx=idx, forward_mode="global_only"))
+        else:
+            raise ValueError(f"Unsupported SPF eval mode: {mode}")
+    return results
+
+
+def write_round_metrics(
+    output_dir,
+    epoch,
+    global_results,
+    personal_results,
+    train_metrics,
+    timing,
+    best_state,
+    method_label,
+    seed,
+):
+    gm = summarize_eval_results(global_results)
+    pm = summarize_eval_results(personal_results)
+    pm_accs = pm["client_accs"]
+    client_std = float(np.std(pm_accs)) if pm_accs else 0.0
+    worst_client = min(pm_accs) if pm_accs else 0.0
+
+    if gm["micro_acc"] > best_state["best_gm_micro"]:
+        best_state["best_gm_micro"] = gm["micro_acc"]
+        best_state["best_gm_round"] = epoch
+    if pm["micro_acc"] > best_state["best_pm_micro"]:
+        best_state["best_pm_micro"] = pm["micro_acc"]
+        best_state["best_pm_round"] = epoch
+
+    row = {
+        "round": epoch,
+        "gm_micro": gm["micro_acc"],
+        "gm_macro_client": gm["macro_client_acc"],
+        "pm_micro": pm["micro_acc"],
+        "pm_macro_client": pm["macro_client_acc"],
+        "worst_client_acc": worst_client,
+        "client_acc_std": client_std,
+        "method_label": method_label,
+        "seed": seed,
+    }
+    row.update(train_metrics)
+    _append_csv_row(os.path.join(output_dir, "metrics.csv"), METRICS_FIELDS, row)
+
+    for idx, (global_result, personal_result) in enumerate(zip(global_results, personal_results)):
+        per_row = {
+            "round": epoch,
+            "client_id": idx,
+            "global_acc": float(global_result["accuracy"]),
+            "personalized_acc": float(personal_result["accuracy"]),
+            "seed": seed,
+            "method_label": method_label,
+        }
+        _append_csv_row(
+            os.path.join(output_dir, "per_client_metrics.csv"),
+            PER_CLIENT_METRICS_FIELDS,
+            per_row,
+        )
+
+    print(
+        f"Round {epoch} | GM(micro)={gm['micro_acc']:.4f} | "
+        f"PM(micro)={pm['micro_acc']:.4f} | PM(macro)={pm['macro_client_acc']:.4f} | "
+        f"WorstClient={worst_client:.4f} | ClientStd={client_std:.4f} | "
+        f"GammaMean={train_metrics.get('spf_gamma_mean', '')} | "
+        f"NegGamma={train_metrics.get('spf_negative_gamma_ratio', '')} | "
+        f"CorrectionRatio={train_metrics.get('spf_correction_ratio_mean', '')}"
+    )
+    print(f"legacy_mean_personalized_acc: {pm['macro_client_acc']}")
+    return row
+
+
+def write_metrics_summary(output_dir, rows, best_state, seed, method_label):
+    if not rows:
+        return
+    final = rows[-1]
+    summary = {
+        "best_gm_micro": best_state["best_gm_micro"],
+        "best_gm_round": best_state["best_gm_round"],
+        "final_gm_micro": final["gm_micro"],
+        "best_pm_micro": best_state["best_pm_micro"],
+        "best_pm_round": best_state["best_pm_round"],
+        "final_pm_micro": final["pm_micro"],
+        "final_pm_macro_client": final["pm_macro_client"],
+        "final_worst_client_acc": final["worst_client_acc"],
+        "final_client_acc_std": final["client_acc_std"],
+        "final_spf_gamma_mean": final.get("spf_gamma_mean", ""),
+        "final_spf_gamma_std": final.get("spf_gamma_std", ""),
+        "final_spf_negative_gamma_ratio": final.get("spf_negative_gamma_ratio", ""),
+        "final_spf_correction_ratio_mean": final.get("spf_correction_ratio_mean", ""),
+        "seed": seed,
+        "method_label": method_label,
+    }
+    with open(os.path.join(output_dir, "metrics_summary.json"), "w") as f:
+        json.dump(summary, f, indent=2)
+
+
 def main(args):
+    if args.spf_debug_gate:
+        os.environ["SPF_DEBUG_GATE"] = "1"
     cfg = setup_cfg(args)
     if cfg.SEED >= 0:
         set_random_seed(cfg.SEED)
@@ -407,6 +652,21 @@ def main(args):
             run_spf_state_isolation_check(local_trainer, spf_private_states)
         else:
             global_weights = copy.deepcopy(local_trainer.model.state_dict())
+    metrics_rows = []
+    metrics_best_state = {
+        "best_gm_micro": float("-inf"),
+        "best_gm_round": -1,
+        "best_pm_micro": float("-inf"),
+        "best_pm_round": -1,
+    }
+    method_label = ""
+    if args.trainer == 'GL_SVDMSE' and args.use_spf:
+        method_label = local_trainer.model.prompt_learner.get_spf_method_label()
+        print("GM mode: global_only_ctx_global")
+        print("PM mode: client_private_fused_prompt")
+        if not local_trainer.model.prompt_learner.use_dynamic_gate:
+            assert not hasattr(local_trainer.model.prompt_learner, "rank_gate")
+            print("SPF rank_gate disabled for fixed-gamma method")
 
     # Training
     start_epoch = 0
@@ -415,6 +675,9 @@ def main(args):
     global_time_list = []
     start = time.time()
     for epoch in range(start_epoch, end_epoch):
+        round_start = time.perf_counter()
+        if torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()
 
         if args.trainer == 'CLIP':
             print("------------Global test start without training -------------")
@@ -476,12 +739,16 @@ def main(args):
             print("idxs_users", idxs_users)
 
             print("------------local train start epoch:", epoch, "-------------")
+            train_start = time.perf_counter()
             if args.use_spf:
+                local_trainer._last_spf_train_metrics = []
                 for idx in idxs_users:
                     load_spf_client_state(local_trainer, global_weights, spf_private_states[idx])
                     if local_trainer.model.prompt_learner.freeze_anchor:
                         refresh_spf_anchor_for_client(local_trainer)
                     rebuild_prompt_optimizer(local_trainer)
+                    local_trainer._spf_debug_client_id = idx
+                    local_trainer._spf_debug_global_epoch = epoch
                     local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
                     spf_private_states[idx] = clone_spf_private_state(get_prompt_learner(local_trainer))
                     local_weights_0[idx] = extract_spf_global_state(local_trainer)
@@ -512,26 +779,73 @@ def main(args):
                         )
 
             print("------------local train finish epoch:", epoch, "-------------")
+            round_train_sec = time.perf_counter() - train_start
 
             if args.use_spf:
                 global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=False)
                 assert set(global_weights.keys()) == {"ctx_global"}
-                assert all("ctx_local" not in key and "gamma_net" not in key for key in global_weights)
+                assert all(
+                    "ctx_local" not in key and "rank_gate" not in key and "rank_bias" not in key
+                    for key in global_weights
+                )
                 print(f"SPF FedAvg completed for round {epoch}: keys={list(global_weights.keys())}")
             else:
                 global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
 
             print("------------local test start-------------")
-            results = []
             all_users = list(range(0, cfg.DATASET.USERS))
             if args.use_spf:
-                for idx in all_users:
-                    load_spf_client_state(local_trainer, global_weights, spf_private_states[idx])
-                    if local_trainer.model.prompt_learner.freeze_anchor:
-                        refresh_spf_anchor_for_client(local_trainer)
-                    print(f"SPF global state dispatched to client {idx}")
-                    results.append(local_trainer.test(idx=idx))
+                eval_start = time.perf_counter()
+                print("------------strict GM test start-------------")
+                global_results = evaluate_spf_clients(
+                    local_trainer,
+                    global_weights,
+                    spf_private_states,
+                    all_users,
+                    mode="global_only",
+                )
+                print("------------personalized PM test start-------------")
+                personal_results = evaluate_spf_clients(
+                    local_trainer,
+                    global_weights,
+                    spf_private_states,
+                    all_users,
+                    mode="personal",
+                )
+                round_eval_sec = time.perf_counter() - eval_start
+                train_metrics = collect_spf_train_metrics(local_trainer)
+                peak_memory_mb = (
+                    torch.cuda.max_memory_allocated() / 1024 ** 2
+                    if torch.cuda.is_available()
+                    else 0.0
+                )
+                for k, result in enumerate(personal_results):
+                    if k in global_test_acc_dict:
+                        global_test_acc_dict[k].append(result["accuracy"])
+                    else:
+                        global_test_acc_dict[k] = [result["accuracy"]]
+                    print(k, "--Local test acc:", result["accuracy"])
+                timing = {
+                    "train_sec": round_train_sec,
+                    "eval_sec": round_eval_sec,
+                    "total_sec": time.perf_counter() - round_start,
+                    "peak_memory_mb": peak_memory_mb,
+                }
+                metrics_row = write_round_metrics(
+                    local_trainer.args.para_dir,
+                    epoch,
+                    global_results,
+                    personal_results,
+                    train_metrics,
+                    timing,
+                    metrics_best_state,
+                    method_label,
+                    cfg.SEED,
+                )
+                metrics_rows.append(metrics_row)
+                global_time_list.append(time.time() - start)
             else:
+                results = []
                 round_shared_basis = maybe_refresh_round_shared_basis(local_trainer, args, global_weights)
                 if round_shared_basis is not None:
                     print("Fixed-round SPF basis refreshed for local test")
@@ -552,8 +866,9 @@ def main(args):
                         )
                     results.append(local_trainer.test(idx=idx))
             # global_test_acc = show_results(cfg, results, epoch)
-            global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
-            global_time_list.append(time.time() - start)
+            if not args.use_spf:
+                global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
+                global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
             
         elif args.trainer == 'GL_SVDMSE_HE':
@@ -678,6 +993,14 @@ def main(args):
         print(key, "mean of acc:", np.mean(global_test_acc_list[-5:]))
         print(key, "std of acc:", np.std(global_test_acc_list[-5:]))
     save_acc_csv(local_trainer.args.para_dir, global_test_acc_dict, cfg)
+    if metrics_rows:
+        write_metrics_summary(
+            local_trainer.args.para_dir,
+            metrics_rows,
+            metrics_best_state,
+            cfg.SEED,
+            method_label,
+        )
 
 
 if __name__ == "__main__":
@@ -719,19 +1042,35 @@ if __name__ == "__main__":
     parser.add_argument('--spf_energy', type=float, default=0.90, help='SVD energy threshold for SPF shared subspace')
     parser.add_argument('--spf_min_rank', type=int, default=1, help='minimum SPF shared rank')
     parser.add_argument('--spf_max_rank', type=int, default=8, help='maximum SPF shared rank')
-    parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
-    parser.add_argument('--spf_gamma_max', type=float, default=0.10, help='maximum SPF dynamic residual gate value')
-    parser.add_argument('--spf_gate_hidden_ratio', type=int, default=8, help='ctx_dim divisor for SPF gamma gate hidden size')
+    parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for A0/A1')
+    parser.add_argument('--spf_gamma_max', type=float, default=0.10, help='maximum SPF gamma value')
+    parser.add_argument('--spf_gate_type', type=str, default="rankwise", choices=["rankwise"], help='dynamic SPF gate type')
+    parser.add_argument('--spf_gamma_base', type=float, default=0.05, help='base value for rank-wise SPF gamma')
+    parser.add_argument('--spf_gamma_delta', type=float, default=0.03, help='tanh delta range for rank-wise SPF gamma')
+    parser.add_argument('--spf_gamma_min', type=float, default=0.005, help='minimum clamped rank-wise SPF gamma')
+    parser.add_argument('--spf_gamma_neg_min', type=float, default=-0.05, help='minimum negative gamma for bipolar SPF gate')
+    parser.add_argument('--spf_bipolar_bias_init', type=float, default=0.2554, help='rank bias initialization for bipolar SPF gate')
+    parser.add_argument('--spf_gate_lr_mult', type=float, default=3.0, help='rank-wise gate learning-rate multiplier')
+    parser.add_argument('--spf_bipolar_gate', action='store_true', default=False, help='allow rank-wise SPF gate to repel with negative gamma')
     parser.add_argument('--spf_use_dynamic_gate', dest='spf_use_dynamic_gate', action='store_true', help='use dynamic SPF gate instead of fixed gamma')
     parser.add_argument('--no_spf_use_dynamic_gate', dest='spf_use_dynamic_gate', action='store_false', help='disable dynamic SPF gate and use fixed gamma')
     parser.set_defaults(spf_use_dynamic_gate=True)
-    parser.add_argument('--spf_alignment_type', type=str, default="cosine", choices=["mse", "cosine"], help='SPF alignment loss type')
+    parser.add_argument('--spf_alignment_type', type=str, default="cosine", choices=["cosine"], help='SPF alignment loss type')
     parser.add_argument('--spf_freeze_anchor', dest='spf_freeze_anchor', action='store_true', help='freeze SPF basis and global anchor per client round')
     parser.add_argument('--no_spf_freeze_anchor', dest='spf_freeze_anchor', action='store_false', help='recompute SPF basis and anchor every batch')
     parser.set_defaults(spf_freeze_anchor=True)
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
+    parser.add_argument('--spf_global_lambda', type=float, default=1.0, help='weight of SPF global anchor CE supervision')
+    parser.add_argument('--spf_push_lambda', type=float, default=0.0, help='weight of margin-based SPF local/global repulsion')
+    parser.add_argument('--spf_push_alpha', type=float, default=1.0, help='margin for SPF local/global repulsion')
     parser.add_argument('--spf_shared_init', action='store_true', default=False, help='initialize local prompts from cloned global prompts')
     parser.add_argument('--spf_fixed_round_basis', action='store_true', default=False, help='reuse one SPF basis per communication round')
+    parser.add_argument(
+        '--spf_debug_gate',
+        action='store_true',
+        default=os.environ.get("SPF_DEBUG_GATE", "").lower() in {"1", "true", "yes", "on"},
+        help='enable SPF dynamic gate debug diagnostics',
+    )
     parser.add_argument('--smoke_text_encoder_counter', action='store_true', default=False, help='enable text encoder forward counting for smoke tests')
     parser.add_argument('--spf_variant', type=str, default="", help='output directory tag for SPF-lite stabilization variants')
     # he setting

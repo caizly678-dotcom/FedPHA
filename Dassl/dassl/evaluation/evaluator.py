@@ -79,6 +79,8 @@ class Classification(EvaluatorBase):
         results["accuracy"] = acc
         results["error_rate"] = err
         results["macro_f1"] = macro_f1
+        results["correct"] = self._correct
+        results["total"] = self._total
 
         print(
             "=> result\n"
