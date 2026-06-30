@@ -97,14 +97,13 @@ class PromptLearner(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
         super().__init__()
         n_cls = len(classnames)
-        n_ctx = cfg.TRAINER.GL_SVDMSE.N_CTX
-        ctx_init = cfg.TRAINER.GL_SVDMSE.CTX_INIT
+        n_ctx = cfg.TRAINER.RESIDUAL_PEFT.N_CTX
+        ctx_init = cfg.TRAINER.RESIDUAL_PEFT.CTX_INIT
         dtype = clip_model.dtype
         ctx_dim = clip_model.ln_final.weight.shape[0]
         clip_imsize = clip_model.visual.input_resolution
         cfg_imsize = cfg.INPUT.SIZE[0]
-        self.N = cfg.TRAINER.GL_SVDMSE.N
-        self.ratio = cfg.TRAINER.GL_SVDMSE.ratio
+        self.N = cfg.TRAINER.RESIDUAL_PEFT.N
         assert cfg_imsize == clip_imsize, f"cfg_imsize ({cfg_imsize}) must equal to clip_imsize ({clip_imsize})"
 
         if ctx_init:
@@ -121,7 +120,7 @@ class PromptLearner(nn.Module):
 
         else:
             # random initialization
-            if cfg.TRAINER.GL_SVDMSE.CSC:
+            if cfg.TRAINER.RESIDUAL_PEFT.CSC:
                 print("Initializing class-specific contexts")
                 ctx_vectors = torch.empty(n_cls, n_ctx, ctx_dim, dtype=dtype)
             else:
@@ -180,7 +179,7 @@ class PromptLearner(nn.Module):
         self.n_ctx = n_ctx
         self.tokenized_prompts = tokenized_prompts  # torch.Tensor
         self.name_lens = name_lens
-        self.class_token_position = cfg.TRAINER.GL_SVDMSE.CLASS_TOKEN_POSITION
+        self.class_token_position = cfg.TRAINER.RESIDUAL_PEFT.CLASS_TOKEN_POSITION
 
     def build_prompts(self, ctx):
         """
@@ -245,7 +244,7 @@ class CustomCLIP(nn.Module):
         self.text_encoder = TextEncoder(clip_model)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
-        self.N = cfg.TRAINER.GL_SVDMSE.N
+        self.N = cfg.TRAINER.RESIDUAL_PEFT.N
 
     def train(self, mode=True):
         super().train(mode)
@@ -317,24 +316,22 @@ class CustomCLIP(nn.Module):
         raise ValueError(f"Unknown mode: {mode}")
 
 # @TRAINER_REGISTRY.register()
-class GL_SVDMSE(TrainerX):
+class RESIDUAL_PEFT(TrainerX):
     """
     It is based on CoOp.
     """
 
     def check_cfg(self, cfg):
-        assert cfg.TRAINER.GL_SVDMSE.PREC in ["fp16", "fp32", "amp"]
+        assert cfg.TRAINER.RESIDUAL_PEFT.PREC in ["fp16", "fp32", "amp"]
 
     def build_model(self):
         cfg = self.cfg
-        self.lambda_orthogonal = cfg.TRAINER.GL_SVDMSE.lambda_orthogonal
-        self.alpha = cfg.TRAINER.GL_SVDMSE.alpha
         classnames = self.dm.dataset.classnames
 
         print(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
         
-        if cfg.TRAINER.GL_SVDMSE.PREC == "fp32" or cfg.TRAINER.GL_SVDMSE.PREC == "amp":
+        if cfg.TRAINER.RESIDUAL_PEFT.PREC == "fp32" or cfg.TRAINER.RESIDUAL_PEFT.PREC == "amp":
             # CLIP's default precision is fp16
             clip_model.float()   
 
@@ -364,7 +361,7 @@ class GL_SVDMSE(TrainerX):
         self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
         self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
 
-        self.scaler = GradScaler() if cfg.TRAINER.GL_SVDMSE.PREC == "amp" else None
+        self.scaler = GradScaler() if cfg.TRAINER.RESIDUAL_PEFT.PREC == "amp" else None
 
 
     def forward_backward(self, batch_idx, batch, **kwargs):
@@ -404,6 +401,35 @@ class GL_SVDMSE(TrainerX):
                 "Gradient leakage detected: loss_personal still updates "
                 "prompt_learner.ctx_global. Check global_logits.detach(), "
                 "ctx_global.detach(), and LRACA K/V paths."
+            )
+
+            self.optim.zero_grad(set_to_none=True)
+
+            # 只反传全局损失，确认不会更新个性化私有参数
+            loss_global.backward(retain_graph=True)
+
+            private_grad_max = 0.0
+            for name, param in self.model.prompt_learner.named_parameters():
+                if (
+                    name == "ctx_local"
+                    or name == "alpha_logit"
+                    or name.startswith("lraca.")
+                ):
+                    if param.grad is not None:
+                        private_grad_max = max(
+                            private_grad_max,
+                            param.grad.detach().abs().max().item()
+                        )
+
+            print(
+                f"[Gradient Isolation Check] "
+                f"max |dL_global / dprivate| = {private_grad_max:.3e}"
+            )
+
+            assert private_grad_max < 1e-10, (
+                "Gradient leakage detected: loss_global still updates "
+                "prompt_learner.ctx_local, prompt_learner.lraca.*, or "
+                "prompt_learner.alpha_logit."
             )
 
             # 清掉本次 debug 产生的梯度，再进入正常训练

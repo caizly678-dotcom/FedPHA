@@ -252,6 +252,18 @@ def compose_residual_state(base_state, global_ctx, private_state):
     return state
 
 
+def append_residual_metrics_csv(para_dir, epoch, gm_acc, gm_std, pm_direct_acc, pm_direct_std, worst_pm):
+    metrics_path = os.path.join(para_dir, "residual_metrics.csv")
+    write_header = not os.path.exists(metrics_path)
+
+    with open(metrics_path, "a") as result_file:
+        if write_header:
+            result_file.write("round,gm_mean,gm_std,pm_direct_mean,pm_direct_std,worst_pm\n")
+        result_file.write(
+            f"{epoch},{gm_acc},{gm_std},{pm_direct_acc},{pm_direct_std},{worst_pm}\n"
+        )
+
+
 def main(args):
     cfg = setup_cfg(args)
     if cfg.SEED >= 0:
@@ -270,13 +282,20 @@ def main(args):
     local_weights_3 = [[] for i in range(cfg.DATASET.USERS)]
     local_weights_per = [{} for i in range(cfg.DATASET.USERS)]
 
-    residual_private_states = [{} for _ in range(cfg.DATASET.USERS)]
-    residual_global_updates = [None for _ in range(cfg.DATASET.USERS)]
-    base_state = copy.deepcopy(local_trainer.model.state_dict())
-
     local_trainer = build_trainer(args, cfg)
 
     local_trainer.fed_before_train()
+
+    if args.trainer == "RESIDUAL_PEFT":
+        base_state = copy.deepcopy(local_trainer.model.state_dict())
+        global_ctx = base_state["prompt_learner.ctx_global"].detach().clone()
+        residual_private_states = [{} for _ in range(cfg.DATASET.USERS)]
+        residual_global_updates = [None for _ in range(cfg.DATASET.USERS)]
+        local_trainer.sched = None
+        if hasattr(local_trainer, "_scheds"):
+            for name in local_trainer._scheds:
+                local_trainer._scheds[name] = None
+
     count_parameters(local_trainer.model, "prompt_learner")
     count_parameters(local_trainer.model, "image_encoder")
     count_parameters(local_trainer.model, "text_encoder")
@@ -407,6 +426,7 @@ def main(args):
                     )
 
                 local_trainer.model.load_state_dict(client_state, strict=False)
+                local_trainer.optim.state.clear()
 
                 local_trainer.train(
                     idx=idx,
@@ -493,6 +513,15 @@ def main(args):
 
             gm_history.append(gm_acc)
             pm_direct_history.append(pm_direct_acc)
+            append_residual_metrics_csv(
+                local_trainer.args.para_dir,
+                epoch,
+                gm_acc,
+                gm_std,
+                pm_direct_acc,
+                pm_direct_std,
+                worst_pm
+            )
 
             global_time_list.append(time.time() - start)
 
