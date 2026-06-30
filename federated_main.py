@@ -125,6 +125,20 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.FEDPGP.mu = 1
     cfg.TRAINER.FEDPGP.temp = 0.5
 
+    cfg.TRAINER.RESIDUAL_PEFT = CN()
+    cfg.TRAINER.RESIDUAL_PEFT.N_CTX = args.n_ctx
+    cfg.TRAINER.RESIDUAL_PEFT.CSC = False
+    cfg.TRAINER.RESIDUAL_PEFT.CTX_INIT = False
+    cfg.TRAINER.RESIDUAL_PEFT.PREC = "fp16"
+    cfg.TRAINER.RESIDUAL_PEFT.CLASS_TOKEN_POSITION = "end"
+    cfg.TRAINER.RESIDUAL_PEFT.N = 1
+
+    cfg.TRAINER.RESIDUAL_PEFT.LRACA_RANK = args.lraca_rank
+    cfg.TRAINER.RESIDUAL_PEFT.TAU = args.residual_tau
+    cfg.TRAINER.RESIDUAL_PEFT.ALPHA_MAX = args.residual_alpha_max
+    cfg.TRAINER.RESIDUAL_PEFT.ALPHA_INIT = args.residual_alpha_init
+    cfg.TRAINER.RESIDUAL_PEFT.LAMBDA_P = args.lambda_p    
+
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
     cfg.DATASET.USERS = args.num_users  # number of clients
     cfg.DATASET.NAME = args.dataset
@@ -214,6 +228,29 @@ def setup_cfg(args):
 
     return cfg
 
+def clone_tensor_state(state, keys_or_prefixes):
+    out = {}
+
+    for key, value in state.items():
+        if any(
+            key == item or key.startswith(item)
+            for item in keys_or_prefixes
+        ):
+            out[key] = value.detach().clone()
+
+    return out
+
+
+def compose_residual_state(base_state, global_ctx, private_state):
+    state = copy.deepcopy(base_state)
+
+    state["prompt_learner.ctx_global"] = global_ctx.detach().clone()
+
+    for key, value in private_state.items():
+        state[key] = value.detach().clone()
+
+    return state
+
 
 def main(args):
     cfg = setup_cfg(args)
@@ -232,6 +269,10 @@ def main(args):
     local_weights_2 = [[] for i in range(cfg.DATASET.USERS)]
     local_weights_3 = [[] for i in range(cfg.DATASET.USERS)]
     local_weights_per = [{} for i in range(cfg.DATASET.USERS)]
+
+    residual_private_states = [{} for _ in range(cfg.DATASET.USERS)]
+    residual_global_updates = [None for _ in range(cfg.DATASET.USERS)]
+    base_state = copy.deepcopy(local_trainer.model.state_dict())
 
     local_trainer = build_trainer(args, cfg)
 
@@ -254,6 +295,8 @@ def main(args):
     end_epoch = cfg.OPTIM.ROUND
     global_test_acc_dict = {}
     global_time_list = []
+    gm_history = []
+    pm_direct_history = []
     start = time.time()
     for epoch in range(start_epoch, end_epoch):
 
@@ -346,7 +389,116 @@ def main(args):
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
             global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
-            
+
+        elif args.trainer == "RESIDUAL_PEFT":
+            idxs_users = list(range(cfg.DATASET.USERS))
+
+            print("------------local train start epoch:", epoch, "-------------")
+
+            # 1. 每个客户端本地训练
+            for idx in idxs_users:
+                if epoch == 0:
+                    client_state = copy.deepcopy(base_state)
+                else:
+                    client_state = compose_residual_state(
+                        base_state,
+                        global_ctx,
+                        residual_private_states[idx]
+                    )
+
+                local_trainer.model.load_state_dict(client_state, strict=False)
+
+                local_trainer.train(
+                    idx=idx,
+                    global_epoch=epoch,
+                    is_fed=True
+                )
+
+                local_state = local_trainer.model.state_dict()
+
+                # 上传：仅 Global Prompt
+                residual_global_updates[idx] = (
+                    local_state["prompt_learner.ctx_global"].detach().clone()
+                )
+
+                # 保存：仅客户端私有部分
+                residual_private_states[idx] = clone_tensor_state(
+                    local_state,
+                    [
+                        "prompt_learner.ctx_local",
+                        "prompt_learner.lraca.",
+                        "prompt_learner.alpha_logit"
+                    ]
+                )
+
+            print("------------local train finish epoch:", epoch, "-------------")
+
+            # 2. 服务端聚合 Global Prompt
+            global_ctx = average_weights(
+                residual_global_updates,
+                idxs_users,
+                datanumber_client,
+                islist=True
+            )
+
+            # =====================================================
+            # 3. 就在这里加：分别测试 GM 和 PM_direct
+            # =====================================================
+            print("------------post-aggregation evaluation start-------------")
+
+            all_users = list(range(cfg.DATASET.USERS))
+
+            gm_results = []
+            pm_direct_results = []
+
+            for idx in all_users:
+                # 将聚合后的 Global Prompt 与该客户端私有模块拼回完整模型
+                eval_state = compose_residual_state(
+                    base_state,
+                    global_ctx,
+                    residual_private_states[idx]
+                )
+
+                local_trainer.model.load_state_dict(eval_state, strict=False)
+
+                # GM：只使用 Global Prompt 的预测
+                local_trainer.set_eval_mode("global")
+                gm_results.append(local_trainer.test(idx=idx))
+
+                # PM_direct：不做额外本地训练，直接用残差修正预测
+                local_trainer.set_eval_mode("personalized")
+                pm_direct_results.append(local_trainer.test(idx=idx))
+
+            # 4. 汇总并打印两组结果
+            gm_acc = np.mean([result["accuracy"] for result in gm_results])
+            pm_direct_acc = np.mean(
+                [result["accuracy"] for result in pm_direct_results]
+            )
+
+            gm_std = np.std([result["accuracy"] for result in gm_results])
+            pm_direct_std = np.std(
+                [result["accuracy"] for result in pm_direct_results]
+            )
+
+            worst_pm = np.min(
+                [result["accuracy"] for result in pm_direct_results]
+            )
+
+            print(f"[Round {epoch}] GM: {gm_acc:.4f} ± {gm_std:.4f}")
+            print(
+                f"[Round {epoch}] PM_direct: "
+                f"{pm_direct_acc:.4f} ± {pm_direct_std:.4f}, "
+                f"Worst-PM: {worst_pm:.4f}"
+            )
+
+            gm_history.append(gm_acc)
+            pm_direct_history.append(pm_direct_acc)
+
+            global_time_list.append(time.time() - start)
+
+            print("------------post-aggregation evaluation finish-------------")
+
+
         elif args.trainer == 'GL_SVDMSE_HE':
             # global prompt + local prompt
 
@@ -528,7 +680,13 @@ if __name__ == "__main__":
     parser.add_argument("--load-epoch", type=int, help="load model weights at this epoch for evaluation")
     parser.add_argument("--no-train", action="store_true", help="do not call trainer.train()")
     parser.add_argument("opts", default=None, nargs=argparse.REMAINDER, help="modify config options using the command-line")
-    
+
+    parser.add_argument("--lraca_rank", type=int, default=32)
+    parser.add_argument("--residual_tau", type=float, default=2.0)
+    parser.add_argument("--residual_alpha_max", type=float, default=0.5)
+    parser.add_argument("--residual_alpha_init", type=float, default=0.05)
+    parser.add_argument("--lambda_p", type=float, default=1.0)
+
     args = parser.parse_args()
     
     setproctitle.setproctitle('{}_{}_{}'.format(args.trainer, args.backbone, args.dataset))

@@ -5,6 +5,7 @@ from trainers.FEDPGP import FEDPGP
 from trainers.PROMPTFL import PROMPTFL
 from trainers.GL_SVDMSE import GL_SVDMSE
 from trainers.GL_SVDMSE_HE import GL_SVDMSE_HE
+from trainers.RESIDUAL_PEFT import RESIDUAL_PEFT
 
 TRAINER_REGISTRY = Registry("TRAINER")
 TRAINER_REGISTRY.register(CLIP)
@@ -13,6 +14,7 @@ TRAINER_REGISTRY.register(FEDPGP)
 TRAINER_REGISTRY.register(PROMPTFL)
 TRAINER_REGISTRY.register(GL_SVDMSE)
 TRAINER_REGISTRY.register(GL_SVDMSE_HE)
+TRAINER_REGISTRY.register(RESIDUAL_PEFT)
 
 def build_trainer(args,cfg):
     avai_trainers = TRAINER_REGISTRY.registered_names()
