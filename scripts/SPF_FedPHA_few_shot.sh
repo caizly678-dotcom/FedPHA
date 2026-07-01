@@ -15,7 +15,10 @@ python federated_main.py \
   --num_users ${USERS} \
   --seed ${SEED} \
   --use_spf \
-  --spf_gamma_init 0.05 \
   --spf_energy 0.90 \
   --spf_max_rank 8 \
-  --spf_shared_lambda 0.1
+  --spf_shared_lambda 0.1 \
+  --spf_late_alpha 0.5 \
+  --spf_fused_ce_lambda 1.0 \
+  --spf_global_ce_lambda 1.0 \
+  --spf_local_ce_lambda 1.0

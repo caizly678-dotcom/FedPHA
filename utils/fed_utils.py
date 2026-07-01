@@ -1,3 +1,4 @@
+import os
 import torch
 import copy
 from prettytable import PrettyTable
@@ -25,6 +26,38 @@ def show_results(cfg, results, epoch,global_test_acc_dict):
 
     print(f"Epoch:{epoch}")
     return global_test_acc,global_test_acc_dict
+
+
+def save_spf_branch_acc_csv(para_dir, epoch, results):
+    branch_path = os.path.join(para_dir, "spf_branch_acc.csv")
+    write_header = not os.path.exists(branch_path)
+
+    fused_acc = []
+    global_acc = []
+    local_acc = []
+
+    with open(branch_path, "a") as result_file:
+        if write_header:
+            result_file.write(
+                "round,client,fused_accuracy,global_only_accuracy,local_only_accuracy\n"
+            )
+
+        for client, result in enumerate(results):
+            fused = result.get("fused_accuracy", result["accuracy"])
+            global_only = result["global_only_accuracy"]
+            local_only = result["local_only_accuracy"]
+
+            fused_acc.append(fused)
+            global_acc.append(global_only)
+            local_acc.append(local_only)
+
+            result_file.write(
+                f"{epoch},{client},{fused},{global_only},{local_only}\n"
+            )
+
+    print(f"Fused/Final Acc: {np.mean(fused_acc)}")
+    print(f"Global-only Acc: {np.mean(global_acc)}")
+    print(f"Local-only Acc: {np.mean(local_acc)}")
 
 def average_weights(w, idxs_users, datanumber_client, islist=False):
     """
@@ -96,10 +129,6 @@ def count_parameters(model, model_name):
     print(table)
     print(f"Total Trainable Params: {total_params}")
     return total_params
-
-
-
-import os
 
 def save_acc_csv(para_dir,global_test_acc_dict,cfg):
     acc_path = os.path.join(para_dir, 'acc.csv')

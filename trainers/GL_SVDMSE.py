@@ -10,6 +10,7 @@ from Dassl.dassl.optim import build_optimizer, build_lr_scheduler
 from trainers.spf_utils import compute_shared_basis, project_to_basis
 from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
+from tqdm import tqdm
 
 _tokenizer = _Tokenizer()
 
@@ -74,10 +75,6 @@ class PromptLearner(nn.Module):
         self.spf_energy = cfg.TRAINER.GL_SVDMSE.SPF_ENERGY
         self.spf_min_rank = cfg.TRAINER.GL_SVDMSE.SPF_MIN_RANK
         self.spf_max_rank = cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK
-        self.register_buffer(
-            "fusion_gamma",
-            torch.tensor([cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT], dtype=torch.float32)
-        )
         assert cfg_imsize == clip_imsize, f"cfg_imsize ({cfg_imsize}) must equal to clip_imsize ({clip_imsize})"
 
         if ctx_init:
@@ -137,27 +134,35 @@ class PromptLearner(nn.Module):
         self.name_lens = name_lens
         self.class_token_position = cfg.TRAINER.GL_SVDMSE.CLASS_TOKEN_POSITION
 
-    def fuse_ctx_spf(self, ctx_local, ctx_global):
-        basis, _ = compute_shared_basis(
-            ctx_global,
-            energy=self.spf_energy,
-            min_rank=self.spf_min_rank,
-            max_rank=self.spf_max_rank,
+    def _build_prompts_from_ctx(self, ctx):
+        ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
+        ctx = ctx.permute(1, 0, 2, 3).contiguous().view(
+            self.N * self.n_cls, self.n_ctx, ctx.shape[-1]
         )
+        return torch.cat([self.token_prefix, ctx, self.token_suffix], dim=1)
+
+    def get_spf_aux(self, ctx_local, ctx_global):
+        with torch.no_grad():
+            basis, _ = compute_shared_basis(
+                ctx_global.detach(),
+                energy=self.spf_energy,
+                min_rank=self.spf_min_rank,
+                max_rank=self.spf_max_rank,
+            )
+        basis = basis.detach()
+
         local_shared = project_to_basis(ctx_local, basis)
-        global_shared = project_to_basis(ctx_global, basis)
 
-        gamma = self.fusion_gamma.to(device=ctx_local.device, dtype=ctx_local.dtype).view(1, 1, 1)
-        fused_ctx = ctx_local + gamma * (global_shared - local_shared)
+        with torch.no_grad():
+            global_shared = project_to_basis(ctx_global.detach(), basis)
 
-        shared_pull_loss = F.mse_loss(local_shared.float(), global_shared.detach().float())
+        shared_pull_loss = F.mse_loss(local_shared.float(), global_shared.float())
 
         aux = {
             "shared_pull_loss": shared_pull_loss,
-            "gamma": gamma.detach().float().mean(),
             "svd_rank": torch.tensor(float(basis.shape[1]), device=ctx_local.device),
         }
-        return fused_ctx, aux
+        return aux
 
     def compute_null_space(self, global_ctx, ratio=0.8):
         global_ctx = global_ctx.view(-1, global_ctx.shape[-1])  # Flatten: (N * n_ctx, ctx_dim)
@@ -184,14 +189,10 @@ class PromptLearner(nn.Module):
             if self.class_token_position != "end":
                 raise NotImplementedError("SPF-FedPHA only supports CLASS_TOKEN_POSITION == 'end'")
 
-            fused_ctx, aux = self.fuse_ctx_spf(self.ctx_local, self.ctx_global)
-
-            fused_ctx = fused_ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
-            fused_ctx = fused_ctx.permute(1, 0, 2, 3).contiguous().view(
-                self.N * self.n_cls, self.n_ctx, fused_ctx.shape[-1]
-            )
-            prompts = torch.cat([self.token_prefix, fused_ctx, self.token_suffix], dim=1)
-            return prompts, aux
+            prompts_global = self._build_prompts_from_ctx(self.ctx_global)
+            prompts_local = self._build_prompts_from_ctx(self.ctx_local)
+            aux = self.get_spf_aux(self.ctx_local, self.ctx_global)
+            return prompts_global, prompts_local, aux
 
         ctx = self.ctx_local
 
@@ -301,25 +302,34 @@ class CustomCLIP(nn.Module):
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
         self.N = cfg.TRAINER.GL_SVDMSE.N
+        self.spf_late_alpha = float(cfg.TRAINER.GL_SVDMSE.SPF_LATE_ALPHA)
 
-    def forward(self, image, idx=None):
+    def forward(self, image, idx=None, return_all=False):
         tokenized_prompts = self.tokenized_prompts
         out = self.prompt_learner()
 
         if self.prompt_learner.use_spf:
-            prompts, aux = out
-            text_features = self.text_encoder(prompts, tokenized_prompts)
-            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+            prompts_global, prompts_local, aux = out
+            text_features_global = self.text_encoder(prompts_global, tokenized_prompts)
+            text_features_global = text_features_global / text_features_global.norm(dim=-1, keepdim=True)
+            text_features_local = self.text_encoder(prompts_local, tokenized_prompts)
+            text_features_local = text_features_local / text_features_local.norm(dim=-1, keepdim=True)
             image_features = self.image_encoder(image.type(self.dtype))
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
             logit_scale = self.logit_scale.exp()
-            logits = logit_scale * image_features @ text_features.t()
+            logits_global = logit_scale * image_features @ text_features_global.t()
+            logits_local = logit_scale * image_features @ text_features_local.t()
+            alpha = self.spf_late_alpha
+            logits_fused = alpha * logits_global + (1.0 - alpha) * logits_local
 
             if self.training:
-                return logits, aux
+                return logits_fused, logits_global, logits_local, aux
 
-            return logits
+            if return_all:
+                return logits_fused, logits_global, logits_local
+
+            return logits_fused
 
         prompts, prompts_global, prompts_projected_local = out
         text_features = self.text_encoder(prompts, tokenized_prompts)
@@ -397,31 +407,56 @@ class GL_SVDMSE(TrainerX):
         prec = self.cfg.TRAINER.GL_SVDMSE.PREC
 
         if self.model.prompt_learner.use_spf:
+            lambda_fused = self.cfg.TRAINER.GL_SVDMSE.SPF_FUSED_CE_LAMBDA
+            lambda_global = self.cfg.TRAINER.GL_SVDMSE.SPF_GLOBAL_CE_LAMBDA
+            lambda_local = self.cfg.TRAINER.GL_SVDMSE.SPF_LOCAL_CE_LAMBDA
+            lambda_sum = lambda_fused + lambda_global + lambda_local
+
             if prec == "amp":
                 with autocast():
-                    output, aux = self.model(image)
-                    loss = F.cross_entropy(output, label)
+                    output, output_global, output_local, aux = self.model(image)
+                    loss_fused = F.cross_entropy(output, label)
+                    loss_global = F.cross_entropy(output_global, label)
+                    loss_local = F.cross_entropy(output_local, label)
+                    loss_cls = (
+                        lambda_fused * loss_fused
+                        + lambda_global * loss_global
+                        + lambda_local * loss_local
+                    ) / lambda_sum
                     loss = (
-                        loss
-                        + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
+                        loss_cls
+                        + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA
+                        * aux["shared_pull_loss"]
                     )
                 self.optim.zero_grad()
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optim)
                 self.scaler.update()
             else:
-                output, aux = self.model(image)
-                loss = F.cross_entropy(output, label)
+                output, output_global, output_local, aux = self.model(image)
+                loss_fused = F.cross_entropy(output, label)
+                loss_global = F.cross_entropy(output_global, label)
+                loss_local = F.cross_entropy(output_local, label)
+                loss_cls = (
+                    lambda_fused * loss_fused
+                    + lambda_global * loss_global
+                    + lambda_local * loss_local
+                ) / lambda_sum
                 loss = (
-                    loss
-                    + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
+                    loss_cls
+                    + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA
+                    * aux["shared_pull_loss"]
                 )
                 self.model_backward_and_update(loss)
 
             loss_summary = {
                 "loss": loss.item(),
+                "loss_fused": loss_fused.item(),
+                "loss_global": loss_global.item(),
+                "loss_local": loss_local.item(),
                 "acc": compute_accuracy(output, label)[0].item(),
-                "spf_gamma": float(aux["gamma"].item()),
+                "acc_global": compute_accuracy(output_global, label)[0].item(),
+                "acc_local": compute_accuracy(output_local, label)[0].item(),
                 "spf_rank": float(aux["svd_rank"].item()),
                 "spf_shared_loss": float(aux["shared_pull_loss"].item()),
             }
@@ -459,6 +494,70 @@ class GL_SVDMSE(TrainerX):
             self.update_lr()
 
         return loss_summary
+
+    @torch.no_grad()
+    def test(self, split=None, is_global=False, current_epoch=0, idx=-1, global_test=False):
+        if not self.model.prompt_learner.use_spf:
+            return super().test(
+                split=split,
+                is_global=is_global,
+                current_epoch=current_epoch,
+                idx=idx,
+                global_test=global_test,
+            )
+
+        self.set_model_mode("eval")
+        self.model.eval()
+        self.evaluator.reset()
+
+        if split is None:
+            split = self.cfg.TEST.SPLIT
+
+        if split == "val" and self.val_loader is not None:
+            data_loader = self.val_loader
+        else:
+            split = "test"
+            data_loader = self.fed_test_loader_x_dict[idx]
+
+        print(f"Evaluate on the client{idx}_{split} set")
+
+        global_correct = 0
+        local_correct = 0
+        total = 0
+
+        for batch_idx, batch in enumerate(tqdm(data_loader)):
+            input, label = self.parse_batch_test(batch)
+            output, output_global, output_local = self.model(
+                input,
+                idx=idx,
+                return_all=True,
+            )
+            self.evaluator.process(output, label)
+
+            global_correct += int(output_global.max(1)[1].eq(label).sum().item())
+            local_correct += int(output_local.max(1)[1].eq(label).sum().item())
+            total += label.shape[0]
+
+        results = self.evaluator.evaluate()
+        self.evaluator.reset()
+
+        fused_accuracy = results["accuracy"]
+        global_accuracy = 100.0 * global_correct / total
+        local_accuracy = 100.0 * local_correct / total
+
+        results["fused_accuracy"] = fused_accuracy
+        results["global_only_accuracy"] = global_accuracy
+        results["local_only_accuracy"] = local_accuracy
+
+        if not is_global and idx < 0:
+            current_epoch = self.epoch
+        for k, v in results.items():
+            tag = f"{split}/{k}"
+            if not is_global:
+                tag = f"{tag}/{str(idx)}"
+            self.write_scalar(tag, v, current_epoch)
+
+        return results
 
     def parse_batch_train(self, batch):
         input = batch["img"]

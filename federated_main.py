@@ -1,6 +1,12 @@
 from collections import defaultdict
 
-from utils.fed_utils import average_weights, count_parameters, show_results, save_acc_csv
+from utils.fed_utils import (
+    average_weights,
+    count_parameters,
+    show_results,
+    save_acc_csv,
+    save_spf_branch_acc_csv,
+)
 from Dassl.dassl.utils import setup_logger, set_random_seed
 from Dassl.dassl.config import get_cfg_default
 from Dassl.dassl.engine import build_trainer
@@ -85,8 +91,11 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_ENERGY = args.spf_energy
     cfg.TRAINER.GL_SVDMSE.SPF_MIN_RANK = args.spf_min_rank
     cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK = args.spf_max_rank
-    cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_LATE_ALPHA = args.spf_late_alpha
+    cfg.TRAINER.GL_SVDMSE.SPF_FUSED_CE_LAMBDA = args.spf_fused_ce_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_GLOBAL_CE_LAMBDA = args.spf_global_ce_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_LOCAL_CE_LAMBDA = args.spf_local_ce_lambda
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -221,7 +230,7 @@ def setup_cfg(args):
 
     if args.use_spf:
         cfg.OUTPUT_DIR = (
-            f"{base_output_dir}/spf_g{args.spf_gamma_init}_e{args.spf_energy}_r{args.spf_max_rank}"
+            f"{base_output_dir}/spf_late_a{args.spf_late_alpha}_e{args.spf_energy}_r{args.spf_max_rank}"
         )
     
     cfg.freeze()
@@ -406,6 +415,8 @@ def main(args):
                 results.append(local_trainer.test(idx=idx))
             # global_test_acc = show_results(cfg, results, epoch)
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
+            if args.use_spf:
+                save_spf_branch_acc_csv(local_trainer.args.para_dir, epoch, results)
             global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
 
@@ -691,8 +702,11 @@ if __name__ == "__main__":
     parser.add_argument('--spf_energy', type=float, default=0.90, help='SVD energy threshold for SPF shared subspace')
     parser.add_argument('--spf_min_rank', type=int, default=1, help='minimum SPF shared rank')
     parser.add_argument('--spf_max_rank', type=int, default=8, help='maximum SPF shared rank')
-    parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
+    parser.add_argument('--spf_late_alpha', type=float, default=0.5, help='fixed SPF late logit fusion global-branch weight')
+    parser.add_argument('--spf_fused_ce_lambda', type=float, default=1.0, help='weight of SPF fused-logit CE loss')
+    parser.add_argument('--spf_global_ce_lambda', type=float, default=1.0, help='weight of SPF global-logit CE loss')
+    parser.add_argument('--spf_local_ce_lambda', type=float, default=1.0, help='weight of SPF local-logit CE loss')
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")
