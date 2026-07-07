@@ -26,12 +26,12 @@ class Logger:
        >>> sys.stdout = Logger(osp.join(save_dir, log_name))
     """
 
-    def __init__(self, fpath=None):
-        self.console = sys.stdout
+    def __init__(self, fpath=None, mode="w", console=None):
+        self.console = console if console is not None else sys.stdout
         self.file = None
         if fpath is not None:
             mkdir_if_missing(osp.dirname(fpath))
-            self.file = open(fpath, "w")
+            self.file = open(fpath, mode, buffering=1)
 
     def __del__(self):
         self.close()
@@ -54,7 +54,6 @@ class Logger:
             os.fsync(self.file.fileno())
 
     def close(self):
-        self.console.close()
         if self.file is not None:
             self.file.close()
 
@@ -73,7 +72,9 @@ def setup_logger(cfg):
         # make sure the existing log file is not over-written
         fpath += time.strftime("-%Y-%m-%d-%H-%M-%S")
 
-    sys.stdout = Logger(fpath)
+    sys.stdout = Logger(fpath, mode="w", console=sys.stdout)
+    sys.stderr = Logger(fpath, mode="a", console=sys.stderr)
+    print(f"Log file: {fpath}")
     return output
 
 def write_cfg(cfg):
@@ -86,6 +87,8 @@ def write_cfg(cfg):
         exist_para_cfg = True
         para_path = os.path.join(directory_path,para)
         cfg_path = para_path+'/cfg.yaml'
+        if not os.path.isfile(cfg_path):
+            continue
         # query_cfg = copy.deepcopy(cfg)
         f = open(cfg_path, 'r+')
         query_cfg = yaml.unsafe_load(f)
@@ -127,4 +130,3 @@ def create_if_not_exists(path: str) -> None:
     """
     if not os.path.exists(path):
         os.makedirs(path)
-

@@ -380,10 +380,12 @@ class CustomCLIP(nn.Module):
                 global_shared_features = global_shared_features / global_shared_features.norm(
                     dim=-1, keepdim=True
                 )
-                aux["shared_pull_loss"] = F.mse_loss(
-                    local_shared_features.float(),
-                    global_shared_features.detach().float()
-                )
+                cosine_sim = torch.sum(
+                    local_shared_features.float()
+                    * global_shared_features.detach().float(),
+                    dim=-1,
+                ).mean()
+                aux["shared_pull_loss"] = 1.0 - cosine_sim
                 assert logits_local.shape == logits_fused.shape == logits_global.shape, (
                     "SPF logits shape mismatch: "
                     f"local={logits_local.shape}, "
