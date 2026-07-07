@@ -87,6 +87,8 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK = args.spf_max_rank
     cfg.TRAINER.GL_SVDMSE.SPF_GAMMA_INIT = args.spf_gamma_init
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
+    cfg.TRAINER.GL_SVDMSE.SPF_WARMUP_ROUNDS = args.spf_warmup_rounds
+    cfg.TRAINER.GL_SVDMSE.SPF_DEBUG_CHECKS = args.spf_debug_checks
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -512,6 +514,8 @@ if __name__ == "__main__":
     parser.add_argument('--spf_max_rank', type=int, default=8, help='maximum SPF shared rank')
     parser.add_argument('--spf_gamma_init', type=float, default=0.05, help='fixed SPF residual fusion coefficient for stage-1')
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
+    parser.add_argument('--spf_warmup_rounds', type=int, default=5, help='linear warmup rounds for SPF fusion and shared pull')
+    parser.add_argument('--spf_debug_checks', action='store_true', default=False, help='run one-shot SPF gradient/shape debug checks')
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")

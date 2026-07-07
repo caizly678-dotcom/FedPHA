@@ -137,9 +137,16 @@ class PromptLearner(nn.Module):
         self.name_lens = name_lens
         self.class_token_position = cfg.TRAINER.GL_SVDMSE.CLASS_TOKEN_POSITION
 
-    def fuse_ctx_spf(self, ctx_local, ctx_global):
+    def build_prompts_from_ctx(self, ctx):
+        ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
+        ctx = ctx.permute(1, 0, 2, 3).contiguous().view(
+            self.N * self.n_cls, self.n_ctx, ctx.shape[-1]
+        )
+        return torch.cat([self.token_prefix, ctx, self.token_suffix], dim=1)
+
+    def fuse_ctx_spf(self, ctx_local, ctx_global, spf_scale=1.0):
         basis, _ = compute_shared_basis(
-            ctx_global,
+            ctx_global.detach(),
             energy=self.spf_energy,
             min_rank=self.spf_min_rank,
             max_rank=self.spf_max_rank,
@@ -147,17 +154,26 @@ class PromptLearner(nn.Module):
         local_shared = project_to_basis(ctx_local, basis)
         global_shared = project_to_basis(ctx_global, basis)
 
-        gamma = self.fusion_gamma.to(device=ctx_local.device, dtype=ctx_local.dtype).view(1, 1, 1)
-        fused_ctx = ctx_local + gamma * (global_shared - local_shared)
-
-        shared_pull_loss = F.mse_loss(local_shared.float(), global_shared.detach().float())
+        scale = torch.as_tensor(
+            spf_scale,
+            device=ctx_local.device,
+            dtype=ctx_local.dtype
+        ).clamp(0.0, 1.0)
+        gamma_base = self.fusion_gamma.to(device=ctx_local.device, dtype=ctx_local.dtype).view(1, 1, 1)
+        gamma = gamma_base * scale.view(1, 1, 1)
+        fused_ctx = ctx_local + gamma * (global_shared.detach() - local_shared)
 
         aux = {
-            "shared_pull_loss": shared_pull_loss,
             "gamma": gamma.detach().float().mean(),
+            "gamma_base": gamma_base.detach().float().mean(),
+            "spf_scale": scale.detach().float(),
             "svd_rank": torch.tensor(float(basis.shape[1]), device=ctx_local.device),
+            "prompt_shared_mse": F.mse_loss(
+                local_shared.detach().float(),
+                global_shared.detach().float()
+            ),
         }
-        return fused_ctx, aux
+        return fused_ctx, local_shared, global_shared, aux
 
     def compute_null_space(self, global_ctx, ratio=0.8):
         global_ctx = global_ctx.view(-1, global_ctx.shape[-1])  # Flatten: (N * n_ctx, ctx_dim)
@@ -179,19 +195,33 @@ class PromptLearner(nn.Module):
 
         return V2.to(global_ctx.dtype)
 
-    def forward(self):
+    def forward(self, spf_scale=1.0):
         if self.use_spf:
             if self.class_token_position != "end":
                 raise NotImplementedError("SPF-FedPHA only supports CLASS_TOKEN_POSITION == 'end'")
 
-            fused_ctx, aux = self.fuse_ctx_spf(self.ctx_local, self.ctx_global)
-
-            fused_ctx = fused_ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
-            fused_ctx = fused_ctx.permute(1, 0, 2, 3).contiguous().view(
-                self.N * self.n_cls, self.n_ctx, fused_ctx.shape[-1]
+            fused_ctx, local_shared, global_shared, aux = self.fuse_ctx_spf(
+                self.ctx_local, self.ctx_global, spf_scale=spf_scale
             )
-            prompts = torch.cat([self.token_prefix, fused_ctx, self.token_suffix], dim=1)
-            return prompts, aux
+
+            prompts = self.build_prompts_from_ctx(fused_ctx)
+            prompts_global = self.build_prompts_from_ctx(self.ctx_global)
+            prompts_local_shared = self.build_prompts_from_ctx(local_shared)
+            prompts_global_shared = self.build_prompts_from_ctx(global_shared.detach())
+            expected_shape = prompts.shape
+            expected_dtype = prompts.dtype
+            for name, prompt in [
+                ("prompts_global", prompts_global),
+                ("prompts_local_shared", prompts_local_shared),
+                ("prompts_global_shared", prompts_global_shared),
+            ]:
+                assert prompt.shape == expected_shape, (
+                    f"{name} shape {prompt.shape} != fused prompts shape {expected_shape}"
+                )
+                assert prompt.dtype == expected_dtype, (
+                    f"{name} dtype {prompt.dtype} != fused prompts dtype {expected_dtype}"
+                )
+            return prompts, prompts_global, prompts_local_shared, prompts_global_shared, aux
 
         ctx = self.ctx_local
 
@@ -302,12 +332,12 @@ class CustomCLIP(nn.Module):
         self.dtype = clip_model.dtype
         self.N = cfg.TRAINER.GL_SVDMSE.N
 
-    def forward(self, image, idx=None):
+    def forward(self, image, idx=None, spf_scale=1.0):
         tokenized_prompts = self.tokenized_prompts
-        out = self.prompt_learner()
+        out = self.prompt_learner(spf_scale=spf_scale)
 
         if self.prompt_learner.use_spf:
-            prompts, aux = out
+            prompts, prompts_global, prompts_local_shared, prompts_global_shared, aux = out
             text_features = self.text_encoder(prompts, tokenized_prompts)
             text_features = text_features / text_features.norm(dim=-1, keepdim=True)
             image_features = self.image_encoder(image.type(self.dtype))
@@ -317,7 +347,31 @@ class CustomCLIP(nn.Module):
             logits = logit_scale * image_features @ text_features.t()
 
             if self.training:
-                return logits, aux
+                global_features = self.text_encoder(prompts_global, tokenized_prompts)
+                global_features = global_features / global_features.norm(
+                    dim=-1, keepdim=True
+                )
+                logits_global = logit_scale * image_features @ global_features.t()
+                local_shared_features = self.text_encoder(
+                    prompts_local_shared, tokenized_prompts
+                )
+                local_shared_features = local_shared_features / local_shared_features.norm(
+                    dim=-1, keepdim=True
+                )
+                global_shared_features = self.text_encoder(
+                    prompts_global_shared, tokenized_prompts
+                )
+                global_shared_features = global_shared_features / global_shared_features.norm(
+                    dim=-1, keepdim=True
+                )
+                aux["shared_pull_loss"] = F.mse_loss(
+                    local_shared_features.float(),
+                    global_shared_features.detach().float()
+                )
+                assert logits.shape == logits_global.shape, (
+                    f"personal logits shape {logits.shape} != global logits shape {logits_global.shape}"
+                )
+                return logits, logits_global, aux
 
             return logits
 
@@ -391,39 +445,120 @@ class GL_SVDMSE(TrainerX):
 
         self.scaler = GradScaler() if cfg.TRAINER.GL_SVDMSE.PREC == "amp" else None
 
+    def get_spf_warmup_scale(self, global_epoch):
+        warmup_rounds = int(self.cfg.TRAINER.GL_SVDMSE.SPF_WARMUP_ROUNDS)
+        if warmup_rounds <= 0 or global_epoch < 0:
+            return 1.0
+        return min(1.0, float(global_epoch + 1) / float(warmup_rounds))
+
+    @staticmethod
+    def _grad_max_norm(param):
+        if param.grad is None:
+            return 0.0, 0.0
+        grad = param.grad.detach().float()
+        return grad.abs().max().item(), grad.norm().item()
+
+    def run_spf_debug_checks(self, image, label, spf_scale, shared_lambda):
+        prompt_learner = self.model.prompt_learner
+
+        self.optim.zero_grad(set_to_none=True)
+        output, _, aux = self.model(image, spf_scale=spf_scale)
+        loss_personal = F.cross_entropy(output, label)
+        loss_shared = shared_lambda * aux["shared_pull_loss"]
+        (loss_personal + loss_shared).backward()
+        global_max, global_norm = self._grad_max_norm(prompt_learner.ctx_global)
+        local_max, local_norm = self._grad_max_norm(prompt_learner.ctx_local)
+        print(
+            "[SPF Debug] personal+shared backward: "
+            f"ctx_global max={global_max:.3e} norm={global_norm:.3e}, "
+            f"ctx_local max={local_max:.3e} norm={local_norm:.3e}"
+        )
+        assert global_max < 1e-10, (
+            "SPF gradient leakage: personal/shared loss updated ctx_global"
+        )
+
+        self.optim.zero_grad(set_to_none=True)
+        _, output_global, _ = self.model(image, spf_scale=spf_scale)
+        loss_global = F.cross_entropy(output_global, label)
+        loss_global.backward()
+        global_max, global_norm = self._grad_max_norm(prompt_learner.ctx_global)
+        local_max, local_norm = self._grad_max_norm(prompt_learner.ctx_local)
+        print(
+            "[SPF Debug] global backward: "
+            f"ctx_global max={global_max:.3e} norm={global_norm:.3e}, "
+            f"ctx_local max={local_max:.3e} norm={local_norm:.3e}"
+        )
+        assert local_max < 1e-10, (
+            "SPF gradient leakage: global loss updated ctx_local"
+        )
+
+        self.optim.zero_grad(set_to_none=True)
+        self._spf_debug_checked = True
+
 
     def forward_backward(self, batch_idx, batch, **kwargs):
         image, label = self.parse_batch_train(batch)
         prec = self.cfg.TRAINER.GL_SVDMSE.PREC
 
         if self.model.prompt_learner.use_spf:
+            spf_scale = self.get_spf_warmup_scale(
+                getattr(self, "global_epoch", -1)
+            )
+            shared_lambda = (
+                self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * spf_scale
+            )
+
+            if (
+                self.cfg.TRAINER.GL_SVDMSE.SPF_DEBUG_CHECKS
+                and not getattr(self, "_spf_debug_checked", False)
+            ):
+                self.run_spf_debug_checks(image, label, spf_scale, shared_lambda)
+
             if prec == "amp":
                 with autocast():
-                    output, aux = self.model(image)
-                    loss = F.cross_entropy(output, label)
+                    output, output_global, aux = self.model(
+                        image,
+                        spf_scale=spf_scale
+                    )
+                    loss_personal = F.cross_entropy(output, label)
+                    loss_global = F.cross_entropy(output_global, label)
                     loss = (
-                        loss
-                        + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
+                        loss_personal
+                        + loss_global
+                        + shared_lambda * aux["shared_pull_loss"]
                     )
                 self.optim.zero_grad()
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optim)
                 self.scaler.update()
             else:
-                output, aux = self.model(image)
-                loss = F.cross_entropy(output, label)
+                output, output_global, aux = self.model(
+                    image,
+                    spf_scale=spf_scale
+                )
+                loss_personal = F.cross_entropy(output, label)
+                loss_global = F.cross_entropy(output_global, label)
                 loss = (
-                    loss
-                    + self.cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA * aux["shared_pull_loss"]
+                    loss_personal
+                    + loss_global
+                    + shared_lambda * aux["shared_pull_loss"]
                 )
                 self.model_backward_and_update(loss)
 
             loss_summary = {
                 "loss": loss.item(),
+                "loss_personal": loss_personal.item(),
+                "loss_global": loss_global.item(),
+                "loss_shared_scaled": float(shared_lambda * aux["shared_pull_loss"].detach().item()),
                 "acc": compute_accuracy(output, label)[0].item(),
+                "global_acc": compute_accuracy(output_global, label)[0].item(),
                 "spf_gamma": float(aux["gamma"].item()),
+                "spf_gamma_base": float(aux["gamma_base"].item()),
+                "spf_scale": float(aux["spf_scale"].item()),
+                "spf_shared_lambda": float(shared_lambda),
                 "spf_rank": float(aux["svd_rank"].item()),
                 "spf_shared_loss": float(aux["shared_pull_loss"].item()),
+                "spf_prompt_shared_mse": float(aux["prompt_shared_mse"].item()),
             }
         else:
             if prec == "amp":

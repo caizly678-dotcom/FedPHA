@@ -670,6 +670,7 @@ class TrainerX(SimpleTrainer):
     def run_epoch(self, idx=-1, global_epoch=-1, **kwargs):
 
         self.set_model_mode("train")
+        self.global_epoch = global_epoch
         losses = MetricMeter()
         batch_time = AverageMeter()
         data_time = AverageMeter()
