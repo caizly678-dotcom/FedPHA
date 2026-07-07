@@ -520,6 +520,7 @@ class SimpleTrainer(TrainerBase):
     def test(self, split=None, is_global=False, current_epoch=0, idx=-1,global_test=False):
         self.set_model_mode("eval")
         self.evaluator.reset()
+        head_evaluators = None
 
         if split is None:
             split = self.cfg.TEST.SPLIT
@@ -535,12 +536,36 @@ class SimpleTrainer(TrainerBase):
 
         for batch_idx, batch in enumerate(tqdm(data_loader)):
             input, label = self.parse_batch_test(batch)
-            output = self.model_inference(input, idx)
-            self.evaluator.process(output, label)
+            output = self.model_inference(input, idx, current_epoch=current_epoch)
+            if isinstance(output, dict):
+                if head_evaluators is None:
+                    head_evaluators = OrderedDict()
+                    for head in output:
+                        head_evaluators[head] = build_evaluator(
+                            self.cfg,
+                            lab2cname=self.lab2cname
+                        )
+                for head, logits in output.items():
+                    head_evaluators[head].process(logits, label)
+            else:
+                self.evaluator.process(output, label)
 
-        results = self.evaluator.evaluate()
+        if head_evaluators is None:
+            results = self.evaluator.evaluate()
+        else:
+            results = OrderedDict()
+            for head, evaluator in head_evaluators.items():
+                print(f"=> SPF {head} head")
+                head_results = evaluator.evaluate()
+                for k, v in head_results.items():
+                    results[f"{head}_{k}"] = v
+            if "fused_accuracy" in results:
+                results["accuracy"] = results["fused_accuracy"]
 
         self.evaluator.reset()
+        if head_evaluators is not None:
+            for evaluator in head_evaluators.values():
+                evaluator.reset()
 
         if not is_global and idx < 0:
             current_epoch = self.epoch
@@ -553,9 +578,17 @@ class SimpleTrainer(TrainerBase):
             # print("tag",tag,"value:",v, ",current_epoch:",current_epoch)
         return results
 
-    def model_inference(self, input, idx):
+    def model_inference(self, input, idx, current_epoch=0):
         self.model.eval()
-        output = self.model(input, idx)
+        use_spf = (
+            hasattr(self.model, "prompt_learner")
+            and getattr(self.model.prompt_learner, "use_spf", False)
+        )
+        if use_spf and hasattr(self, "get_spf_warmup_scale"):
+            spf_scale = self.get_spf_warmup_scale(current_epoch)
+            output = self.model(input, idx, spf_scale=spf_scale)
+        else:
+            output = self.model(input, idx)
         if isinstance(output,tuple):
             output = output[0]
         return output

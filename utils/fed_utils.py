@@ -6,25 +6,38 @@ from torch.nn import functional as F
 
 def show_results(cfg, results, epoch,global_test_acc_dict):
 
-    global_test_acc = []
-    global_test_error = []
-    global_test_f1 = []
+    metric_values = {}
     for k, result in enumerate(results):
-        global_test_acc.append(results[k]['accuracy'])
-        global_test_error.append(results[k]['error_rate'])
-        global_test_f1.append(results[k]['macro_f1'])
+        for metric_name, metric_value in result.items():
+            if not isinstance(metric_value, (int, float, np.floating)):
+                continue
+            metric_values.setdefault(metric_name, []).append(metric_value)
 
         if k in global_test_acc_dict:
             global_test_acc_dict[k].append(results[k]['accuracy'])
         else:
             global_test_acc_dict[k] = [results[k]['accuracy']]
+        for metric_name, metric_value in result.items():
+            if not metric_name.endswith("accuracy"):
+                continue
+            metric_key = f"{k}:{metric_name}"
+            if metric_key in global_test_acc_dict:
+                global_test_acc_dict[metric_key].append(metric_value)
+            else:
+                global_test_acc_dict[metric_key] = [metric_value]
 
-        print(k, "--Local test acc:", results[k]['accuracy'])
+        print(k, "--Fused test acc:", results[k]['accuracy'])
+        for head_name in ["local", "global", "fused"]:
+            key = f"{head_name}_accuracy"
+            if key in result:
+                print(k, f"--{head_name.capitalize()} head test acc:", result[key])
 
-    print("--Global test acc:", sum(global_test_acc) / len(global_test_acc))
+    for metric_name, values in metric_values.items():
+        if metric_name.endswith("accuracy"):
+            print(f"--Mean {metric_name}:", sum(values) / len(values))
 
     print(f"Epoch:{epoch}")
-    return global_test_acc,global_test_acc_dict
+    return metric_values.get("accuracy", []),global_test_acc_dict
 
 def average_weights(w, idxs_users, datanumber_client, islist=False):
     """

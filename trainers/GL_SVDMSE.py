@@ -221,7 +221,15 @@ class PromptLearner(nn.Module):
                 assert prompt.dtype == expected_dtype, (
                     f"{name} dtype {prompt.dtype} != fused prompts dtype {expected_dtype}"
                 )
-            return prompts, prompts_global, prompts_local_shared, prompts_global_shared, aux
+            prompts_local = self.build_prompts_from_ctx(self.ctx_local)
+            return (
+                prompts_local,
+                prompts,
+                prompts_global,
+                prompts_local_shared,
+                prompts_global_shared,
+                aux,
+            )
 
         ctx = self.ctx_local
 
@@ -337,21 +345,29 @@ class CustomCLIP(nn.Module):
         out = self.prompt_learner(spf_scale=spf_scale)
 
         if self.prompt_learner.use_spf:
-            prompts, prompts_global, prompts_local_shared, prompts_global_shared, aux = out
-            text_features = self.text_encoder(prompts, tokenized_prompts)
-            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+            (
+                prompts_local,
+                prompts_fused,
+                prompts_global,
+                prompts_local_shared,
+                prompts_global_shared,
+                aux,
+            ) = out
+            local_features = self.text_encoder(prompts_local, tokenized_prompts)
+            local_features = local_features / local_features.norm(dim=-1, keepdim=True)
+            fused_features = self.text_encoder(prompts_fused, tokenized_prompts)
+            fused_features = fused_features / fused_features.norm(dim=-1, keepdim=True)
+            global_features = self.text_encoder(prompts_global, tokenized_prompts)
+            global_features = global_features / global_features.norm(dim=-1, keepdim=True)
             image_features = self.image_encoder(image.type(self.dtype))
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
             logit_scale = self.logit_scale.exp()
-            logits = logit_scale * image_features @ text_features.t()
+            logits_local = logit_scale * image_features @ local_features.t()
+            logits_fused = logit_scale * image_features @ fused_features.t()
+            logits_global = logit_scale * image_features @ global_features.t()
 
             if self.training:
-                global_features = self.text_encoder(prompts_global, tokenized_prompts)
-                global_features = global_features / global_features.norm(
-                    dim=-1, keepdim=True
-                )
-                logits_global = logit_scale * image_features @ global_features.t()
                 local_shared_features = self.text_encoder(
                     prompts_local_shared, tokenized_prompts
                 )
@@ -368,12 +384,19 @@ class CustomCLIP(nn.Module):
                     local_shared_features.float(),
                     global_shared_features.detach().float()
                 )
-                assert logits.shape == logits_global.shape, (
-                    f"personal logits shape {logits.shape} != global logits shape {logits_global.shape}"
+                assert logits_local.shape == logits_fused.shape == logits_global.shape, (
+                    "SPF logits shape mismatch: "
+                    f"local={logits_local.shape}, "
+                    f"fused={logits_fused.shape}, "
+                    f"global={logits_global.shape}"
                 )
-                return logits, logits_global, aux
+                return logits_local, logits_fused, logits_global, aux
 
-            return logits
+            return {
+                "local": logits_local,
+                "fused": logits_fused,
+                "global": logits_global,
+            }
 
         prompts, prompts_global, prompts_projected_local = out
         text_features = self.text_encoder(prompts, tokenized_prompts)
@@ -462,10 +485,11 @@ class GL_SVDMSE(TrainerX):
         prompt_learner = self.model.prompt_learner
 
         self.optim.zero_grad(set_to_none=True)
-        output, _, aux = self.model(image, spf_scale=spf_scale)
-        loss_personal = F.cross_entropy(output, label)
+        output_local, output_fused, _, aux = self.model(image, spf_scale=spf_scale)
+        loss_local = F.cross_entropy(output_local, label)
+        loss_fused = F.cross_entropy(output_fused, label)
         loss_shared = shared_lambda * aux["shared_pull_loss"]
-        (loss_personal + loss_shared).backward()
+        (loss_local + loss_fused + loss_shared).backward()
         global_max, global_norm = self._grad_max_norm(prompt_learner.ctx_global)
         local_max, local_norm = self._grad_max_norm(prompt_learner.ctx_local)
         print(
@@ -478,7 +502,7 @@ class GL_SVDMSE(TrainerX):
         )
 
         self.optim.zero_grad(set_to_none=True)
-        _, output_global, _ = self.model(image, spf_scale=spf_scale)
+        _, _, output_global, _ = self.model(image, spf_scale=spf_scale)
         loss_global = F.cross_entropy(output_global, label)
         loss_global.backward()
         global_max, global_norm = self._grad_max_norm(prompt_learner.ctx_global)
@@ -516,15 +540,17 @@ class GL_SVDMSE(TrainerX):
 
             if prec == "amp":
                 with autocast():
-                    output, output_global, aux = self.model(
+                    output_local, output_fused, output_global, aux = self.model(
                         image,
                         spf_scale=spf_scale
                     )
-                    loss_personal = F.cross_entropy(output, label)
+                    loss_local = F.cross_entropy(output_local, label)
+                    loss_fused = F.cross_entropy(output_fused, label)
                     loss_global = F.cross_entropy(output_global, label)
                     loss = (
-                        loss_personal
+                        loss_local
                         + loss_global
+                        + loss_fused
                         + shared_lambda * aux["shared_pull_loss"]
                     )
                 self.optim.zero_grad()
@@ -532,25 +558,30 @@ class GL_SVDMSE(TrainerX):
                 self.scaler.step(self.optim)
                 self.scaler.update()
             else:
-                output, output_global, aux = self.model(
+                output_local, output_fused, output_global, aux = self.model(
                     image,
                     spf_scale=spf_scale
                 )
-                loss_personal = F.cross_entropy(output, label)
+                loss_local = F.cross_entropy(output_local, label)
+                loss_fused = F.cross_entropy(output_fused, label)
                 loss_global = F.cross_entropy(output_global, label)
                 loss = (
-                    loss_personal
+                    loss_local
                     + loss_global
+                    + loss_fused
                     + shared_lambda * aux["shared_pull_loss"]
                 )
                 self.model_backward_and_update(loss)
 
             loss_summary = {
                 "loss": loss.item(),
-                "loss_personal": loss_personal.item(),
+                "loss_local": loss_local.item(),
+                "loss_fused": loss_fused.item(),
                 "loss_global": loss_global.item(),
                 "loss_shared_scaled": float(shared_lambda * aux["shared_pull_loss"].detach().item()),
-                "acc": compute_accuracy(output, label)[0].item(),
+                "local_acc": compute_accuracy(output_local, label)[0].item(),
+                "acc": compute_accuracy(output_fused, label)[0].item(),
+                "fused_acc": compute_accuracy(output_fused, label)[0].item(),
                 "global_acc": compute_accuracy(output_global, label)[0].item(),
                 "spf_gamma": float(aux["gamma"].item()),
                 "spf_gamma_base": float(aux["gamma_base"].item()),
@@ -589,9 +620,6 @@ class GL_SVDMSE(TrainerX):
                 "loss": loss.item(),
                 "acc": compute_accuracy(output, label)[0].item(),
             }
-
-        if (self.batch_idx + 1) == self.num_batches:
-            self.update_lr()
 
         return loss_summary
 

@@ -317,6 +317,10 @@ def main(args):
 
             idxs_users = list(range(0, cfg.DATASET.USERS))
             print("idxs_users", idxs_users)
+            if isinstance(global_weights, dict):
+                global_weights_t = copy.deepcopy(global_weights['prompt_learner.ctx_global'])
+            else:
+                global_weights_t = copy.deepcopy(global_weights)
 
             print("------------local train start epoch:", epoch, "-------------")
             for idx in idxs_users:
@@ -342,13 +346,16 @@ def main(args):
                 local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
 
             for idx in all_users:
-                local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
-                results.append(local_trainer.test(idx=idx))
+                test_weights = copy.deepcopy(local_weights_per[idx])
+                test_weights['prompt_learner.ctx_global'] = global_weights_t
+                local_trainer.model.load_state_dict(test_weights, strict=False)
+                results.append(local_trainer.test(idx=idx, current_epoch=epoch))
             # global_test_acc = show_results(cfg, results, epoch)
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
             global_time_list.append(time.time() - start)
             print("------------local test finish-------------")
-            
+            local_trainer.update_lr()
+
         elif args.trainer == 'GL_SVDMSE_HE':
             # global prompt + local prompt
 
