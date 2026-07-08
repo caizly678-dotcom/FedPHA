@@ -822,7 +822,6 @@ def Dataset_partition_domain(global_domain_trainset, global_domain_testset, beta
             test_idx_k = np.where(test_labels == k)[0]
             train_idx_k = np.array(train_idx_k)
             test_idx_k = np.array(test_idx_k)
-            np.random.seed(0)
             np.random.shuffle(train_idx_k)
             np.random.shuffle(test_idx_k)
             if beta == 0:
@@ -881,7 +880,6 @@ def Dataset_partition_office(base_path, site, beta, n_parties=3, min_require_siz
         for k in range(K):
             train_idx_k = np.where(train_labels == k)[0]
             test_idx_k = np.where(test_labels == k)[0]
-            np.random.seed(0)
             np.random.shuffle(train_idx_k)
             np.random.shuffle(test_idx_k)
             if beta == 0:

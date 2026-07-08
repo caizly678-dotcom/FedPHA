@@ -89,6 +89,7 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
     cfg.TRAINER.GL_SVDMSE.SPF_WARMUP_ROUNDS = args.spf_warmup_rounds
     cfg.TRAINER.GL_SVDMSE.SPF_DEBUG_CHECKS = args.spf_debug_checks
+    cfg.TRAINER.GL_SVDMSE.USE_FEDLN = args.use_fedln
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
     cfg.TRAINER.GL_SVDMSE_HE.N_CTX_GLOBAL = args.n_ctx  # number of context vectors
@@ -234,6 +235,7 @@ def main(args):
     local_weights_2 = [[] for i in range(cfg.DATASET.USERS)]
     local_weights_3 = [[] for i in range(cfg.DATASET.USERS)]
     local_weights_per = [{} for i in range(cfg.DATASET.USERS)]
+    local_weights_ln = [{} for i in range(cfg.DATASET.USERS)]
 
     local_trainer = build_trainer(args, cfg)
 
@@ -317,10 +319,6 @@ def main(args):
 
             idxs_users = list(range(0, cfg.DATASET.USERS))
             print("idxs_users", idxs_users)
-            if isinstance(global_weights, dict):
-                global_weights_t = copy.deepcopy(global_weights['prompt_learner.ctx_global'])
-            else:
-                global_weights_t = copy.deepcopy(global_weights)
 
             print("------------local train start epoch:", epoch, "-------------")
             for idx in idxs_users:
@@ -332,6 +330,13 @@ def main(args):
                 local_weight = local_trainer.model.state_dict()
                 local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
                 local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
+
+                if cfg.TRAINER.GL_SVDMSE.USE_FEDLN:
+                    local_weights_ln[idx] = {
+                        k: copy.deepcopy(v.cpu())
+                        for k, v in local_weight.items()
+                        if "image_encoder" in k and "ln" in k
+                    }
 
             print("------------local train finish epoch:", epoch, "-------------")
 
@@ -345,10 +350,12 @@ def main(args):
                 local_weights_per[idx]['prompt_learner.ctx_global'] = global_weights
                 local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
 
+                if cfg.TRAINER.GL_SVDMSE.USE_FEDLN:
+                    for k, v in local_weights_ln[idx].items():
+                        local_weights_per[idx][k] = v
+
             for idx in all_users:
-                test_weights = copy.deepcopy(local_weights_per[idx])
-                test_weights['prompt_learner.ctx_global'] = global_weights_t
-                local_trainer.model.load_state_dict(test_weights, strict=False)
+                local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
                 results.append(local_trainer.test(idx=idx, current_epoch=epoch))
             # global_test_acc = show_results(cfg, results, epoch)
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
@@ -523,6 +530,8 @@ if __name__ == "__main__":
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
     parser.add_argument('--spf_warmup_rounds', type=int, default=5, help='linear warmup rounds for SPF fusion and shared pull')
     parser.add_argument('--spf_debug_checks', action='store_true', default=False, help='run one-shot SPF gradient/shape debug checks')
+    parser.add_argument('--use_fedln', action='store_true', default=False, help='enable FedLN for image encoder')
+
     # he setting
     parser.add_argument('--specify', default=False, help="Whether to specify the prompt length list of the dataset")
     parser.add_argument('--prompts_lens', nargs='+', type=int, help="Specify the prompt length list of the dataset, eg.--prompts_lens 4 8 16 32")

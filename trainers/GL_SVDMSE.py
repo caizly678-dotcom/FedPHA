@@ -449,6 +449,12 @@ class GL_SVDMSE(TrainerX):
         for name, param in self.model.named_parameters():
             if "prompt_learner" not in name:
                 param.requires_grad_(False)
+        self.use_fedln = getattr(cfg.TRAINER.GL_SVDMSE, "USE_FEDLN", False)
+        if self.use_fedln:
+            print("Turning on local LayerNorm tuning (FedLN) for Image Encoder...")
+            for name, param in self.model.image_encoder.named_parameters():
+                if "ln" in name:
+                    param.requires_grad_(True)
 
         if cfg.MODEL.INIT_WEIGHTS:
             load_pretrained_weights(self.model.prompt_learner, cfg.MODEL.INIT_WEIGHTS)
@@ -463,10 +469,34 @@ class GL_SVDMSE(TrainerX):
         else:
             self.model.to(self.device)
         
-        # NOTE: only give prompt_learner to the optimizer
-        self.optim = build_optimizer(self.model.prompt_learner, cfg.OPTIM)
-        self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
-        self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
+        if getattr(self, "use_fedln", False):
+            prompt_params = []
+            ln_params = []
+            for name, param in self.model.named_parameters():
+                if param.requires_grad:
+                    if "prompt_learner" in name:
+                        prompt_params.append(param)
+                    elif "ln" in name:
+                        ln_params.append(param)
+            if len(ln_params) == 0:
+                raise RuntimeError(
+                    "FedLN is enabled but no trainable image-encoder LayerNorm "
+                    "parameters were found. Check the backbone or LN name match."
+                )
+
+            base_lr = cfg.OPTIM.LR
+            param_groups = [
+                {"params": prompt_params, "lr": base_lr},
+                {"params": ln_params, "lr": base_lr * 0.1}
+            ]
+
+            self.optim = build_optimizer(None, cfg.OPTIM, param_groups=param_groups)
+            self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
+            self.register_model("custom_model", self.model, self.optim, self.sched)
+        else:
+            self.optim = build_optimizer(self.model.prompt_learner, cfg.OPTIM)
+            self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
+            self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
 
         self.scaler = GradScaler() if cfg.TRAINER.GL_SVDMSE.PREC == "amp" else None
 
