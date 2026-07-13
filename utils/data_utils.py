@@ -1,6 +1,7 @@
 # This code is used to generate non-iid data with Feature Skew
 import re
 import sys, os
+import random
 
 from torchvision.datasets import ImageFolder
 
@@ -302,20 +303,23 @@ def prepare_data_domain_partition_train(cfg, data_base_path):
             net_dataidx_map_train, net_dataidx_map_test = Dataset_partition_office(data_base_path, current_domain_name,
                                                                                    cfg.DATASET.BETA,
                                                                                    n_parties=domain_n_clients,
-                                                                                   min_require_size=min_pic_require_size)
+                                                                                   min_require_size=min_pic_require_size,
+                                                                                   seed=cfg.SEED)
         elif cfg.DATASET.NAME == 'DomainNet':
             global_domain_trainset = DomainNetDataset(data_base_path, current_domain_name, transform=transform_train, train=True)
             global_domain_testset = DomainNetDataset(data_base_path, current_domain_name, transform=transform_test, train=False)
             net_dataidx_map_train, net_dataidx_map_test = Dataset_partition_domain(global_domain_trainset, global_domain_testset
                                                                                    , beta=cfg.DATASET.BETA, K=365, n_parties=domain_n_clients,
-                                                                                   min_require_size=min_pic_require_size)
+                                                                                   min_require_size=min_pic_require_size,
+                                                                                   seed=cfg.SEED)
 
         elif cfg.DATASET.NAME == 'PACS':
             global_domain_trainset = PACSDataset(data_base_path, current_domain_name, transform=transform_train, train=True)
             global_domain_testset = PACSDataset(data_base_path, current_domain_name, transform=transform_test, train=False)
             net_dataidx_map_train, net_dataidx_map_test = Dataset_partition_domain(global_domain_trainset, global_domain_testset
                                                                                    , beta=cfg.DATASET.BETA, K=7, n_parties=domain_n_clients,
-                                                                                   min_require_size=min_pic_require_size)
+                                                                                   min_require_size=min_pic_require_size,
+                                                                                   seed=cfg.SEED)
 
         elif cfg.DATASET.NAME == 'Office31':
             global_domain_trainset = Office31Dataset(data_base_path, current_domain_name, transform=transform_train, train=True)
@@ -323,14 +327,16 @@ def prepare_data_domain_partition_train(cfg, data_base_path):
             net_dataidx_map_train, net_dataidx_map_test = Dataset_partition_domain(global_domain_trainset, global_domain_testset
                                                                                    , beta=cfg.DATASET.BETA, K=len(global_domain_trainset.imagefolder_obj.classes),
                                                                                    n_parties=domain_n_clients,
-                                                                                   min_require_size=min_pic_require_size)
+                                                                                   min_require_size=min_pic_require_size,
+                                                                                   seed=cfg.SEED)
         elif cfg.DATASET.NAME == 'OfficeHome':
             global_domain_trainset = OfficeHomeDataset(data_base_path, current_domain_name, transform=transform_train, train=True)
             global_domain_testset = OfficeHomeDataset(data_base_path, current_domain_name, transform=transform_test, train=False)
             net_dataidx_map_train, net_dataidx_map_test = Dataset_partition_domain(global_domain_trainset, global_domain_testset
                                                                                    , beta=cfg.DATASET.BETA, K=len(global_domain_trainset.imagefolder_obj.classes),
                                                                                    n_parties=domain_n_clients,
-                                                                                   min_require_size=min_pic_require_size)
+                                                                                   min_require_size=min_pic_require_size,
+                                                                                   seed=cfg.SEED)
 
         if hasattr(global_domain_testset, 'imagefolder_obj'):
 
@@ -799,7 +805,9 @@ def record_net_data_stats(y_train, net_dataidx_map):
     return net_cls_counts
 
 
-def Dataset_partition_domain(global_domain_trainset, global_domain_testset, beta, K, n_parties=5, min_require_size=2):
+def Dataset_partition_domain(global_domain_trainset, global_domain_testset, beta, K, n_parties=5, min_require_size=2, seed=0):
+    np.random.seed(seed)
+    random.seed(seed)
     min_size = 0
 
     train_path = global_domain_trainset.imgs
@@ -856,7 +864,9 @@ def Dataset_partition_domain(global_domain_trainset, global_domain_testset, beta
     return net_dataidx_map_train, net_dataidx_map_test
 
 
-def Dataset_partition_office(base_path, site, beta, n_parties=3, min_require_size=2):
+def Dataset_partition_office(base_path, site, beta, n_parties=3, min_require_size=2, seed=0):
+    np.random.seed(seed)
+    random.seed(seed)
     min_size = 0
     K = 10
     # np.random.seed(2023)

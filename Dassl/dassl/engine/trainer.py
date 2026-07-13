@@ -521,6 +521,7 @@ class SimpleTrainer(TrainerBase):
         self.set_model_mode("eval")
         self.evaluator.reset()
         head_evaluators = None
+        complement_counts = None
 
         if split is None:
             split = self.cfg.TEST.SPLIT
@@ -545,8 +546,44 @@ class SimpleTrainer(TrainerBase):
                             self.cfg,
                             lab2cname=self.lab2cname
                         )
+                    if all(head in output for head in ("local", "global", "fused")):
+                        complement_counts = {
+                            "local_correct": 0.0,
+                            "global_correct": 0.0,
+                            "fused_correct": 0.0,
+                            "global_help_local_wrong": 0.0,
+                            "local_help_global_wrong": 0.0,
+                            "oracle_correct": 0.0,
+                            "local_global_disagreement": 0.0,
+                            "total": 0.0,
+                        }
                 for head, logits in output.items():
                     head_evaluators[head].process(logits, label)
+                if complement_counts is not None and all(
+                    head in output for head in ("local", "global", "fused")
+                ):
+                    pred_local = output["local"].argmax(dim=1)
+                    pred_global = output["global"].argmax(dim=1)
+                    pred_fused = output["fused"].argmax(dim=1)
+                    local_correct = pred_local.eq(label)
+                    global_correct = pred_global.eq(label)
+                    fused_correct = pred_fused.eq(label)
+                    complement_counts["local_correct"] += local_correct.sum().item()
+                    complement_counts["global_correct"] += global_correct.sum().item()
+                    complement_counts["fused_correct"] += fused_correct.sum().item()
+                    complement_counts["global_help_local_wrong"] += (
+                        global_correct & ~local_correct
+                    ).sum().item()
+                    complement_counts["local_help_global_wrong"] += (
+                        local_correct & ~global_correct
+                    ).sum().item()
+                    complement_counts["oracle_correct"] += (
+                        local_correct | global_correct
+                    ).sum().item()
+                    complement_counts["local_global_disagreement"] += (
+                        pred_local != pred_global
+                    ).sum().item()
+                    complement_counts["total"] += float(label.numel())
             else:
                 self.evaluator.process(output, label)
 
@@ -561,6 +598,23 @@ class SimpleTrainer(TrainerBase):
                     results[f"{head}_{k}"] = v
             if "fused_accuracy" in results:
                 results["accuracy"] = results["fused_accuracy"]
+            if complement_counts is not None:
+                total = max(complement_counts["total"], 1.0)
+                local_acc = 100.0 * complement_counts["local_correct"] / total
+                fused_acc = 100.0 * complement_counts["fused_correct"] / total
+                results["global_help_local_wrong_rate"] = (
+                    100.0 * complement_counts["global_help_local_wrong"] / total
+                )
+                results["local_help_global_wrong_rate"] = (
+                    100.0 * complement_counts["local_help_global_wrong"] / total
+                )
+                results["oracle_accuracy"] = (
+                    100.0 * complement_counts["oracle_correct"] / total
+                )
+                results["local_global_disagreement_rate"] = (
+                    100.0 * complement_counts["local_global_disagreement"] / total
+                )
+                results["fused_gain_over_local"] = fused_acc - local_acc
 
         self.evaluator.reset()
         if head_evaluators is not None:

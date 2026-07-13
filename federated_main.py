@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from utils.fed_utils import average_weights, count_parameters, show_results, save_acc_csv
+from trainers.spf_utils import compute_shared_basis_from_contexts
 from Dassl.dassl.utils import setup_logger, set_random_seed
 from Dassl.dassl.config import get_cfg_default
 from Dassl.dassl.engine import build_trainer
@@ -64,6 +65,15 @@ def extend_cfg(cfg, args):
     """
     from yacs.config import CfgNode as CN
 
+    if args.spf_align_tau <= 0:
+        raise ValueError(f"--spf_align_tau must be > 0, got {args.spf_align_tau}")
+    if args.spf_sinkhorn_iters < 1:
+        raise ValueError(
+            f"--spf_sinkhorn_iters must be at least 1, got {args.spf_sinkhorn_iters}"
+        )
+    if args.spf_conf_power < 0:
+        raise ValueError(f"--spf_conf_power must be non-negative, got {args.spf_conf_power}")
+
     cfg.TRAINER.PROMPTFL = CN()
     cfg.TRAINER.PROMPTFL.N_CTX = args.n_ctx  # number of context vectors
     cfg.TRAINER.PROMPTFL.CSC = False  # class-specific context
@@ -89,6 +99,11 @@ def extend_cfg(cfg, args):
     cfg.TRAINER.GL_SVDMSE.SPF_SHARED_LAMBDA = args.spf_shared_lambda
     cfg.TRAINER.GL_SVDMSE.SPF_WARMUP_ROUNDS = args.spf_warmup_rounds
     cfg.TRAINER.GL_SVDMSE.SPF_DEBUG_CHECKS = args.spf_debug_checks
+    cfg.TRAINER.GL_SVDMSE.SPF_USE_ALIGNMENT = args.spf_use_alignment
+    cfg.TRAINER.GL_SVDMSE.SPF_ALIGN_TAU = args.spf_align_tau
+    cfg.TRAINER.GL_SVDMSE.SPF_SINKHORN_ITERS = args.spf_sinkhorn_iters
+    cfg.TRAINER.GL_SVDMSE.SPF_CONF_POWER = args.spf_conf_power
+    cfg.TRAINER.GL_SVDMSE.SPF_DETACH_PRIVATE = args.spf_detach_private
     cfg.TRAINER.GL_SVDMSE.USE_FEDLN = args.use_fedln
     
     cfg.TRAINER.GL_SVDMSE_HE = CN()
@@ -210,7 +225,10 @@ def setup_cfg(args):
 
     if args.use_spf:
         cfg.OUTPUT_DIR = (
-            f"{base_output_dir}/spf_g{args.spf_gamma_init}_e{args.spf_energy}_r{args.spf_max_rank}"
+            f"{base_output_dir}/"
+            f"spf_align{int(args.spf_use_alignment)}_detach{int(args.spf_detach_private)}"
+            f"_tau{args.spf_align_tau}_g{args.spf_gamma_init}"
+            f"_e{args.spf_energy}_r{args.spf_max_rank}"
         )
     
     cfg.freeze()
@@ -328,8 +346,12 @@ def main(args):
                     local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
                 local_trainer.train(idx=idx, global_epoch=epoch, is_fed=True)
                 local_weight = local_trainer.model.state_dict()
-                local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
-                local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
+                if cfg.TRAINER.GL_SVDMSE.USE_SPF and f'prompt_learner.ctx_global_list.{idx}' in local_weight:
+                    local_weights_0[idx] = copy.deepcopy(local_weight[f'prompt_learner.ctx_global_list.{idx}'])
+                    local_weights_1[idx] = copy.deepcopy(local_weight[f'prompt_learner.ctx_local_list.{idx}'])
+                else:
+                    local_weights_0[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_global'])
+                    local_weights_1[idx] = copy.deepcopy(local_weight['prompt_learner.ctx_local'])
 
                 if cfg.TRAINER.GL_SVDMSE.USE_FEDLN:
                     local_weights_ln[idx] = {
@@ -340,15 +362,29 @@ def main(args):
 
             print("------------local train finish epoch:", epoch, "-------------")
 
-            global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
+            if cfg.TRAINER.GL_SVDMSE.USE_SPF:
+                global_basis, _ = compute_shared_basis_from_contexts(
+                    [local_weights_0[idx] for idx in idxs_users],
+                    energy=cfg.TRAINER.GL_SVDMSE.SPF_ENERGY,
+                    min_rank=cfg.TRAINER.GL_SVDMSE.SPF_MIN_RANK,
+                    max_rank=cfg.TRAINER.GL_SVDMSE.SPF_MAX_RANK,
+                )
+            else:
+                global_weights = average_weights(local_weights_0, idxs_users, datanumber_client, islist=True)
 
             print("------------local test start-------------")
             results = []
             all_users = list(range(0, cfg.DATASET.USERS))
 
             for idx in all_users:
-                local_weights_per[idx]['prompt_learner.ctx_global'] = global_weights
-                local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
+                if cfg.TRAINER.GL_SVDMSE.USE_SPF and f'prompt_learner.ctx_global_list.{idx}' in local_weights_per[idx]:
+                    local_weights_per[idx][f'prompt_learner.ctx_global_list.{idx}'] = local_weights_0[idx]
+                    local_weights_per[idx][f'prompt_learner.ctx_local_list.{idx}'] = local_weights_1[idx]
+                else:
+                    local_weights_per[idx]['prompt_learner.ctx_global'] = (
+                        local_weights_0[idx] if cfg.TRAINER.GL_SVDMSE.USE_SPF else global_weights
+                    )
+                    local_weights_per[idx]['prompt_learner.ctx_local'] = local_weights_1[idx]
 
                 if cfg.TRAINER.GL_SVDMSE.USE_FEDLN:
                     for k, v in local_weights_ln[idx].items():
@@ -356,6 +392,10 @@ def main(args):
 
             for idx in all_users:
                 local_trainer.model.load_state_dict(local_weights_per[idx], strict=False)
+                if cfg.TRAINER.GL_SVDMSE.USE_SPF:
+                    local_trainer.model.prompt_learner.spf_shared_basis = global_basis.to(
+                        next(local_trainer.model.prompt_learner.parameters()).device
+                    )
                 results.append(local_trainer.test(idx=idx, current_epoch=epoch))
             # global_test_acc = show_results(cfg, results, epoch)
             global_test_acc, global_test_acc_dict = show_results(cfg, results, epoch, global_test_acc_dict)
@@ -530,6 +570,11 @@ if __name__ == "__main__":
     parser.add_argument('--spf_shared_lambda', type=float, default=0.1, help='weight of SPF shared pull regularization')
     parser.add_argument('--spf_warmup_rounds', type=int, default=5, help='linear warmup rounds for SPF fusion and shared pull')
     parser.add_argument('--spf_debug_checks', action='store_true', default=False, help='run one-shot SPF gradient/shape debug checks')
+    parser.add_argument('--spf_use_alignment', action='store_true', default=False, help='enable semantic Sinkhorn alignment before SPF fusion')
+    parser.add_argument('--spf_align_tau', type=float, default=0.07, help='temperature for SPF semantic alignment')
+    parser.add_argument('--spf_sinkhorn_iters', type=int, default=5, help='number of log-space Sinkhorn iterations for SPF alignment')
+    parser.add_argument('--spf_conf_power', type=float, default=1.0, help='power applied to SPF alignment confidence')
+    parser.add_argument('--spf_detach_private', action='store_true', default=False, help='detach local private subspace in fused SPF loss')
     parser.add_argument('--use_fedln', action='store_true', default=False, help='enable FedLN for image encoder')
 
     # he setting
